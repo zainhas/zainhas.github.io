@@ -7,6 +7,29 @@ nav: true
 nav_order: 5
 ---
 
+## About My Teaching
+
+I'm passionate about making cutting-edge AI technologies accessible through education. My courses focus on practical, hands-on learning with real-world applications.
+
+### Teaching Philosophy
+- **Practical First**: Every concept is taught with immediate, applicable examples
+- **Production Ready**: Focus on techniques and patterns used in real systems
+- **Community Driven**: Courses designed based on community needs and feedback
+- **Accessible**: Complex topics broken down into digestible, actionable lessons
+
+### Course Topics
+- **Vector Databases & Embeddings** - The infrastructure powering modern AI
+- **Retrieval-Augmented Generation** - Building knowledge-grounded AI systems
+- **Multimodal AI** - Working with text, images, and mixed-media data
+- **Production AI Systems** - Scaling AI applications for real-world use
+
+### Platforms I Teach On
+- **[Coursera](https://www.coursera.org/)** - University-level courses with academic rigor
+- **[DeepLearning.AI](https://www.deeplearning.ai/)** - Industry-leading AI education platform
+- **[LinkedIn Learning](https://www.linkedin.com/learning/)** - Professional development focused content
+
+Want to collaborate on educational content? Feel free to reach out!
+
 <style>
 .course-grid {
   display: grid;
@@ -278,26 +301,3 @@ nav_order: 5
     <p style="margin: 0; color: var(--global-text-color-light);">Students Reached</p>
   </div>
 </div>
-
-## About My Teaching
-
-I'm passionate about making cutting-edge AI technologies accessible through education. My courses focus on practical, hands-on learning with real-world applications.
-
-### Teaching Philosophy
-- **Practical First**: Every concept is taught with immediate, applicable examples
-- **Production Ready**: Focus on techniques and patterns used in real systems
-- **Community Driven**: Courses designed based on community needs and feedback
-- **Accessible**: Complex topics broken down into digestible, actionable lessons
-
-### Course Topics
-- **Vector Databases & Embeddings** - The infrastructure powering modern AI
-- **Retrieval-Augmented Generation** - Building knowledge-grounded AI systems
-- **Multimodal AI** - Working with text, images, and mixed-media data
-- **Production AI Systems** - Scaling AI applications for real-world use
-
-### Platforms I Teach On
-- **[Coursera](https://www.coursera.org/)** - University-level courses with academic rigor
-- **[DeepLearning.AI](https://www.deeplearning.ai/)** - Industry-leading AI education platform
-- **[LinkedIn Learning](https://www.linkedin.com/learning/)** - Professional development focused content
-
-Want to collaborate on educational content? Feel free to reach out!
