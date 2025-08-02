@@ -127,50 +127,11 @@ Want to collaborate on educational content? Feel free to reach out!
   margin-top: 0.5rem;
 }
 
-.featured-course {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  margin-bottom: 2rem;
-}
-
-.featured-course .course-header {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.featured-course .course-title {
-  font-size: 1.6rem;
-  margin-bottom: 1rem;
-}
-
-.featured-course .course-platform {
-  font-size: 1rem;
-}
-
-.featured-course .course-content {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
 
 @media (max-width: 768px) {
   .course-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
-  }
-  
-  .featured-course {
-    grid-template-columns: 1fr;
-  }
-  
-  .featured-course .course-header,
-  .featured-course .course-content {
-    padding: 1.5rem;
   }
 }
 </style>
@@ -179,28 +140,26 @@ Want to collaborate on educational content? Feel free to reach out!
 
 <div class="course-grid">
 
-  <div class="course-grid">
-    <div class="course-card featured-course">
-      <div class="course-header">
-        <h2 class="course-title">Retrieval Augmented Generation</h2>
-        <div class="course-platform">Coursera</div>
-        <div class="platform-tag">University Course</div>
+  <div class="course-card">
+    <div class="course-header">
+      <h3 class="course-title">Retrieval Augmented Generation</h3>
+      <div class="course-platform">Coursera</div>
+      <div class="platform-tag">University Course</div>
+    </div>
+    <div class="course-content">
+      <p class="course-description">
+        A comprehensive course on RAG systems covering the fundamentals of retrieval-augmented generation, from basic concepts to advanced implementation techniques. Learn how to build production-ready RAG applications.
+      </p>
+      <div class="course-features">
+        <h4>What You'll Learn:</h4>
+        <ul>
+          <li>Fundamentals of RAG architecture</li>
+          <li>Vector databases and embeddings</li>
+          <li>Advanced retrieval techniques</li>
+          <li>Production deployment strategies</li>
+        </ul>
       </div>
-      <div class="course-content">
-        <p class="course-description">
-          A comprehensive course on RAG systems covering the fundamentals of retrieval-augmented generation, from basic concepts to advanced implementation techniques. Learn how to build production-ready RAG applications.
-        </p>
-        <div class="course-features">
-          <h4>What You'll Learn:</h4>
-          <ul>
-            <li>Fundamentals of RAG architecture</li>
-            <li>Vector databases and embeddings</li>
-            <li>Advanced retrieval techniques</li>
-            <li>Production deployment strategies</li>
-          </ul>
-        </div>
-        <a href="https://www.coursera.org/learn/retrieval-augmented-generation-rag" target="_blank" class="course-button">Take Course →</a>
-      </div>
+      <a href="https://www.coursera.org/learn/retrieval-augmented-generation-rag" target="_blank" class="course-button">Take Course →</a>
     </div>
   </div>
 
