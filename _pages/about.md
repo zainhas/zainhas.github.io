@@ -2,15 +2,13 @@
 layout: about
 title: about
 permalink: /
-subtitle: Staff AI/ML Engineer DevRel - Together AI
+subtitle: AI builder & teacher, AI/ML Together AI, @UofT Engineering ℕΨ, ex-(Vector DBs, Health tech, Lecturer) 🇨🇦🇵🇰
 
 profile:
   align: right
   image: prof_pic.jpg
   image_circular: false # crops the image to make it circular
-  more_info: >
-    <p>Staff AI/ML Engineer DevRel - Together AI</p>
-    <p>AI builder & teacher</p>
+  more_info: 
 
 selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
@@ -25,7 +23,5 @@ latest_posts:
   scrollable: true # adds a vertical scroll bar if there are more than 3 new posts items
   limit: 3 # leave blank to include all the blog posts
 ---
-
-AI builder & teacher, AI/ML Together AI, @UofT Engineering ℕΨ, ex-(Vector DBs, Health tech, Lecturer) 🇨🇦🇵🇰
 
 I'm passionate about making AI accessible and helping people build impactful solutions. Currently working as a Staff AI/ML Engineer DevRel at Together AI, where I combine technical expertise with education to help developers succeed with AI technologies.
