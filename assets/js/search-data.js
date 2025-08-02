@@ -55,7 +55,7 @@ ninja.data = [{
         
           title: "Advanced RAG Techniques",
         
-        description: "Learn how to improve the individual indexing, retrieval and generation parts of your RAG pipeline!",
+        description: "Learn how to improve the individual indexing, retreival and generation parts of your RAG pipeline!",
         section: "Posts",
         handler: () => {
           
@@ -70,7 +70,139 @@ ninja.data = [{
         section: "Posts",
         handler: () => {
           
-            window.location.href = "/blog/2024/matryoshka-embeddings/";
+            window.location.href = "/blog/2024/openais-matryoshka-embeddings/";
+          
+        },
+      },{id: "post-step-by-step-guide-to-choosing-the-best-embedding-model-for-your-application",
+        
+          title: "Step-by-Step Guide to Choosing the Best Embedding Model for Your Application",
+        
+        description: "How to select an embedding model for your search and retrieval-augmented generation system.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2024/how-to-choose-an-embedding-model/";
+          
+        },
+      },{id: "post-32x-reduced-memory-usage-with-binary-quantization",
+        
+          title: "32x Reduced Memory Usage With Binary Quantization",
+        
+        description: "In-depth technical breakdown of how binary quantization works and how to use it in Weaviate.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2024/binary-quantization/";
+          
+        },
+      },{id: "post-accelerating-vector-search-up-to-40-with-intel-s-latest-xeon-cpu-emerald-rapids",
+        
+          title: "Accelerating Vector Search up to +40% with Intel’s latest Xeon CPU - Emerald...",
+        
+        description: "Boosting Weaviate using SIMD-AVX512, Loop Unrolling and Compiler Optimizations",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2024/intel/";
+          
+        },
+      },{id: "post-multimodal-retrieval-augmented-generation-rag",
+        
+          title: "Multimodal Retrieval-Augmented Generation (RAG)",
+        
+        description: "Learn how to build Multimodal Retrieval Augmented Generation (MM-RAG) systems that combine text, images, audio, and video. Discover contrastive learning, any-to-any search with vector databases, and practical code examples using Weaviate and OpenAI GPT-4V.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/multimodal-RAG/";
+          
+        },
+      },{id: "post-how-to-reduce-memory-requirements-by-up-to-90-using-product-quantization",
+        
+          title: "How to Reduce Memory Requirements by up to 90%+ using Product Quantization",
+        
+        description: "The details behind how you can compress vectors using PQ with little loss of recall!",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/pq-rescoring/";
+          
+        },
+      },{id: "post-a-gentle-introduction-to-vector-databases",
+        
+          title: "A Gentle Introduction to Vector Databases",
+        
+        description: "What is a Vector Database? Explaination of core concepts, such as vector embeddings, vector search, and vector indexing",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/vector-database/";
+          
+        },
+      },{id: "post-multimodal-embedding-models",
+        
+          title: "Multimodal Embedding Models",
+        
+        description: "ML Models that can see, read, hear and more!",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/multimodal-models/";
+          
+        },
+      },{id: "post-running-large-language-models-privately-privategpt-and-beyond",
+        
+          title: "Running Large Language Models Privately - privateGPT and Beyond",
+        
+        description: "A discussion on data privacy and privacy-preserving machine learning for LLMs",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/private-LLM/";
+          
+        },
+      },{id: "post-how-to-create-your-own-chatgpt-plugin",
+        
+          title: "How to Create Your Own ChatGPT Plugin",
+        
+        description: "A show-and-tell of how we created the Weaviate Retrieval Plugin for ChatGPT",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/how-to-chatgpt-plugin/";
+          
+        },
+      },{id: "post-the-chatgpt-retrieval-plugin-weaviate-as-a-long-term-memory-store-for-generative-ai",
+        
+          title: "The ChatGPT Retrieval Plugin - Weaviate as a Long-term Memory Store for Generative...",
+        
+        description: "Learn how you can connect Weaviate to ChatGPT to generate customized responses.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/weaviate-retrieval-plugin/";
+          
+        },
+      },{id: "post-how-gpt4-0-and-other-large-language-models-work",
+        
+          title: "How GPT4.0 and other Large Language Models Work",
+        
+        description: "A gentle introduction to Large Language Models (LLMs) - how they work and what they learn.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/what-are-llms/";
+          
+        },
+      },{id: "post-how-a-i-creates-art-a-gentle-introduction-to-diffusion-models",
+        
+          title: "How A.I. Creates Art - A Gentle Introduction to Diffusion Models",
+        
+        description: "Machine learning models can create beautiful and novel images. Learn how Diffusion Models work and how you could make use of them.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2023/how-ai-creates-art/";
           
         },
       },{id: "post-vector-embeddings-explained",
@@ -82,6 +214,28 @@ ninja.data = [{
         handler: () => {
           
             window.location.href = "/blog/2023/vector-embeddings-explained/";
+          
+        },
+      },{id: "post-the-details-behind-the-sphere-dataset-in-weaviate",
+        
+          title: "The Details Behind the Sphere Dataset in Weaviate",
+        
+        description: "Learn about the hardware, software and performance metric specifications behind our ~1B object import of the Sphere dataset into Weaviate.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2022/details-behind-the-sphere-dataset-in-weaviate/";
+          
+        },
+      },{id: "post-the-sphere-dataset-in-weaviate",
+        
+          title: "The Sphere Dataset in Weaviate",
+        
+        description: "Learn how to import and query the Sphere dataset in Weaviate!",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2022/sphere-dataset-in-weaviate/";
           
         },
       },{id: "books-the-godfather",
