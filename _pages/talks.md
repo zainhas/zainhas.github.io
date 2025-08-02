@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /talks/
-title: talks
+title: Talks
 description: Conference talks, workshops, and presentations.
 nav: true
 nav_order: 4
@@ -14,7 +14,6 @@ I regularly speak at conferences, meetups, and webinars about:
 - **Retrieval-Augmented Generation (RAG)**
 - **Multimodal AI Applications**
 - **Large Language Model Fine-tuning**
-- **AI/ML Developer Relations**
 - **Coding Agents & AI Tools**
 
 Want me to speak at your event? Feel free to reach out through my social media links!
