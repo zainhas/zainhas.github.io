@@ -1,8 +1,8 @@
 ---
 layout: about
-title: about
+title: About
 permalink: /
-subtitle: AI builder & teacher, AI/ML Together AI, @UofT Engineering ℕΨ, ex-(Vector DBs, Health tech, Lecturer) 🇨🇦🇵🇰
+subtitle: AI builder & teacher, AI/ML Together AI, UofT ℕΨ Engineering, ex-(Vector DBs, Health tech, Lecturer) 🇨🇦🇵🇰
 
 profile:
   align: right
