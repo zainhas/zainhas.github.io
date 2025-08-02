@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /teaching/
-title: Teaching/Courses
+title: Teaching
 description: Online courses and educational content on AI, machine learning, and vector databases.
 nav: true
 nav_order: 5
