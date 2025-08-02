@@ -7,6 +7,18 @@ nav: true
 nav_order: 4
 ---
 
+### About These Talks
+
+I regularly speak at conferences, meetups, and webinars about:
+- **Vector Databases & Semantic Search**
+- **Retrieval-Augmented Generation (RAG)**
+- **Multimodal AI Applications**
+- **Large Language Model Fine-tuning**
+- **AI/ML Developer Relations**
+- **Coding Agents & AI Tools**
+
+Want me to speak at your event? Feel free to reach out through my social media links!
+
 <style>
 .video-grid {
   display: grid;
@@ -72,94 +84,14 @@ nav_order: 4
   font-weight: 500;
 }
 
-.featured-videos {
-  margin-bottom: 3rem;
-}
-
-.featured-video-card {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  background: var(--global-card-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 2rem;
-}
-
-.featured-video-embed {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56.25%;
-}
-
-.featured-video-embed iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.featured-video-content {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.featured-video-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: var(--global-text-color);
-  line-height: 1.3;
-}
-
-.featured-video-meta {
-  font-size: 1rem;
-  color: var(--global-text-color-light);
-  margin-bottom: 0.5rem;
-}
-
-.featured-video-channel {
-  font-size: 0.9rem;
-  color: var(--global-theme-color);
-  font-weight: 600;
-}
 
 @media (max-width: 768px) {
   .video-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
-  .featured-video-card {
-    grid-template-columns: 1fr;
-  }
-  
-  .featured-video-content {
-    padding: 1.5rem;
-  }
 }
 </style>
-
-## Featured Presentations
-
-<div class="featured-videos">
-  <div class="featured-video-card">
-    <div class="featured-video-embed">
-      <iframe src="https://www.youtube.com/embed/kS9DazKNX-Y" allowfullscreen></iframe>
-    </div>
-    <div class="featured-video-content">
-      <h2 class="featured-video-title">Semantic Search: A Deep Dive Into Vector Databases</h2>
-      <div class="featured-video-meta">1:02:12 • 19K views</div>
-      <div class="featured-video-channel">Developer Voices</div>
-    </div>
-  </div>
-</div>
 
 ## All Talks & Presentations
 
@@ -650,17 +582,3 @@ nav_order: 4
 </div>
 
 </div>
-
----
-
-### About These Talks
-
-I regularly speak at conferences, meetups, and webinars about:
-- **Vector Databases & Semantic Search**
-- **Retrieval-Augmented Generation (RAG)**
-- **Multimodal AI Applications**
-- **Large Language Model Fine-tuning**
-- **AI/ML Developer Relations**
-- **Coding Agents & AI Tools**
-
-Want me to speak at your event? Feel free to reach out through my social media links!
