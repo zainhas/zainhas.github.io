@@ -107,73 +107,11 @@ nav_order: 3
   font-weight: 500;
 }
 
-.featured-section {
-  margin-bottom: 3rem;
-}
-
-.featured-card {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  background: var(--global-card-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 2rem;
-}
-
-.featured-image {
-  width: 100%;
-  height: 300px;
-  object-fit: cover;
-}
-
-.featured-content {
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.featured-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: var(--global-text-color);
-}
-
-.featured-title a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.featured-title a:hover {
-  color: var(--global-theme-color);
-}
-
-.featured-description {
-  font-size: 1.1rem;
-  color: var(--global-text-color-light);
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
-}
 
 @media (max-width: 768px) {
   .blog-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
-  }
-  
-  .featured-card {
-    grid-template-columns: 1fr;
-  }
-  
-  .featured-image {
-    height: 200px;
-  }
-  
-  .featured-content {
-    padding: 1.5rem;
   }
 }
 </style>
@@ -186,38 +124,6 @@ Display them in chronological order (newest first)
 {% assign weaviate_posts = site.data.weaviate_posts.weaviate_posts %}
 {% assign external_posts = site.data.weaviate_posts.external_posts %}
 
-{% comment %} Find featured post - Advanced RAG {% endcomment %}
-{% assign featured_post = nil %}
-{% for post in weaviate_posts %}
-  {% if post.featured == true %}
-    {% assign featured_post = post %}
-    {% break %}
-  {% endif %}
-{% endfor %}
-
-## Featured Article
-
-{% if featured_post %}
-<div class="featured-card">
-  <div class="featured-content">
-    <h2 class="featured-title">
-      <a href="{{ featured_post.url }}" target="_blank">{{ featured_post.title }}<span class="external-link-icon">↗</span></a>
-    </h2>
-    <p class="featured-description">
-      {{ featured_post.description }}
-    </p>
-    <div class="blog-meta">
-      <span class="blog-date">{{ featured_post.date | date: "%B %d, %Y" }}</span>
-      <div class="blog-tags">
-        <span class="external-tag">{{ featured_post.source }}</span>
-        {% for tag in featured_post.tags limit: 2 %}
-          <span class="blog-tag">{{ tag }}</span>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
 
 ## All Articles
 
@@ -233,11 +139,9 @@ Display them in chronological order (newest first)
 
 {% comment %} Add Weaviate posts with their dates for sorting {% endcomment %}
 {% for post in weaviate_posts %}
-  {% unless post.featured == true %}
-    {% assign date_string = post.date | date: "%Y%m%d" %}
-    {% assign post_with_sort = post.title | prepend: date_string | append: "|weaviate|" | append: forloop.index0 %}
-    {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
-  {% endunless %}
+  {% assign date_string = post.date | date: "%Y%m%d" %}
+  {% assign post_with_sort = post.title | prepend: date_string | append: "|weaviate|" | append: forloop.index0 %}
+  {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
 {% endfor %}
 
 {% assign sorted_post_refs = all_posts_with_dates | sort | reverse %}

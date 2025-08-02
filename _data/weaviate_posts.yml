@@ -137,7 +137,6 @@ weaviate_posts:
     tags: ["rag", "advanced"]
     source: "Weaviate"
     type: "external"
-    featured: true
 
 # External posts from other sources (keeping existing ones)
 external_posts:
