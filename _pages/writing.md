@@ -179,17 +179,17 @@ nav_order: 3
 </style>
 
 {% comment %}
-Get internal posts from _posts and external posts from _data
+Get all posts from external data sources
 Display them in chronological order (newest first)
 {% endcomment %}
 
-{% assign internal_posts = site.posts | where: "categories", "technical-blog" %}
-{% assign external_posts = site.data.all_posts.external_posts %}
+{% assign weaviate_posts = site.data.weaviate_posts.weaviate_posts %}
+{% assign external_posts = site.data.weaviate_posts.external_posts %}
 
 {% comment %} Find featured post - Advanced RAG {% endcomment %}
 {% assign featured_post = nil %}
-{% for post in internal_posts %}
-  {% if post.title contains "Advanced RAG" %}
+{% for post in weaviate_posts %}
+  {% if post.featured == true %}
     {% assign featured_post = post %}
     {% break %}
   {% endif %}
@@ -199,12 +199,9 @@ Display them in chronological order (newest first)
 
 {% if featured_post %}
 <div class="featured-card">
-  {% if featured_post.thumbnail %}
-    <img src="{{ featured_post.thumbnail }}" alt="{{ featured_post.title }}" class="featured-image">
-  {% endif %}
   <div class="featured-content">
     <h2 class="featured-title">
-      <a href="{{ featured_post.url | relative_url }}">{{ featured_post.title }}</a>
+      <a href="{{ featured_post.url }}" target="_blank">{{ featured_post.title }}<span class="external-link-icon">↗</span></a>
     </h2>
     <p class="featured-description">
       {{ featured_post.description }}
@@ -212,8 +209,8 @@ Display them in chronological order (newest first)
     <div class="blog-meta">
       <span class="blog-date">{{ featured_post.date | date: "%B %d, %Y" }}</span>
       <div class="blog-tags">
-        {% assign tag_array = featured_post.tags | split: " " %}
-        {% for tag in tag_array limit: 3 %}
+        <span class="external-tag">{{ featured_post.source }}</span>
+        {% for tag in featured_post.tags limit: 2 %}
           <span class="blog-tag">{{ tag }}</span>
         {% endfor %}
       </div>
@@ -227,18 +224,18 @@ Display them in chronological order (newest first)
 {% comment %} Create a combined array manually sorted by date {% endcomment %}
 {% assign all_posts_with_dates = "" | split: "" %}
 
-{% comment %} Add external posts with their dates for sorting {% endcomment %}
+{% comment %} Add external posts (Together AI, etc.) with their dates for sorting {% endcomment %}
 {% for post in external_posts %}
   {% assign date_string = post.date | date: "%Y%m%d" %}
   {% assign post_with_sort = post.title | prepend: date_string | append: "|external|" | append: forloop.index0 %}
   {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
 {% endfor %}
 
-{% comment %} Add internal posts with their dates for sorting {% endcomment %}
-{% for post in internal_posts %}
-  {% unless post == featured_post %}
+{% comment %} Add Weaviate posts with their dates for sorting {% endcomment %}
+{% for post in weaviate_posts %}
+  {% unless post.featured == true %}
     {% assign date_string = post.date | date: "%Y%m%d" %}
-    {% assign post_with_sort = post.title | prepend: date_string | append: "|internal|" | append: forloop.index0 %}
+    {% assign post_with_sort = post.title | prepend: date_string | append: "|weaviate|" | append: forloop.index0 %}
     {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
   {% endunless %}
 {% endfor %}
@@ -253,50 +250,29 @@ Display them in chronological order (newest first)
   
   {% if post_type == "external" %}
     {% assign current_post = external_posts[post_index] %}
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="{{ current_post.url }}" target="_blank">{{ current_post.title }}<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          {{ current_post.description }}
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">{{ current_post.date | date: "%B %d, %Y" }}</span>
-          <div class="blog-tags">
-            <span class="external-tag">{{ current_post.source }}</span>
-            {% for tag in current_post.tags limit: 2 %}
-              <span class="blog-tag">{{ tag }}</span>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </div>
   {% else %}
-    {% assign current_post = internal_posts[post_index] %}
-    <div class="blog-card">
-      {% if current_post.thumbnail %}
-        <img src="{{ current_post.thumbnail }}" alt="{{ current_post.title }}" class="blog-thumbnail">
-      {% endif %}
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="{{ current_post.url | relative_url }}">{{ current_post.title }}</a>
-        </h3>
-        <p class="blog-description">
-          {{ current_post.description }}
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">{{ current_post.date | date: "%B %d, %Y" }}</span>
-          <div class="blog-tags">
-            {% assign tag_array = current_post.tags | split: " " %}
-            {% for tag in tag_array limit: 3 %}
-              <span class="blog-tag">{{ tag }}</span>
-            {% endfor %}
-          </div>
+    {% assign current_post = weaviate_posts[post_index] %}
+  {% endif %}
+  
+  <div class="blog-card">
+    <div class="blog-content">
+      <h3 class="blog-title">
+        <a href="{{ current_post.url }}" target="_blank">{{ current_post.title }}<span class="external-link-icon">↗</span></a>
+      </h3>
+      <p class="blog-description">
+        {{ current_post.description }}
+      </p>
+      <div class="blog-meta">
+        <span class="blog-date">{{ current_post.date | date: "%B %d, %Y" }}</span>
+        <div class="blog-tags">
+          <span class="external-tag">{{ current_post.source }}</span>
+          {% for tag in current_post.tags limit: 2 %}
+            <span class="blog-tag">{{ tag }}</span>
+          {% endfor %}
         </div>
       </div>
     </div>
-  {% endif %}
+  </div>
 {% endfor %}
 </div>
 

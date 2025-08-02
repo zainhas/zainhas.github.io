@@ -1,0 +1,206 @@
+# All blog posts - now external links to Weaviate blog
+# Includes original Weaviate posts + existing external posts from other sources
+
+weaviate_posts:
+  - title: "The Sphere Dataset in Weaviate"
+    date: 2022-12-06
+    url: "https://weaviate.io/blog/sphere-dataset-in-weaviate"
+    description: "Learn how to import and query the Sphere dataset in Weaviate!"
+    tags: ["datasets", "tutorial"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "The Details Behind the Sphere Dataset in Weaviate"
+    date: 2022-12-27
+    url: "https://weaviate.io/blog/details-behind-the-sphere-dataset-in-weaviate"
+    description: "Learn about the hardware, software and performance metric specifications behind our ~1B object import of the Sphere dataset into Weaviate."
+    tags: ["datasets", "performance"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Vector Embeddings Explained"
+    date: 2023-01-16
+    url: "https://weaviate.io/blog/vector-embeddings-explained"
+    description: "Get an intuitive understanding of what exactly vector embeddings are, how they're generated, and how they're used in semantic search."
+    tags: ["concepts", "embeddings"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "How AI Creates Art"
+    date: 2023-01-24
+    url: "https://weaviate.io/blog/how-ai-creates-art"
+    description: "Machine learning models can create beautiful and novel images. Learn how Diffusion Models work and how you could make use of them."
+    tags: ["concepts", "ai-art"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "What are LLMs"
+    date: 2023-03-23
+    url: "https://weaviate.io/blog/what-are-llms"
+    description: "A gentle introduction to Large Language Models (LLMs) - how they work and what they learn."
+    tags: ["concepts", "llms"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Weaviate Retrieval Plugin"
+    date: 2023-04-04
+    url: "https://weaviate.io/blog/weaviate-retrieval-plugin"
+    description: "Learn how you can connect Weaviate to ChatGPT to generate customized responses."
+    tags: ["tutorial", "chatgpt"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "How to ChatGPT Plugin"
+    date: 2023-04-27
+    url: "https://weaviate.io/blog/how-to-chatgpt-plugin"
+    description: "A show-and-tell of how we created the Weaviate Retrieval Plugin for ChatGPT"
+    tags: ["tutorial", "chatgpt"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Private LLM"
+    date: 2023-05-30
+    url: "https://weaviate.io/blog/private-LLM"
+    description: "A discussion on data privacy and privacy-preserving machine learning for LLMs"
+    tags: ["privacy", "llms"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Multimodal Models"
+    date: 2023-06-27
+    url: "https://weaviate.io/blog/multimodal-models"
+    description: "ML Models that can see, read, hear and more!"
+    tags: ["multimodal", "concepts"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "A Gentle Introduction to Vector Databases"
+    date: 2023-08-01
+    url: "https://weaviate.io/blog/what-is-a-vector-database"
+    description: "What is a Vector Database? Explanation of core concepts, such as vector embeddings, vector search, and vector indexing"
+    tags: ["concepts", "vector-databases"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "How to Reduce Memory Requirements by up to 90%+ using Product Quantization"
+    date: 2023-09-19
+    url: "https://weaviate.io/blog/pq-rescoring"
+    description: "The details behind how you can compress vectors using PQ with little loss of recall!"
+    tags: ["optimization", "quantization"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Multimodal Retrieval-Augmented Generation (RAG)"
+    date: 2023-12-05
+    url: "https://weaviate.io/blog/multimodal-RAG"
+    description: "Learn how to build Multimodal Retrieval Augmented Generation (MM-RAG) systems that combine text, images, audio, and video. Discover contrastive learning, any-to-any search with vector databases, and practical code examples using Weaviate and OpenAI GPT-4V."
+    tags: ["multimodal", "rag"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Accelerating Vector Search up to +40% with Intel's latest Xeon CPU - Emerald Rapids"
+    date: 2024-03-26
+    url: "https://weaviate.io/blog/intel"
+    description: "Boosting Weaviate using SIMD-AVX512, Loop Unrolling and Compiler Optimizations"
+    tags: ["performance", "hardware"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "32x Reduced Memory Usage With Binary Quantization"
+    date: 2024-04-02
+    url: "https://weaviate.io/blog/binary-quantization"
+    description: "In-depth technical breakdown of how binary quantization works and how to use it in Weaviate."
+    tags: ["optimization", "quantization"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Step-by-Step Guide to Choosing the Best Embedding Model for Your Application"
+    date: 2024-06-04
+    url: "https://weaviate.io/blog/how-to-choose-an-embedding-model"
+    description: "How to select an embedding model for your search and retrieval-augmented generation system."
+    tags: ["tutorial", "embeddings"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "OpenAI's Matryoshka Embeddings"
+    date: 2024-06-18
+    url: "https://weaviate.io/blog/openais-matryoshka-embeddings-in-weaviate"
+    description: "How to use OpenAI's embedding models trained with Matryoshka Representation Learning in a vector database like Weaviate"
+    tags: ["embeddings", "openai"]
+    source: "Weaviate"
+    type: "external"
+
+  - title: "Advanced RAG Techniques"
+    date: 2024-07-25
+    url: "https://weaviate.io/blog/advanced-rag"
+    description: "Learn how to improve the individual indexing, retrieval and generation parts of your RAG pipeline!"
+    tags: ["rag", "advanced"]
+    source: "Weaviate"
+    type: "external"
+    featured: true
+
+# External posts from other sources (keeping existing ones)
+external_posts:
+  - title: "Back to The Future: Evaluating AI Agents on Predicting Future Events"
+    date: 2025-07-17
+    url: "https://www.together.ai/blog/futurebench"
+    description: "A comprehensive benchmark for evaluating AI agents on their ability to predict future events and outcomes."
+    tags: ["AI Agents", "Evaluation"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Together Evaluations: Benchmark Models for Your Tasks"
+    date: 2025-07-28
+    url: "https://www.together.ai/blog/introducing-together-evaluations"
+    description: "Introducing a comprehensive evaluation framework for benchmarking AI models across various tasks and domains."
+    tags: ["Evaluation", "Benchmarks"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "From Zero to One: Building An Autonomous Data Scientist Agent"
+    date: 2025-06-12
+    url: "https://www.together.ai/blog/building-an-autonomous-and-open-data-scientist-agent-from-scratch"
+    description: "A technical deep dive into building an autonomous AI agent capable of performing data science tasks from scratch."
+    tags: ["AI Agents", "Data Science"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Direct Preference Optimization: A Technical Deep Dive"
+    date: 2025-04-17
+    url: "https://www.together.ai/blog/direct-preference-optimization"
+    description: "An in-depth exploration of Direct Preference Optimization techniques for improving AI model alignment and performance."
+    tags: ["Fine-tuning", "Optimization"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Continued Fine‑tuning of LLMs: A Technical Deep Dive"
+    date: 2025-04-17
+    url: "https://www.together.ai/blog/continued-fine-tuning"
+    description: "Comprehensive guide to continued fine-tuning techniques for large language models, covering advanced optimization strategies."
+    tags: ["LLMs", "Fine-tuning"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Open Deep Research"
+    date: 2025-04-16
+    url: "https://www.together.ai/blog/open-deep-research"
+    description: "Exploring the principles and practices of open research in deep learning and artificial intelligence."
+    tags: ["Research", "Open Source"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Long Context Fine‑Tuning: A Technical Deep Dive"
+    date: 2024-11-25
+    url: "https://www.together.ai/blog/long-context-fine-tuning-a-technical-deep-dive"
+    description: "Advanced techniques for fine-tuning language models with extended context windows, enabling better long-form understanding."
+    tags: ["Long Context", "Fine-tuning"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Multimodal Document RAG with Llama 3.2 Vision and ColQwen2"
+    date: 2024-10-08
+    url: "https://www.together.ai/blog/multimodal-document-rag-with-llama-3-2-vision-and-colqwen2"
+    description: "Building advanced retrieval-augmented generation systems that can process both text and visual document content using state-of-the-art models."
+    tags: ["Multimodal", "RAG"]
+    source: "Together AI"
+    type: "external"
