@@ -10,7 +10,7 @@ ninja.data = [{
       window.location.href = "/";
     },
   },{id: "nav-writing",
-          title: "writing",
+          title: "Writing",
           description: "Technical articles and insights on AI, machine learning, and vector databases.",
           section: "Navigation",
           handler: () => {
