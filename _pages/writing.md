@@ -1,11 +1,23 @@
 ---
 layout: page
 permalink: /writing/
-title: writing
+title: Writing
 description: Technical articles and insights on AI, machine learning, and vector databases.
 nav: true
 nav_order: 3
 ---
+
+### About My Writing
+
+I write about cutting-edge developments in AI/ML, with a focus on:
+
+- **Vector Databases & Semantic Search** - Deep dives into the technology powering modern AI applications
+- **Retrieval-Augmented Generation (RAG)** - Techniques for building knowledge-grounded AI systems  
+- **Embedding Models & Fine-tuning** - Practical guides for optimizing AI model performance
+- **Multimodal AI** - Exploring AI systems that work with text, images, and other modalities
+- **Developer Relations** - Bridging the gap between complex AI research and practical implementation
+
+My articles combine theoretical understanding with hands-on implementation guides, helping developers and researchers build better AI applications.
 
 <style>
 .blog-grid {
@@ -179,17 +191,3 @@ Display them in chronological order (newest first)
   </div>
 {% endfor %}
 </div>
-
----
-
-### About My Writing
-
-I write about cutting-edge developments in AI/ML, with a focus on:
-
-- **Vector Databases & Semantic Search** - Deep dives into the technology powering modern AI applications
-- **Retrieval-Augmented Generation (RAG)** - Techniques for building knowledge-grounded AI systems  
-- **Embedding Models & Fine-tuning** - Practical guides for optimizing AI model performance
-- **Multimodal AI** - Exploring AI systems that work with text, images, and other modalities
-- **Developer Relations** - Bridging the gap between complex AI research and practical implementation
-
-My articles combine theoretical understanding with hands-on implementation guides, helping developers and researchers build better AI applications.
