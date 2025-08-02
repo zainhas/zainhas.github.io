@@ -23,8 +23,8 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/talks/";
           },
-        },{id: "nav-teaching-courses",
-          title: "Teaching/Courses",
+        },{id: "nav-teaching",
+          title: "Teaching",
           description: "Online courses and educational content on AI, machine learning, and vector databases.",
           section: "Navigation",
           handler: () => {
