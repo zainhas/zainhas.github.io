@@ -11,12 +11,6 @@ nav_order: 5
 
 I'm passionate about making cutting-edge AI technologies accessible through education. My courses focus on practical, hands-on learning with real-world applications.
 
-### Teaching Philosophy
-- **Practical First**: Every concept is taught with immediate, applicable examples
-- **Production Ready**: Focus on techniques and patterns used in real systems
-- **Community Driven**: Courses designed based on community needs and feedback
-- **Accessible**: Complex topics broken down into digestible, actionable lessons
-
 ### Course Topics
 - **Vector Databases & Embeddings** - The infrastructure powering modern AI
 - **Retrieval-Augmented Generation** - Building knowledge-grounded AI systems
@@ -181,36 +175,57 @@ Want to collaborate on educational content? Feel free to reach out!
 }
 </style>
 
-## Featured Course
-
-<div class="course-grid">
-  <div class="course-card featured-course">
-    <div class="course-header">
-      <h2 class="course-title">Retrieval Augmented Generation</h2>
-      <div class="course-platform">Coursera</div>
-      <div class="platform-tag">University Course</div>
-    </div>
-    <div class="course-content">
-      <p class="course-description">
-        A comprehensive course on RAG systems covering the fundamentals of retrieval-augmented generation, from basic concepts to advanced implementation techniques. Learn how to build production-ready RAG applications.
-      </p>
-      <div class="course-features">
-        <h4>What You'll Learn:</h4>
-        <ul>
-          <li>Fundamentals of RAG architecture</li>
-          <li>Vector databases and embeddings</li>
-          <li>Advanced retrieval techniques</li>
-          <li>Production deployment strategies</li>
-        </ul>
-      </div>
-      <a href="https://www.coursera.org/learn/retrieval-augmented-generation-rag" target="_blank" class="course-button">Take Course →</a>
-    </div>
-  </div>
-</div>
-
 ## All Courses
 
 <div class="course-grid">
+
+  <div class="course-grid">
+    <div class="course-card featured-course">
+      <div class="course-header">
+        <h2 class="course-title">Retrieval Augmented Generation</h2>
+        <div class="course-platform">Coursera</div>
+        <div class="platform-tag">University Course</div>
+      </div>
+      <div class="course-content">
+        <p class="course-description">
+          A comprehensive course on RAG systems covering the fundamentals of retrieval-augmented generation, from basic concepts to advanced implementation techniques. Learn how to build production-ready RAG applications.
+        </p>
+        <div class="course-features">
+          <h4>What You'll Learn:</h4>
+          <ul>
+            <li>Fundamentals of RAG architecture</li>
+            <li>Vector databases and embeddings</li>
+            <li>Advanced retrieval techniques</li>
+            <li>Production deployment strategies</li>
+          </ul>
+        </div>
+        <a href="https://www.coursera.org/learn/retrieval-augmented-generation-rag" target="_blank" class="course-button">Take Course →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="course-card">
+    <div class="course-header">
+      <h3 class="course-title">Introduction to AI-Native Vector Databases</h3>
+      <div class="course-platform">LinkedIn Learning</div>
+      <div class="platform-tag">Professional Course</div>
+    </div>
+    <div class="course-content">
+      <p class="course-description">
+        Get introduced to the fundamentals of vector databases and their role in modern AI applications. Perfect for professionals looking to understand this critical AI infrastructure component.
+      </p>
+      <div class="course-features">
+        <h4>Key Topics:</h4>
+        <ul>
+          <li>Vector database fundamentals</li>
+          <li>AI-native database architectures</li>
+          <li>Use cases and applications</li>
+          <li>Industry best practices</li>
+        </ul>
+      </div>
+      <a href="https://www.linkedin.com/learning/introduction-to-ai-native-vector-databases" target="_blank" class="course-button">Take Course →</a>
+    </div>
+  </div>
 
   <div class="course-card">
     <div class="course-header">
@@ -258,46 +273,4 @@ Want to collaborate on educational content? Feel free to reach out!
     </div>
   </div>
 
-  <div class="course-card">
-    <div class="course-header">
-      <h3 class="course-title">Introduction to AI-Native Vector Databases</h3>
-      <div class="course-platform">LinkedIn Learning</div>
-      <div class="platform-tag">Professional Course</div>
-    </div>
-    <div class="course-content">
-      <p class="course-description">
-        Get introduced to the fundamentals of vector databases and their role in modern AI applications. Perfect for professionals looking to understand this critical AI infrastructure component.
-      </p>
-      <div class="course-features">
-        <h4>Key Topics:</h4>
-        <ul>
-          <li>Vector database fundamentals</li>
-          <li>AI-native database architectures</li>
-          <li>Use cases and applications</li>
-          <li>Industry best practices</li>
-        </ul>
-      </div>
-      <a href="https://www.linkedin.com/learning/introduction-to-ai-native-vector-databases" target="_blank" class="course-button">Take Course →</a>
-    </div>
-  </div>
-
-</div>
-
----
-
-## Course Statistics
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0; text-align: center;">
-  <div style="background: var(--global-card-bg-color); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--global-divider-color);">
-    <h3 style="color: var(--global-theme-color); margin-bottom: 0.5rem;">4</h3>
-    <p style="margin: 0; color: var(--global-text-color-light);">Courses Created</p>
-  </div>
-  <div style="background: var(--global-card-bg-color); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--global-divider-color);">
-    <h3 style="color: var(--global-theme-color); margin-bottom: 0.5rem;">3</h3>
-    <p style="margin: 0; color: var(--global-text-color-light);">Platforms</p>
-  </div>
-  <div style="background: var(--global-card-bg-color); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--global-divider-color);">
-    <h3 style="color: var(--global-theme-color); margin-bottom: 0.5rem;">1000s</h3>
-    <p style="margin: 0; color: var(--global-text-color-light);">Students Reached</p>
-  </div>
 </div>
