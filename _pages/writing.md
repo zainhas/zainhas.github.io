@@ -98,10 +98,6 @@ nav_order: 3
   opacity: 0.7;
 }
 
-.external-posts {
-  margin-top: 3rem;
-}
-
 .external-tag {
   background: #2563eb;
   color: white;
@@ -182,277 +178,126 @@ nav_order: 3
 }
 </style>
 
+{% comment %}
+Get internal posts from _posts and external posts from _data
+Display them in chronological order (newest first)
+{% endcomment %}
+
+{% assign internal_posts = site.posts | where: "categories", "technical-blog" %}
+{% assign external_posts = site.data.all_posts.external_posts %}
+
+{% comment %} Find featured post - Advanced RAG {% endcomment %}
+{% assign featured_post = nil %}
+{% for post in internal_posts %}
+  {% if post.title contains "Advanced RAG" %}
+    {% assign featured_post = post %}
+    {% break %}
+  {% endif %}
+{% endfor %}
+
 ## Featured Article
 
+{% if featured_post %}
 <div class="featured-card">
-  <img src="/assets/img/posts/2024-07-25-advanced-rag/hero.png" alt="Advanced RAG Techniques" class="featured-image">
+  {% if featured_post.thumbnail %}
+    <img src="{{ featured_post.thumbnail }}" alt="{{ featured_post.title }}" class="featured-image">
+  {% endif %}
   <div class="featured-content">
     <h2 class="featured-title">
-      <a href="{{ '/blog/2024/advanced-rag/' | relative_url }}">Advanced RAG Techniques</a>
+      <a href="{{ featured_post.url | relative_url }}">{{ featured_post.title }}</a>
     </h2>
     <p class="featured-description">
-      Learn how to improve the individual indexing, retrieval and generation parts of your RAG pipeline! From semantic chunking to query rewriting, discover practical tips and tricks used in production systems.
+      {{ featured_post.description }}
     </p>
     <div class="blog-meta">
-      <span class="blog-date">July 25, 2024</span>
+      <span class="blog-date">{{ featured_post.date | date: "%B %d, %Y" }}</span>
       <div class="blog-tags">
-        <span class="blog-tag">RAG</span>
-        <span class="blog-tag">Vector Databases</span>
-        <span class="blog-tag">AI</span>
+        {% assign tag_array = featured_post.tags | split: " " %}
+        {% for tag in tag_array limit: 3 %}
+          <span class="blog-tag">{{ tag }}</span>
+        {% endfor %}
       </div>
     </div>
   </div>
 </div>
-
-## Recent Articles
-
-<div class="blog-grid">
-
-<div class="blog-card">
-  <img src="/assets/img/posts/2024-06-18-openais-matryoshka-embeddings/hero.png" alt="Matryoshka Embeddings" class="blog-thumbnail">
-  <div class="blog-content">
-    <h3 class="blog-title">
-      <a href="{{ '/blog/2024/matryoshka-embeddings/' | relative_url }}">OpenAI's Matryoshka Embeddings in Weaviate</a>
-    </h3>
-    <p class="blog-description">
-      How to use OpenAI's embedding models trained with Matryoshka Representation Learning in a vector database like Weaviate.
-    </p>
-    <div class="blog-meta">
-      <span class="blog-date">June 18, 2024</span>
-      <div class="blog-tags">
-        <span class="blog-tag">Embeddings</span>
-        <span class="blog-tag">OpenAI</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="blog-card">
-  <img src="/assets/img/posts/2023-01-16-vector-embeddings-explained/hero.png" alt="Vector Embeddings" class="blog-thumbnail">
-  <div class="blog-content">
-    <h3 class="blog-title">
-      <a href="{{ '/blog/2023/vector-embeddings-explained/' | relative_url }}">Vector Embeddings Explained</a>
-    </h3>
-    <p class="blog-description">
-      Get an intuitive understanding of what exactly vector embeddings are, how they're generated, and how they're used in semantic search.
-    </p>
-    <div class="blog-meta">
-      <span class="blog-date">January 16, 2023</span>
-      <div class="blog-tags">
-        <span class="blog-tag">Concepts</span>
-        <span class="blog-tag">Embeddings</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-</div>
+{% endif %}
 
 ## All Articles
 
-{% assign blog_posts = site.posts | where: "categories", "technical-blog" %}
-{% if blog_posts.size > 0 %}
-  <div class="posts-list">
-    {% for post in blog_posts %}
-      <div class="post-item">
-        <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-        <p class="post-meta">{{ post.date | date: "%B %d, %Y" }}</p>
-        {% if post.description %}
-          <p class="post-description">{{ post.description }}</p>
-        {% endif %}
-        {% if post.tags %}
-          <div class="post-tags">
-            {% for tag in post.tags limit: 3 %}
-              <span class="tag">{{ tag }}</span>
+{% comment %} Create a combined array manually sorted by date {% endcomment %}
+{% assign all_posts_with_dates = "" | split: "" %}
+
+{% comment %} Add external posts with their dates for sorting {% endcomment %}
+{% for post in external_posts %}
+  {% assign date_string = post.date | date: "%Y%m%d" %}
+  {% assign post_with_sort = post.title | prepend: date_string | append: "|external|" | append: forloop.index0 %}
+  {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
+{% endfor %}
+
+{% comment %} Add internal posts with their dates for sorting {% endcomment %}
+{% for post in internal_posts %}
+  {% unless post == featured_post %}
+    {% assign date_string = post.date | date: "%Y%m%d" %}
+    {% assign post_with_sort = post.title | prepend: date_string | append: "|internal|" | append: forloop.index0 %}
+    {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
+  {% endunless %}
+{% endfor %}
+
+{% assign sorted_post_refs = all_posts_with_dates | sort | reverse %}
+
+<div class="blog-grid">
+{% for post_ref in sorted_post_refs %}
+  {% assign ref_parts = post_ref | split: "|" %}
+  {% assign post_type = ref_parts[1] %}
+  {% assign post_index = ref_parts[2] | plus: 0 %}
+  
+  {% if post_type == "external" %}
+    {% assign current_post = external_posts[post_index] %}
+    <div class="blog-card">
+      <div class="blog-content">
+        <h3 class="blog-title">
+          <a href="{{ current_post.url }}" target="_blank">{{ current_post.title }}<span class="external-link-icon">↗</span></a>
+        </h3>
+        <p class="blog-description">
+          {{ current_post.description }}
+        </p>
+        <div class="blog-meta">
+          <span class="blog-date">{{ current_post.date | date: "%B %d, %Y" }}</span>
+          <div class="blog-tags">
+            <span class="external-tag">{{ current_post.source }}</span>
+            {% for tag in current_post.tags limit: 2 %}
+              <span class="blog-tag">{{ tag }}</span>
             {% endfor %}
           </div>
-        {% endif %}
+        </div>
       </div>
-      <hr>
-    {% endfor %}
-  </div>
-{% else %}
-  <div class="posts-list">
-    {% for post in site.posts limit: 10 %}
-      <div class="post-item">
-        <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-        <p class="post-meta">{{ post.date | date: "%B %d, %Y" }}</p>
-        {% if post.description %}
-          <p class="post-description">{{ post.description }}</p>
-        {% else %}
-          <p class="post-description">{{ post.content | strip_html | truncate: 200 }}</p>
-        {% endif %}
-        {% if post.tags %}
-          <div class="post-tags">
-            {% for tag in post.tags limit: 3 %}
-              <span class="tag">{{ tag }}</span>
+    </div>
+  {% else %}
+    {% assign current_post = internal_posts[post_index] %}
+    <div class="blog-card">
+      {% if current_post.thumbnail %}
+        <img src="{{ current_post.thumbnail }}" alt="{{ current_post.title }}" class="blog-thumbnail">
+      {% endif %}
+      <div class="blog-content">
+        <h3 class="blog-title">
+          <a href="{{ current_post.url | relative_url }}">{{ current_post.title }}</a>
+        </h3>
+        <p class="blog-description">
+          {{ current_post.description }}
+        </p>
+        <div class="blog-meta">
+          <span class="blog-date">{{ current_post.date | date: "%B %d, %Y" }}</span>
+          <div class="blog-tags">
+            {% assign tag_array = current_post.tags | split: " " %}
+            {% for tag in tag_array limit: 3 %}
+              <span class="blog-tag">{{ tag }}</span>
             {% endfor %}
           </div>
-        {% endif %}
-      </div>
-      <hr>
-    {% endfor %}
-  </div>
-{% endif %}
-
-## Featured External Articles
-
-<div class="external-posts">
-  <div class="blog-grid">
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/futurebench" target="_blank">Back to The Future: Evaluating AI Agents on Predicting Future Events<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          A comprehensive benchmark for evaluating AI agents on their ability to predict future events and outcomes.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">July 17, 2025</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">AI Agents</span>
-            <span class="blog-tag">Evaluation</span>
-          </div>
         </div>
       </div>
     </div>
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/introducing-together-evaluations" target="_blank">Together Evaluations: Benchmark Models for Your Tasks<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          Introducing a comprehensive evaluation framework for benchmarking AI models across various tasks and domains.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">July 28, 2025</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">Evaluation</span>
-            <span class="blog-tag">Benchmarks</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/building-an-autonomous-and-open-data-scientist-agent-from-scratch" target="_blank">From Zero to One: Building An Autonomous Data Scientist Agent<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          A technical deep dive into building an autonomous AI agent capable of performing data science tasks from scratch.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">June 12, 2025</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">AI Agents</span>
-            <span class="blog-tag">Data Science</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/direct-preference-optimization" target="_blank">Direct Preference Optimization: A Technical Deep Dive<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          An in-depth exploration of Direct Preference Optimization techniques for improving AI model alignment and performance.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">April 17, 2025</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">Fine-tuning</span>
-            <span class="blog-tag">Optimization</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/continued-fine-tuning" target="_blank">Continued Fine‑tuning of LLMs: A Technical Deep Dive<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          Comprehensive guide to continued fine-tuning techniques for large language models, covering advanced optimization strategies.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">April 17, 2025</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">LLMs</span>
-            <span class="blog-tag">Fine-tuning</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/open-deep-research" target="_blank">Open Deep Research<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          Exploring the principles and practices of open research in deep learning and artificial intelligence.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">April 16, 2025</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">Research</span>
-            <span class="blog-tag">Open Source</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/long-context-fine-tuning-a-technical-deep-dive" target="_blank">Long Context Fine‑Tuning: A Technical Deep Dive<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          Advanced techniques for fine-tuning language models with extended context windows, enabling better long-form understanding.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">November 25, 2024</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">Long Context</span>
-            <span class="blog-tag">Fine-tuning</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="blog-card">
-      <div class="blog-content">
-        <h3 class="blog-title">
-          <a href="https://www.together.ai/blog/multimodal-document-rag-with-llama-3-2-vision-and-colqwen2" target="_blank">Multimodal Document RAG with Llama 3.2 Vision and ColQwen2<span class="external-link-icon">↗</span></a>
-        </h3>
-        <p class="blog-description">
-          Building advanced retrieval-augmented generation systems that can process both text and visual document content using state-of-the-art models.
-        </p>
-        <div class="blog-meta">
-          <span class="blog-date">October 8, 2024</span>
-          <div class="blog-tags">
-            <span class="external-tag">Together AI</span>
-            <span class="blog-tag">Multimodal</span>
-            <span class="blog-tag">RAG</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  {% endif %}
+{% endfor %}
 </div>
 
 ---
