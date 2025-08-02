@@ -9,14 +9,7 @@ ninja.data = [{
     handler: () => {
       window.location.href = "/";
     },
-  },{id: "nav-projects",
-          title: "projects",
-          description: "A growing collection of your cool projects.",
-          section: "Navigation",
-          handler: () => {
-            window.location.href = "/projects/";
-          },
-        },{id: "nav-writing",
+  },{id: "nav-writing",
           title: "writing",
           description: "Technical articles and insights on AI, machine learning, and vector databases.",
           section: "Navigation",
@@ -36,20 +29,6 @@ ninja.data = [{
           section: "Navigation",
           handler: () => {
             window.location.href = "/teaching/";
-          },
-        },{id: "nav-code",
-          title: "code",
-          description: "Open source projects, GitHub repositories, and code contributions.",
-          section: "Navigation",
-          handler: () => {
-            window.location.href = "/code/";
-          },
-        },{id: "nav-cv",
-          title: "cv",
-          description: "This is a description of the page. You can modify it in &#39;_pages/cv.md&#39;. You can also change or remove the top pdf download button.",
-          section: "Navigation",
-          handler: () => {
-            window.location.href = "/cv/";
           },
         },{id: "books-the-godfather",
           title: 'The Godfather',
