@@ -32,7 +32,7 @@ ninja.data = [{
           },
         },{id: "nav-teaching-courses",
           title: "Teaching/Courses",
-          description: "Materials for courses and teaching activities.",
+          description: "Online courses and educational content on AI, machine learning, and vector databases.",
           section: "Navigation",
           handler: () => {
             window.location.href = "/teaching/";
