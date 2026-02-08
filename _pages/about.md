@@ -24,6 +24,8 @@ latest_posts:
   limit: 3 # leave blank to include all the blog posts
 ---
 
-I'm passionate about making AI accessible and helping people build impactful solutions. Currently working as a **Staff AI/ML Engineer - DX** at [Together AI](https://www.together.ai/), where I combine technical expertise with education to help developers succeed with AI technologies.
+I build and teach AI. Currently a **Staff AI/ML Engineer - DX** at [Together AI](https://www.together.ai/), focused on large-scale models, tooling, and developer education.
 
-Previously, I worked on developer education for vector databases and semantic search. I've taught courses on [Coursera](https://www.coursera.org/learn/retrieval-augmented-generation-rag) and [DeepLearning.AI](https://www.deeplearning.ai/), and spoken at 40+ conferences worldwide on topics like RAG, multimodal AI, and LLM fine-tuning.
+I studied Engineering Science (ℕΨ) and did PhD work at the University of Toronto. Previously worked on vector databases at Weaviate, did data science in industry, and co-founded a health tech startup (Vinci Labs).
+
+I teach on [Coursera](https://www.coursera.org/learn/retrieval-augmented-generation-rag), [DeepLearning.AI](https://www.deeplearning.ai/), and [LinkedIn Learning](https://www.linkedin.com/learning/introduction-to-ai-native-vector-databases), and have spoken at 40+ conferences on RAG, multimodal AI, fine-tuning, and coding agents.
