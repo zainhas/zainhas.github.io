@@ -141,7 +141,6 @@ html[data-theme="dark"] .blog-tag {
 }
 </style>
 
-
 {% comment %}
 Get all posts from external data sources
 Display them in chronological order (newest first)
@@ -150,22 +149,21 @@ Display them in chronological order (newest first)
 {% assign weaviate_posts = site.data.weaviate_posts.weaviate_posts %}
 {% assign external_posts = site.data.weaviate_posts.external_posts %}
 
-
 {% comment %} Create a combined array manually sorted by date {% endcomment %}
 {% assign all_posts_with_dates = "" | split: "" %}
 
 {% comment %} Add external posts (Together AI, etc.) with their dates for sorting {% endcomment %}
 {% for post in external_posts %}
-  {% assign date_string = post.date | date: "%Y%m%d" %}
-  {% assign post_with_sort = post.title | prepend: date_string | append: "|external|" | append: forloop.index0 %}
-  {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
+{% assign date_string = post.date | date: "%Y%m%d" %}
+{% assign post_with_sort = post.title | prepend: date_string | append: "|external|" | append: forloop.index0 %}
+{% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
 {% endfor %}
 
 {% comment %} Add Weaviate posts with their dates for sorting {% endcomment %}
 {% for post in weaviate_posts %}
-  {% assign date_string = post.date | date: "%Y%m%d" %}
-  {% assign post_with_sort = post.title | prepend: date_string | append: "|weaviate|" | append: forloop.index0 %}
-  {% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
+{% assign date_string = post.date | date: "%Y%m%d" %}
+{% assign post_with_sort = post.title | prepend: date_string | append: "|weaviate|" | append: forloop.index0 %}
+{% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
 {% endfor %}
 
 {% assign sorted_post_refs = all_posts_with_dates | sort | reverse %}

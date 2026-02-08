@@ -1,7 +1,12 @@
 ---
 layout: default
 ---
-<script>document.addEventListener('DOMContentLoaded',function(){var c=document.querySelector('.container.mt-5');if(c)c.classList.replace('mt-5','mt-3');});</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var c = document.querySelector('.container.mt-5');
+    if (c) c.classList.replace('mt-5', 'mt-3');
+  });
+</script>
 <div class="post">
   {% if page.profile %}
     <div class="profile float-{% if page.profile.align == 'left' %}left{% else %}right{% endif %}" style="margin-top: 0;">

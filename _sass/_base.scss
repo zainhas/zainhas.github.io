@@ -5,10 +5,15 @@
 // Typography
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'cv11', 'ss01';
+  font-feature-settings: "cv11", "ss01";
   font-optical-sizing: auto;
   letter-spacing: -0.011em;
   line-height: 1.7;
@@ -204,7 +209,9 @@ ul.task-list input[type="checkbox"] {
   border: 1px solid var(--global-divider-color);
   border-radius: 12px;
   overflow: hidden;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 
   &:hover {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -245,7 +252,7 @@ ul.task-list input[type="checkbox"] {
   .more-info {
     margin-bottom: 5px;
     margin-top: 5px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-size: 0.85rem;
 
     p {
@@ -299,7 +306,9 @@ ul.task-list input[type="checkbox"] {
   background-color: rgba(250, 250, 249, 0.85);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 html[data-theme="dark"] .navbar {
@@ -369,7 +378,9 @@ html[data-theme="dark"] .dropdown-item:hover {
     letter-spacing: 0;
     padding: 0.5rem 0.85rem;
     border-radius: 8px;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease;
 
     &:hover {
       color: var(--global-hover-color);
@@ -506,7 +517,9 @@ html[data-theme="dark"] .dropdown-item:hover {
 
       i::before {
         color: var(--global-text-color-light);
-        transition: color 0.25s ease, transform 0.25s ease;
+        transition:
+          color 0.25s ease,
+          transform 0.25s ease;
       }
 
       &:hover {
@@ -1556,7 +1569,10 @@ body,
 .navbar,
 .card,
 .post-description {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 // ============================================================================
@@ -1597,8 +1613,9 @@ body,
 .course-card {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
-              transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition:
+    opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .blog-card.is-visible,
@@ -1631,7 +1648,9 @@ body,
   background-size: 0% 1px;
   background-position: center bottom;
   background-repeat: no-repeat;
-  transition: background-size 0.3s ease, color 0.2s ease;
+  transition:
+    background-size 0.3s ease,
+    color 0.2s ease;
   padding-bottom: 1px;
 
   &:hover {
@@ -1644,8 +1663,9 @@ body,
 // ============================================================================
 
 .profile img {
-  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
-              box-shadow 0.4s ease;
+  transition:
+    transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 0.4s ease;
 
   &:hover {
     transform: scale(1.02);
