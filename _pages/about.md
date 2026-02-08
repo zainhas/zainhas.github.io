@@ -2,7 +2,7 @@
 layout: about
 title: About
 permalink: /
-subtitle: Staff AI/ML Engineer - DX at Together AI. Building & teaching at the intersection of AI research and real-world systems.
+subtitle: "I build and teach AI • AI/ML Together AI • EngSci ℕΨ/PhD University of Toronto • Previously: vector DBs, data scientist, lecturer & health tech founder"
 
 profile:
   align: right
