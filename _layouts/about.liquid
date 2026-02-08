@@ -9,21 +9,43 @@ layout: default
 </script>
 <div class="post">
   {% if page.profile %}
+    <style>
+      .ascii-profile {
+        font-family: 'JetBrains Mono', 'DejaVu Sans Mono', 'Courier New', monospace;
+        font-size: 5px;
+        line-height: 1.05;
+        letter-spacing: 0.05em;
+        white-space: pre;
+        overflow: hidden;
+        color: var(--global-text-color);
+        background-color: transparent;
+        border-radius: 12px;
+        padding: 6px;
+        display: block;
+        width: fit-content;
+      }
+      .ascii-profile-mobile {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        .ascii-profile {
+          display: none;
+        }
+        .ascii-profile-mobile {
+          display: block;
+        }
+        .ascii-profile-mobile img {
+          width: 100%;
+          max-width: 320px;
+          border-radius: 12px;
+        }
+      }
+    </style>
     <div class="profile float-{% if page.profile.align == 'left' %}left{% else %}right{% endif %}" style="margin-top: 0;">
-      {% if page.profile.image %}
-        {% assign profile_image_path = page.profile.image | prepend: 'assets/img/' %}
-        {% if page.profile.image_circular %}
-          {% assign profile_image_class = 'img-fluid z-depth-1 rounded-circle' %}
-        {% else %}
-          {% assign profile_image_class = 'img-fluid z-depth-1 rounded' %}
-        {% endif %}
-        {% capture sizes %}(min-width: {{ site.max_width }}) {{ site.max_width | minus: 30 | times: 0.3}}px, (min-width: 576px)
-    30vw, 95vw"{% endcapture %}
-        {%
-          include figure.liquid loading="eager" path=profile_image_path class=profile_image_class sizes=sizes alt=page.profile.image
-          cache_bust=true
-        %}
-      {% endif %}
+      <pre class="ascii-profile">{% include prof_pic_ascii.txt %}</pre>
+      <div class="ascii-profile-mobile">
+        <img src="{{ 'assets/img/prof_pic_ascii.png' | relative_url }}" alt="Profile picture ASCII art" loading="eager">
+      </div>
       {% if page.profile.more_info %}
         <div class="more-info">{{ page.profile.more_info }}</div>
       {% endif %}
