@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /code/
-title: code
+title: Code
 description: Open source projects, GitHub repositories, and code contributions.
 nav: false
 nav_order: 6

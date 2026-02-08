@@ -6,6 +6,7 @@ body {
   padding-bottom: 70px;
   color: var(--global-text-color);
   background-color: var(--global-bg-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 
   h1,
   h2,
@@ -37,8 +38,6 @@ body.sticky-bottom-footer {
     width: 100%;
   }
 }
-
-// TODO: redefine content layout.
 
 /******************************************************************************
  * Publications

@@ -2,7 +2,7 @@
 layout: about
 title: About
 permalink: /
-subtitle: AI builder & teacher, AI/ML Together AI, UofT ℕΨ Engineering, ex-(Vector DBs, Health tech, Lecturer) 🇨🇦🇵🇰
+subtitle: Staff AI/ML Engineer - DX at Together AI. Building & teaching at the intersection of AI research and real-world systems.
 
 profile:
   align: right
@@ -24,4 +24,6 @@ latest_posts:
   limit: 3 # leave blank to include all the blog posts
 ---
 
-I'm passionate about making AI accessible and helping people build impactful solutions. Currently working as a Staff AI/ML Engineer DevRel at Together AI, where I combine technical expertise with education to help developers succeed with AI technologies.
+I'm passionate about making AI accessible and helping people build impactful solutions. Currently working as a **Staff AI/ML Engineer - DX** at [Together AI](https://www.together.ai/), where I combine technical expertise with education to help developers succeed with AI technologies.
+
+Previously, I worked on developer education for vector databases and semantic search. I've taught courses on [Coursera](https://www.coursera.org/learn/retrieval-augmented-generation-rag) and [DeepLearning.AI](https://www.deeplearning.ai/), and spoken at 40+ conferences worldwide on topics like RAG, multimodal AI, and LLM fine-tuning.

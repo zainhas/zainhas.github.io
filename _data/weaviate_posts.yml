@@ -140,6 +140,38 @@ weaviate_posts:
 
 # External posts from other sources (keeping existing ones)
 external_posts:
+  - title: "Fine-Tuning Open LLM Judges to Outperform GPT-5.2"
+    date: 2026-02-02
+    url: "https://www.together.ai/blog/fine-tuning-open-llm-judges-to-outperform-gpt-5-2"
+    description: "Open-source LLM judges fine-tuned with DPO can outperform GPT-5.2 at evaluating model outputs. We trained GPT-OSS 120B on 5,400 preference pairs to beat GPT-5.2's accuracy — delivering superior performance at 15x lower cost and 14x faster speeds."
+    tags: ["Fine-tuning", "Evaluation"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "How to Evaluate and Benchmark Large Language Models (LLMs)"
+    date: 2025-11-04
+    url: "https://www.together.ai/blog/evaluate-and-benchmark-llms"
+    description: "A comprehensive guide to evaluating and benchmarking LLMs, covering key metrics, methodologies, and best practices for model selection."
+    tags: ["LLMs", "Evaluation"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Dynamic AI Agent Testing for the Real World with Collinear Simulations and Together Evals"
+    date: 2025-10-28
+    url: "https://www.together.ai/blog/collinear-simulations-together-evals"
+    description: "How to use Collinear Simulations with Together Evals for dynamic, real-world testing of AI agents in production scenarios."
+    tags: ["AI Agents", "Evaluation"]
+    source: "Together AI"
+    type: "external"
+
+  - title: "Fine-Tuning Platform Upgrades: Larger Models, Longer Contexts, Enhanced Hugging Face Integrations"
+    date: 2025-09-10
+    url: "https://www.together.ai/blog/fine-tuning-updates-sept-2025"
+    description: "Major upgrades to the Together AI fine-tuning platform including support for larger models, longer context windows, and deeper Hugging Face integration."
+    tags: ["Fine-tuning", "Platform"]
+    source: "Together AI"
+    type: "external"
+
   - title: "Back to The Future: Evaluating AI Agents on Predicting Future Events"
     date: 2025-07-17
     url: "https://www.together.ai/blog/futurebench"

@@ -7,23 +7,14 @@ nav: true
 nav_order: 3
 ---
 
-### About My Writing
-
-I write about cutting-edge developments in AI/ML, with a focus on:
-
-- **Vector Databases & Semantic Search** - Deep dives into the technology powering modern AI applications
-- **Retrieval-Augmented Generation (RAG)** - Techniques for building knowledge-grounded AI systems  
-- **Embedding Models & Fine-tuning** - Practical guides for optimizing AI model performance
-- **Multimodal AI** - Exploring AI systems that work with text, images, and other modalities
-- **Developer Relations** - Bridging the gap between complex AI research and practical implementation
-
-My articles combine theoretical understanding with hands-on implementation guides, helping developers and researchers build better AI applications.
+Technical deep dives and practical guides on RAG, vector databases, embeddings, LLM fine-tuning, and multimodal AI. Published on the Weaviate and Together AI engineering blogs.
 
 <style>
 .blog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+  margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
@@ -32,37 +23,36 @@ My articles combine theoretical understanding with hands-on implementation guide
   border: 1px solid var(--global-divider-color);
   border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
   height: fit-content;
 }
 
 .blog-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
 
-.blog-thumbnail {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-bottom: 1px solid var(--global-divider-color);
+html[data-theme="dark"] .blog-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
 .blog-content {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
 }
 
 .blog-title {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   color: var(--global-text-color);
-  line-height: 1.3;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
 .blog-title a {
   color: inherit;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .blog-title a:hover {
@@ -70,63 +60,87 @@ My articles combine theoretical understanding with hands-on implementation guide
 }
 
 .blog-description {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   color: var(--global-text-color-light);
   margin-bottom: 1rem;
-  line-height: 1.5;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .blog-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--global-divider-color);
 }
 
 .blog-date {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--global-text-color-light);
+  font-variant-numeric: tabular-nums;
 }
 
 .blog-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .blog-tag {
-  background: var(--global-theme-color);
-  color: white;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--global-theme-color);
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="dark"] .blog-tag {
+  background: rgba(34, 211, 238, 0.1);
 }
 
 .external-link-icon {
   display: inline-block;
-  margin-left: 0.5rem;
-  font-size: 0.8rem;
-  opacity: 0.7;
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.blog-title a:hover .external-link-icon {
+  opacity: 1;
 }
 
 .external-tag {
-  background: #2563eb;
   color: white;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
+.external-tag.weaviate {
+  background: #0d9488;
+}
+
+.external-tag.together {
+  background: #6366f1;
+}
 
 @media (max-width: 768px) {
   .blog-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 }
 </style>
+
 
 {% comment %}
 Get all posts from external data sources
@@ -136,8 +150,6 @@ Display them in chronological order (newest first)
 {% assign weaviate_posts = site.data.weaviate_posts.weaviate_posts %}
 {% assign external_posts = site.data.weaviate_posts.external_posts %}
 
-
-## All Articles
 
 {% comment %} Create a combined array manually sorted by date {% endcomment %}
 {% assign all_posts_with_dates = "" | split: "" %}
@@ -181,7 +193,11 @@ Display them in chronological order (newest first)
       <div class="blog-meta">
         <span class="blog-date">{{ current_post.date | date: "%B %d, %Y" }}</span>
         <div class="blog-tags">
-          <span class="external-tag">{{ current_post.source }}</span>
+          {% if current_post.source == "Weaviate" %}
+            <span class="external-tag weaviate">{{ current_post.source }}</span>
+          {% else %}
+            <span class="external-tag together">{{ current_post.source }}</span>
+          {% endif %}
           {% for tag in current_post.tags limit: 2 %}
             <span class="blog-tag">{{ tag }}</span>
           {% endfor %}
