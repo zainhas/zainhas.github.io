@@ -61,7 +61,9 @@ layout: default
           // Fisher-Yates shuffle
           for (var k = indices.length - 1; k > 0; k--) {
             var r = Math.floor(Math.random() * (k + 1));
-            var tmp = indices[k]; indices[k] = indices[r]; indices[r] = tmp;
+            var tmp = indices[k];
+            indices[k] = indices[r];
+            indices[r] = tmp;
           }
           var duration = 3000;
           var total = indices.length;
