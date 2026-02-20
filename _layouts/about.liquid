@@ -19,8 +19,10 @@ layout: default
         overflow: hidden;
         color: var(--global-text-color);
         background-color: transparent;
-        border-radius: 12px;
-        padding: 6px;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
         display: block;
         width: fit-content;
       }
@@ -43,6 +45,43 @@ layout: default
     </style>
     <div class="profile float-{% if page.profile.align == 'left' %}left{% else %}right{% endif %}" style="margin-top: 0;">
       <pre class="ascii-profile">{% include prof_pic_ascii.txt %}</pre>
+      <script>
+        (function () {
+          var pre = document.querySelector('.ascii-profile');
+          if (!pre) return;
+          var full = pre.textContent;
+          var chars = full.split('');
+          var indices = [];
+          for (var i = 0; i < chars.length; i++) {
+            if (chars[i] !== ' ' && chars[i] !== '\n') indices.push(i);
+          }
+          var blank = chars.slice();
+          for (var j = 0; j < indices.length; j++) blank[indices[j]] = ' ';
+          pre.textContent = blank.join('');
+          // Fisher-Yates shuffle
+          for (var k = indices.length - 1; k > 0; k--) {
+            var r = Math.floor(Math.random() * (k + 1));
+            var tmp = indices[k]; indices[k] = indices[r]; indices[r] = tmp;
+          }
+          var duration = 3000;
+          var total = indices.length;
+          var revealed = 0;
+          var start = null;
+          function step(ts) {
+            if (!start) start = ts;
+            var progress = Math.min((ts - start) / duration, 1);
+            var target = Math.floor(progress * total);
+            var current = blank.slice();
+            for (var n = revealed; n < target; n++) {
+              blank[indices[n]] = chars[indices[n]];
+            }
+            revealed = target;
+            pre.textContent = blank.join('');
+            if (progress < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        })();
+      </script>
       <div class="ascii-profile-mobile">
         <img src="{{ 'assets/img/prof_pic_ascii.png' | relative_url }}" alt="Profile picture ASCII art" loading="eager">
       </div>
