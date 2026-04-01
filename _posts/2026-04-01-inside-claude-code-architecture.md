@@ -9,7 +9,7 @@ toc:
   beginning: true
 ---
 
-*This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.*
+_This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc._
 
 Claude Code is Anthropic's terminal-based AI coding assistant. I recently spent some time digging through the source code (v2.1.88), and the architecture is a fascinating case study in building an agentic AI system that's both responsive and safe. This post walks through the key design decisions and how it all fits together.
 
@@ -26,13 +26,13 @@ Claude Code is a TypeScript application built on a **custom React/Ink TUI** (Ter
 5. **Tool System** provides 50+ tools the model can invoke, each with its own permission logic
 6. **Services & State** underpin everything: API clients, analytics, MCP servers, memory, history
 
-The key insight is that the **QueryEngine is the heart of the system**. It sits between the UI and the Claude API, managing the agentic loop of *send message -> get response -> execute tools -> send results -> repeat*.
+The key insight is that the **QueryEngine is the heart of the system**. It sits between the UI and the Claude API, managing the agentic loop of _send message -> get response -> execute tools -> send results -> repeat_.
 
 ## Startup: Designed for Speed
 
 One of the first things that stands out is how aggressively the startup is optimized. The entry point (`cli.tsx`) uses a **fast-path routing** strategy:
 
-- Trivial commands like `--version` are handled with *zero module imports* — no loading the full application just to print a version string.
+- Trivial commands like `--version` are handled with _zero module imports_ — no loading the full application just to print a version string.
 - Only the default interactive path loads the heavy `main.tsx` orchestrator.
 - Initialization is memoized and parallelized: network pre-connection, auth prefetching, and repository detection all happen concurrently.
 - Setup and command loading run in parallel via `Promise.all`.
@@ -40,14 +40,14 @@ One of the first things that stands out is how aggressively the startup is optim
 
 The phases break down as:
 
-| Phase | What Happens |
-|-------|-------------|
-| Fast-path routing | Handle `--version`, `--mcp`, `--daemon` with minimal imports |
-| Initialization | Config loading, proxy/TLS setup, TCP pre-connect to API |
+| Phase                   | What Happens                                                       |
+| ----------------------- | ------------------------------------------------------------------ |
+| Fast-path routing       | Handle `--version`, `--mcp`, `--daemon` with minimal imports       |
+| Initialization          | Config loading, proxy/TLS setup, TCP pre-connect to API            |
 | Telemetry & Permissions | OpenTelemetry setup, permission context, plugin/skill registration |
-| Setup | Working directory, hooks, file watchers, session memory |
-| Command & Agent Loading | Slash commands and agent definitions loaded in parallel |
-| REPL Launch | React/Ink components rendered, event loop starts |
+| Setup                   | Working directory, hooks, file watchers, session memory            |
+| Command & Agent Loading | Slash commands and agent definitions loaded in parallel            |
+| REPL Launch             | React/Ink components rendered, event loop starts                   |
 
 ## The Query Loop: Where the Magic Happens
 
@@ -107,14 +107,14 @@ This layered approach means there are multiple independent checks. Even if one l
 
 The dependency model is strictly layered:
 
-| Layer | Responsibility | Key Components |
-|-------|---------------|----------------|
-| **Presentation** | Terminal rendering | Ink renderer, React components, screens |
-| **Application** | Flow orchestration | QueryEngine, commands, skills, hooks |
-| **Domain** | Core abstractions | Tool interface, AppState, permissions |
+| Layer              | Responsibility      | Key Components                              |
+| ------------------ | ------------------- | ------------------------------------------- |
+| **Presentation**   | Terminal rendering  | Ink renderer, React components, screens     |
+| **Application**    | Flow orchestration  | QueryEngine, commands, skills, hooks        |
+| **Domain**         | Core abstractions   | Tool interface, AppState, permissions       |
 | **Infrastructure** | I/O and persistence | API client, analytics, MCP, history, memory |
 
-Dependencies flow **downward only**. The Presentation layer knows about components and screens but not about API calls. The Domain layer defines what a Tool *is* without knowing how any specific tool works. This separation means you can understand any layer independently.
+Dependencies flow **downward only**. The Presentation layer knows about components and screens but not about API calls. The Domain layer defines what a Tool _is_ without knowing how any specific tool works. This separation means you can understand any layer independently.
 
 ## State Management
 
@@ -182,19 +182,19 @@ Claude Code operates within a finite context window (~200K tokens). Conversation
 
 Every turn, before sending messages to the API, the system runs a pipeline of five layers:
 
-| Layer | Mechanism | API Call? | Description |
-|-------|-----------|-----------|-------------|
-| 1. Tool Result Budget | `applyToolResultBudget()` | No | Persist oversized tool results to disk, replace with preview + filepath |
-| 2. Snip Compaction | `snipCompactIfNeeded()` | No | Clear old tool result contents to `[Old tool result content cleared]` |
-| 3. Microcompaction | `microcompactMessages()` | No | Remove old tool results using `cache_edits` API or time-based clearing |
-| 4. Context Collapse | `contextCollapse.applyCollapsesIfNeeded()` | No | Model-side projection over conversation segments |
-| 5. Autocompact | `autoCompactIfNeeded()` | Yes (sometimes) | Full compaction if still over threshold |
+| Layer                 | Mechanism                                  | API Call?       | Description                                                             |
+| --------------------- | ------------------------------------------ | --------------- | ----------------------------------------------------------------------- |
+| 1. Tool Result Budget | `applyToolResultBudget()`                  | No              | Persist oversized tool results to disk, replace with preview + filepath |
+| 2. Snip Compaction    | `snipCompactIfNeeded()`                    | No              | Clear old tool result contents to `[Old tool result content cleared]`   |
+| 3. Microcompaction    | `microcompactMessages()`                   | No              | Remove old tool results using `cache_edits` API or time-based clearing  |
+| 4. Context Collapse   | `contextCollapse.applyCollapsesIfNeeded()` | No              | Model-side projection over conversation segments                        |
+| 5. Autocompact        | `autoCompactIfNeeded()`                    | Yes (sometimes) | Full compaction if still over threshold                                 |
 
 Each layer reduces the token count. If an earlier layer brings the count below the autocompact threshold, later layers become no-ops. This cascading design avoids expensive API calls when lightweight compaction is sufficient.
 
 ### Microcompaction: Preserving the Prompt Cache
 
-The most clever layer. Microcompaction uses the `cache_edits` API to delete old tool results *without invalidating the prompt cache*. No message content is modified — edits are piggybacked on the next API request. The system tracks compactable tools (Bash, Glob, Grep, WebSearch, WebFetch, FileEdit, FileWrite, FileRead) and keeps only the N most recent results.
+The most clever layer. Microcompaction uses the `cache_edits` API to delete old tool results _without invalidating the prompt cache_. No message content is modified — edits are piggybacked on the next API request. The system tracks compactable tools (Bash, Glob, Grep, WebSearch, WebFetch, FileEdit, FileWrite, FileRead) and keeps only the N most recent results.
 
 As a fallback, if the gap since the last assistant message exceeds ~1 hour (meaning the prompt cache has expired anyway), it clears old tool results directly since the cache is cold.
 
@@ -212,18 +212,18 @@ A circuit breaker stops retrying after 3 consecutive autocompact failures to avo
 
 Putting it all together, here's what a typical long session looks like:
 
-| Phase | Tokens | What Happens |
-|-------|--------|-------------|
-| Turn 1 | ~5K | No compaction needed |
-| Turn 5 | ~50K | Session memory extraction triggers for the first time |
-| Turn 10 | ~90K | Microcompact clears old tool results each turn |
-| Turn 15 | ~110K | Session memory updates (15K new tokens since last) |
-| Turn 20 | ~135K | Snip clears more old tool contents |
-| Turn 25 | ~155K | **Autocompact triggers** — SM-compact or full compaction |
-| Post-compact | ~60-80K | Fresh start, session memory keeps tracking new work |
-| Turn 26+ | Growing | Cycle continues; if context fills again, another autocompact |
+| Phase        | Tokens  | What Happens                                                 |
+| ------------ | ------- | ------------------------------------------------------------ |
+| Turn 1       | ~5K     | No compaction needed                                         |
+| Turn 5       | ~50K    | Session memory extraction triggers for the first time        |
+| Turn 10      | ~90K    | Microcompact clears old tool results each turn               |
+| Turn 15      | ~110K   | Session memory updates (15K new tokens since last)           |
+| Turn 20      | ~135K   | Snip clears more old tool contents                           |
+| Turn 25      | ~155K   | **Autocompact triggers** — SM-compact or full compaction     |
+| Post-compact | ~60-80K | Fresh start, session memory keeps tracking new work          |
+| Turn 26+     | Growing | Cycle continues; if context fills again, another autocompact |
 
-The proactive approach (compacting *before* hitting the API limit) is the default, with a 13K-token buffer for headroom. There's also a reactive mode (feature-gated) that only compacts after the API returns a "prompt too long" error.
+The proactive approach (compacting _before_ hitting the API limit) is the default, with a 13K-token buffer for headroom. There's also a reactive mode (feature-gated) that only compacts after the API returns a "prompt too long" error.
 
 ## Why It's Structured This Way
 
