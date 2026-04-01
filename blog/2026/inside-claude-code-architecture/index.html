@@ -17,14 +17,871 @@
     }
   </script> <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04"> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5"> <link defer rel="stylesheet" href="/assets/css/scholar-icons.css?62b2ac103a88034e6882a5be5f3e2772"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="/assets/img/prof_pic_ascii.png?62ef0b728b1ae20f506dbe44f0246277"> <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e"> <link rel="canonical" href="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/"> <script src="/assets/js/theme.js?279190624f5bd585feec529dd5391ed1"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
     initTheme();
-  </script> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">Zain</span> Hasan </a> <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse text-right" id="navbarNav"> <ul class="navbar-nav ml-auto flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">About </a> </li> <li class="nav-item "> <a class="nav-link" href="/writing/">Writing </a> </li> <li class="nav-item "> <a class="nav-link" href="/talks/">Talks </a> </li> <li class="nav-item "> <a class="nav-link" href="/teaching/">Teaching </a> </li> <li class="toggle-container"> <button id="light-toggle" title="Change theme"> <i class="ti ti-sun-moon" id="light-toggle-system"></i> <i class="ti ti-moon-filled" id="light-toggle-dark"></i> <i class="ti ti-sun-filled" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">Inside Claude Code: An Architecture Deep Dive</h1> <p class="post-meta"> Created on April 01, 2026 </p> <p class="post-tags"> <a href="/blog/2026"> <i class="fa-solid fa-calendar fa-sm"></i> 2026 </a>   ·   <a href="/blog/tag/llms"> <i class="fa-solid fa-hashtag fa-sm"></i> llms</a>   <a href="/blog/tag/ai-agents"> <i class="fa-solid fa-hashtag fa-sm"></i> ai-agents</a>   <a href="/blog/tag/developer-tools"> <i class="fa-solid fa-hashtag fa-sm"></i> developer-tools</a>   ·   <a href="/blog/category/technical-blog"> <i class="fa-solid fa-tag fa-sm"></i> technical-blog</a> </p> </header> <article class="post-content"> <div id="table-of-contents"> <ul id="toc" class="section-nav"> <li class="toc-entry toc-h2"><a href="#the-30000-foot-view">The 30,000-Foot View</a></li> <li class="toc-entry toc-h2"><a href="#startup-designed-for-speed">Startup: Designed for Speed</a></li> <li class="toc-entry toc-h2"><a href="#the-query-loop-where-the-magic-happens">The Query Loop: Where the Magic Happens</a></li> <li class="toc-entry toc-h2"><a href="#the-tool-system">The Tool System</a></li> <li class="toc-entry toc-h2"><a href="#the-permission-model">The Permission Model</a></li> <li class="toc-entry toc-h2"><a href="#layered-architecture">Layered Architecture</a></li> <li class="toc-entry toc-h2"><a href="#state-management">State Management</a></li> <li class="toc-entry toc-h2"><a href="#inter-agent-communication">Inter-Agent Communication</a></li> <li class="toc-entry toc-h2"><a href="#end-to-end-what-happens-when-you-type-a-message">End-to-End: What Happens When You Type a Message</a></li> <li class="toc-entry toc-h2"> <a href="#deep-dive-the-grep-tool-agentic-search">Deep Dive: The Grep Tool (Agentic Search)</a> <ul> <li class="toc-entry toc-h3"><a href="#execution-and-error-recovery">Execution and Error Recovery</a></li> <li class="toc-entry toc-h3"><a href="#pagination-for-multi-round-search">Pagination for Multi-Round Search</a></li> <li class="toc-entry toc-h3"><a href="#security">Security</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#deep-dive-memory-management--context-compaction">Deep Dive: Memory Management &amp; Context Compaction</a> <ul> <li class="toc-entry toc-h3"><a href="#the-compaction-pipeline">The Compaction Pipeline</a></li> <li class="toc-entry toc-h3"><a href="#microcompaction-preserving-the-prompt-cache">Microcompaction: Preserving the Prompt Cache</a></li> <li class="toc-entry toc-h3"><a href="#autocompact-two-strategies">Autocompact: Two Strategies</a></li> <li class="toc-entry toc-h3"><a href="#the-lifecycle-of-a-long-conversation">The Lifecycle of a Long Conversation</a></li> </ul> </li> <li class="toc-entry toc-h2"><a href="#why-its-structured-this-way">Why It’s Structured This Way</a></li> </ul> </div> <hr> <div id="markdown-content"> <p><em>This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.</em></p> <p>Claude Code is Anthropic’s terminal-based AI coding assistant. I recently spent some time digging through the source code (v2.1.88), and the architecture is a fascinating case study in building an agentic AI system that’s both responsive and safe. This post walks through the key design decisions and how it all fits together.</p> <p>If you’re interested in more of my technical writing on AI, LLMs, and retrieval systems, check out my <a href="/writing/">writing page</a>.</p> <h2 id="the-30000-foot-view">The 30,000-Foot View</h2> <p>Claude Code is a TypeScript application built on a <strong>custom React/Ink TUI</strong> (Terminal User Interface). The architecture follows a layered pattern where each layer has clear responsibilities:</p> <ol> <li> <strong>Entry Points</strong> route to the right mode (CLI, MCP server, SDK, daemon)</li> <li> <strong>Bootstrap</strong> loads configuration, telemetry, auth, and networking</li> <li> <strong>UI Layer</strong> renders the terminal interface using a custom Ink/React renderer</li> <li> <strong>QueryEngine</strong> orchestrates the conversation loop</li> <li> <strong>Tool System</strong> provides 50+ tools the model can invoke, each with its own permission logic</li> <li> <strong>Services &amp; State</strong> underpin everything: API clients, analytics, MCP servers, memory, history</li> </ol> <p>The key insight is that the <strong>QueryEngine is the heart of the system</strong>. It sits between the UI and the Claude API, managing the agentic loop of <em>send message -&gt; get response -&gt; execute tools -&gt; send results -&gt; repeat</em>.</p> <h2 id="startup-designed-for-speed">Startup: Designed for Speed</h2> <p>One of the first things that stands out is how aggressively the startup is optimized. The entry point (<code class="language-plaintext highlighter-rouge">cli.tsx</code>) uses a <strong>fast-path routing</strong> strategy:</p> <ul> <li>Trivial commands like <code class="language-plaintext highlighter-rouge">--version</code> are handled with <em>zero module imports</em> — no loading the full application just to print a version string.</li> <li>Only the default interactive path loads the heavy <code class="language-plaintext highlighter-rouge">main.tsx</code> orchestrator.</li> <li>Initialization is memoized and parallelized: network pre-connection, auth prefetching, and repository detection all happen concurrently.</li> <li>Setup and command loading run in parallel via <code class="language-plaintext highlighter-rouge">Promise.all</code>.</li> <li>The REPL is the final step: it dynamically imports the React components and starts the Ink terminal renderer.</li> </ul> <p>The phases break down as:</p> <table> <thead> <tr> <th>Phase</th> <th>What Happens</th> </tr> </thead> <tbody> <tr> <td>Fast-path routing</td> <td>Handle <code class="language-plaintext highlighter-rouge">--version</code>, <code class="language-plaintext highlighter-rouge">--mcp</code>, <code class="language-plaintext highlighter-rouge">--daemon</code> with minimal imports</td> </tr> <tr> <td>Initialization</td> <td>Config loading, proxy/TLS setup, TCP pre-connect to API</td> </tr> <tr> <td>Telemetry &amp; Permissions</td> <td>OpenTelemetry setup, permission context, plugin/skill registration</td> </tr> <tr> <td>Setup</td> <td>Working directory, hooks, file watchers, session memory</td> </tr> <tr> <td>Command &amp; Agent Loading</td> <td>Slash commands and agent definitions loaded in parallel</td> </tr> <tr> <td>REPL Launch</td> <td>React/Ink components rendered, event loop starts</td> </tr> </tbody> </table> <h2 id="the-query-loop-where-the-magic-happens">The Query Loop: Where the Magic Happens</h2> <p>The most important flow in the entire codebase is the <strong>query loop</strong> — an async generator that processes every message you send. Here’s how it works:</p> <ol> <li> <p><strong>Prepare</strong>: Build the system prompt, gather user context (CLAUDE.md files, git status, date), normalize message history, and apply compaction if the context is getting long.</p> </li> <li> <p><strong>Call Claude API</strong>: Make a streaming POST to the Messages API with the full conversation history, system prompt, and all 50+ tool schemas.</p> </li> <li> <p><strong>Stream Response</strong>: As tokens arrive, the async generator <code class="language-plaintext highlighter-rouge">yield</code>s them to the UI, which renders Claude’s response character by character.</p> </li> <li> <p><strong>Tool Execution</strong>: If Claude’s response includes <code class="language-plaintext highlighter-rouge">tool_use</code> blocks (e.g., “read this file” or “run this command”), the loop pauses streaming, executes the tools with permission checks, and loops back to send the results to Claude.</p> </li> <li> <p><strong>Completion</strong>: When Claude responds with just text (no tool calls), the loop terminates.</p> </li> </ol> <p>The async generator pattern is a particularly elegant choice here. It gives the UI fine-grained control over rendering while keeping the core loop logic clean. The loop also handles recovery paths: context compaction when the conversation gets too long, output limit escalation, fallback model retries, and graceful abort on user interrupts.</p> <h2 id="the-tool-system">The Tool System</h2> <p>Every capability Claude can invoke is a <strong>Tool</strong> — a well-defined interface with identity, schema, execution logic, and permission checks:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Tool&lt;Input, Output, Progress&gt;
-  ├── name, description          (identity)
-  ├── inputSchema (Zod)          (validation)
-  ├── call(input, context)       (execution)
-  ├── checkPermissions(input)    (safety)
-  ├── isReadOnly()               (concurrency hint)
-  └── renderToolUseMessage()     (UI rendering)
-</code></pre></div></div> <p>The 50+ tools are organized into categories:</p> <ul> <li> <strong>File Tools</strong>: Read, Edit, Write, Glob, Grep, NotebookEdit</li> <li> <strong>Shell Tools</strong>: Bash, PowerShell</li> <li> <strong>Web Tools</strong>: WebFetch, WebSearch</li> <li> <strong>Agent Tools</strong>: AgentTool (spawn sub-agents), SendMessage, TeamCreate</li> <li> <strong>Plan Tools</strong>: EnterPlan, ExitPlan, Worktree</li> <li> <strong>Task Tools</strong>: TaskCreate, TaskGet, TaskUpdate, TaskList</li> <li> <strong>MCP Tools</strong>: Dynamic tools from MCP servers</li> <li> <strong>System Tools</strong>: AskUser, ToolSearch, Skill</li> </ul> <p>A critical design decision: <strong>read-only tools run in parallel batches</strong> for speed, while <strong>write tools run sequentially</strong> to prevent race conditions. This means Claude can read multiple files simultaneously but edits happen one at a time.</p> <h2 id="the-permission-model">The Permission Model</h2> <p>Safety is baked into the architecture through a multi-layer permission system. When a tool call arrives, it passes through four gates:</p> <ol> <li> <strong>Static Rules</strong> from <code class="language-plaintext highlighter-rouge">settings.json</code> — pattern-matched against tool name and input</li> <li> <strong>Tool Logic</strong> — each tool’s own <code class="language-plaintext highlighter-rouge">checkPermissions()</code> method (e.g., BashTool checks for dangerous commands)</li> <li> <strong>Permission Mode</strong> — <code class="language-plaintext highlighter-rouge">bypassPermissions</code> allows everything, <code class="language-plaintext highlighter-rouge">auto</code> uses a classifier, <code class="language-plaintext highlighter-rouge">default</code> prompts the user, <code class="language-plaintext highlighter-rouge">plan</code> denies writes</li> <li> <strong>User Prompt</strong> — the terminal dialog where you choose allow once, allow always, or deny</li> </ol> <p>This layered approach means there are multiple independent checks. Even if one layer misses something, the next one can catch it. The permission mode system also enables different workflows — you can run in a more autonomous mode for trusted operations or lock things down for sensitive codebases.</p> <h2 id="layered-architecture">Layered Architecture</h2> <p>The dependency model is strictly layered:</p> <table> <thead> <tr> <th>Layer</th> <th>Responsibility</th> <th>Key Components</th> </tr> </thead> <tbody> <tr> <td><strong>Presentation</strong></td> <td>Terminal rendering</td> <td>Ink renderer, React components, screens</td> </tr> <tr> <td><strong>Application</strong></td> <td>Flow orchestration</td> <td>QueryEngine, commands, skills, hooks</td> </tr> <tr> <td><strong>Domain</strong></td> <td>Core abstractions</td> <td>Tool interface, AppState, permissions</td> </tr> <tr> <td><strong>Infrastructure</strong></td> <td>I/O and persistence</td> <td>API client, analytics, MCP, history, memory</td> </tr> </tbody> </table> <p>Dependencies flow <strong>downward only</strong>. The Presentation layer knows about components and screens but not about API calls. The Domain layer defines what a Tool <em>is</em> without knowing how any specific tool works. This separation means you can understand any layer independently.</p> <h2 id="state-management">State Management</h2> <p>All reactive UI state lives in a single <code class="language-plaintext highlighter-rouge">AppState</code> store — a pub/sub pattern exposed via React hooks (<code class="language-plaintext highlighter-rouge">useAppState</code>, <code class="language-plaintext highlighter-rouge">useSetAppState</code>). The store holds 300+ properties covering settings, tasks, permissions, MCP clients, plugins, and UI state.</p> <p>The unidirectional data flow is clean:</p> <p><strong>Components</strong> read state -&gt; <strong>Input handlers</strong> trigger actions -&gt; <strong>QueryEngine</strong> processes them -&gt; <strong>State updates</strong> re-render components</p> <p>There’s also a separate <strong>bootstrap state</strong> container with 150+ session properties (metrics, auth, UI config) that’s populated during startup and read throughout the session lifecycle.</p> <h2 id="inter-agent-communication">Inter-Agent Communication</h2> <p>Claude Code supports spawning sub-agents that coordinate via a task system backed by file-locked JSON. The leader agent creates tasks with dependencies, teammates claim tasks (conflict-safe via file locks), and results flow back through task status updates. Direct communication uses <code class="language-plaintext highlighter-rouge">SendMessageTool</code> over Unix Domain Sockets.</p> <p>This is a pragmatic design — file-based coordination avoids the complexity of a proper message broker while still supporting concurrent work across multiple agent processes.</p> <h2 id="end-to-end-what-happens-when-you-type-a-message">End-to-End: What Happens When You Type a Message</h2> <p>To make this concrete, here’s what happens when you type <code class="language-plaintext highlighter-rouge">"Fix the bug in auth.ts"</code>:</p> <ol> <li>Keystrokes flow through Ink’s event system to <code class="language-plaintext highlighter-rouge">PromptInput</code>, then <code class="language-plaintext highlighter-rouge">handlePromptSubmit()</code> checks for slash commands and passes the text to the REPL.</li> <li>A <code class="language-plaintext highlighter-rouge">UserMessage</code> is created with your text, added to conversation history, and recorded to the session transcript.</li> <li>Context is gathered: git status, CLAUDE.md files, current date — memoized per session.</li> <li>The QueryEngine calls <code class="language-plaintext highlighter-rouge">queryLoop()</code>, which makes a streaming POST to the Messages API with the full history, system prompt, and tool schemas.</li> <li>Tokens stream back and the UI renders Claude’s response incrementally.</li> <li>Claude decides to read the file — the tool orchestration layer validates input, checks permissions, fires pre/post hooks, executes the read, and returns the result.</li> <li>The file contents go back to Claude, who analyzes the bug and calls <code class="language-plaintext highlighter-rouge">FileEdit</code> to fix it. The permission system shows you the diff for approval.</li> <li>After the fix, Claude responds with just text. The loop terminates, and the prompt reappears.</li> <li>Throughout, the conversation is persisted as JSONL, inputs are logged to history, analytics events are fired, and token costs are tracked.</li> </ol> <h2 id="deep-dive-the-grep-tool-agentic-search">Deep Dive: The Grep Tool (Agentic Search)</h2> <p>The Grep tool is one of the most frequently invoked tools in the agentic loop — a read-only, concurrency-safe wrapper around <a href="https://github.com/BurntSushi/ripgrep" rel="external nofollow noopener" target="_blank">ripgrep</a> that the model uses to search codebases. It’s a good example of how much engineering goes into making a single tool robust.</p> <p>The architecture is three layers deep: <code class="language-plaintext highlighter-rouge">GrepTool.ts</code> (tool logic, schema, permissions, result formatting) -&gt; <code class="language-plaintext highlighter-rouge">ripgrep.ts</code> (process spawning, timeout, retry, error handling) -&gt; the native <code class="language-plaintext highlighter-rouge">rg</code> binary.</p> <p>The input schema accepts regex patterns, file/directory paths, glob filters, output modes (<code class="language-plaintext highlighter-rouge">files_with_matches</code>, <code class="language-plaintext highlighter-rouge">content</code>, or <code class="language-plaintext highlighter-rouge">count</code>), context lines, case sensitivity, and multiline matching. It uses <code class="language-plaintext highlighter-rouge">semanticNumber</code> and <code class="language-plaintext highlighter-rouge">semanticBoolean</code> wrappers to handle the model sending strings like <code class="language-plaintext highlighter-rouge">"true"</code> instead of actual booleans — a pragmatic concession to LLM behavior.</p> <h3 id="execution-and-error-recovery">Execution and Error Recovery</h3> <p>When <code class="language-plaintext highlighter-rouge">GrepTool.call()</code> runs, it builds ripgrep arguments (always including <code class="language-plaintext highlighter-rouge">--hidden</code> and auto-excluding VCS dirs), resolves the <code class="language-plaintext highlighter-rouge">rg</code> binary (system install -&gt; embedded in Bun binary -&gt; vendored platform-specific binary), and spawns the process with a 20-second timeout (60s on WSL).</p> <p>The error recovery is particularly interesting:</p> <ul> <li> <strong>EAGAIN retry</strong>: In resource-constrained environments (Docker, CI), ripgrep can fail when it spawns too many threads. The wrapper detects this and retries with <code class="language-plaintext highlighter-rouge">-j 1</code> (single-threaded) for that call only — it doesn’t persist single-threaded mode globally, which would cause timeouts on large repos.</li> <li> <strong>Timeout with partial results</strong>: If rg times out but has partial stdout, the last line is dropped (may be incomplete) and partial results are returned. If there’s no output at all, a <code class="language-plaintext highlighter-rouge">RipgrepTimeoutError</code> is thrown so the model knows the search didn’t complete.</li> <li> <strong>File deletion races</strong>: <code class="language-plaintext highlighter-rouge">files_with_matches</code> mode uses <code class="language-plaintext highlighter-rouge">Promise.allSettled</code> for stat calls, so a file deleted between rg’s scan and the stat doesn’t crash the whole search.</li> </ul> <h3 id="pagination-for-multi-round-search">Pagination for Multi-Round Search</h3> <p>The default <code class="language-plaintext highlighter-rouge">head_limit</code> of <strong>250</strong> prevents context bloat. When truncation occurs, the output includes a pagination marker that tells the model “there are more results.” It can then call Grep again with <code class="language-plaintext highlighter-rouge">offset: 250</code> to see the next page. This is how the model implements multi-round search — paginating through large result sets across multiple tool calls.</p> <p>In <code class="language-plaintext highlighter-rouge">files_with_matches</code> mode, results are sorted by modification time (most recent first), a heuristic that the most task-relevant files were touched recently.</p> <h3 id="security">Security</h3> <p>The tool blocks UNC paths (<code class="language-plaintext highlighter-rouge">\\server\share</code>) to prevent NTLM credential leaks on Windows, applies permission-based ignore patterns from settings (e.g., <code class="language-plaintext highlighter-rouge">node_modules</code>, <code class="language-plaintext highlighter-rouge">.env</code> files) as automatic <code class="language-plaintext highlighter-rouge">--glob !pattern</code> arguments, and the system prompt explicitly instructs the model to never run <code class="language-plaintext highlighter-rouge">grep</code> or <code class="language-plaintext highlighter-rouge">rg</code> via BashTool — always use this tool, which enforces the correct permission and ignore-pattern rules.</p> <h2 id="deep-dive-memory-management--context-compaction">Deep Dive: Memory Management &amp; Context Compaction</h2> <p>Claude Code operates within a finite context window (~200K tokens). Conversations with heavy tool use can fill this quickly. The system uses a <strong>multi-layered compaction strategy</strong> that operates at three timescales to keep conversations going indefinitely.</p> <h3 id="the-compaction-pipeline">The Compaction Pipeline</h3> <p>Every turn, before sending messages to the API, the system runs a pipeline of five layers:</p> <table> <thead> <tr> <th>Layer</th> <th>Mechanism</th> <th>API Call?</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td>1. Tool Result Budget</td> <td><code class="language-plaintext highlighter-rouge">applyToolResultBudget()</code></td> <td>No</td> <td>Persist oversized tool results to disk, replace with preview + filepath</td> </tr> <tr> <td>2. Snip Compaction</td> <td><code class="language-plaintext highlighter-rouge">snipCompactIfNeeded()</code></td> <td>No</td> <td>Clear old tool result contents to <code class="language-plaintext highlighter-rouge">[Old tool result content cleared]</code> </td> </tr> <tr> <td>3. Microcompaction</td> <td><code class="language-plaintext highlighter-rouge">microcompactMessages()</code></td> <td>No</td> <td>Remove old tool results using <code class="language-plaintext highlighter-rouge">cache_edits</code> API or time-based clearing</td> </tr> <tr> <td>4. Context Collapse</td> <td><code class="language-plaintext highlighter-rouge">contextCollapse.applyCollapsesIfNeeded()</code></td> <td>No</td> <td>Model-side projection over conversation segments</td> </tr> <tr> <td>5. Autocompact</td> <td><code class="language-plaintext highlighter-rouge">autoCompactIfNeeded()</code></td> <td>Yes (sometimes)</td> <td>Full compaction if still over threshold</td> </tr> </tbody> </table> <p>Each layer reduces the token count. If an earlier layer brings the count below the autocompact threshold, later layers become no-ops. This cascading design avoids expensive API calls when lightweight compaction is sufficient.</p> <h3 id="microcompaction-preserving-the-prompt-cache">Microcompaction: Preserving the Prompt Cache</h3> <p>The most clever layer. Microcompaction uses the <code class="language-plaintext highlighter-rouge">cache_edits</code> API to delete old tool results <em>without invalidating the prompt cache</em>. No message content is modified — edits are piggybacked on the next API request. The system tracks compactable tools (Bash, Glob, Grep, WebSearch, WebFetch, FileEdit, FileWrite, FileRead) and keeps only the N most recent results.</p> <p>As a fallback, if the gap since the last assistant message exceeds ~1 hour (meaning the prompt cache has expired anyway), it clears old tool results directly since the cache is cold.</p> <h3 id="autocompact-two-strategies">Autocompact: Two Strategies</h3> <p>Autocompact triggers when tokens reach <code class="language-plaintext highlighter-rouge">effectiveContextWindow - 13,000</code>. It tries two strategies in order:</p> <p><strong>Strategy A — Session Memory Compaction (lightweight)</strong>: Uses a session memory summary file maintained in the background (by a post-sampling hook). The summary is a structured document with sections for current state, task specification, files, workflow, errors, and learnings — each capped at ~2,000 tokens, total ~12,000. SM-compact loads this summary, preserves recent messages (min 10K tokens, max 40K tokens, min 5 text-block messages), and replaces older messages with the summary. No API call needed.</p> <p><strong>Strategy B — Full Conversation Compaction (fallback)</strong>: If SM-compact isn’t available or wasn’t effective, a forked agent summarizes the entire conversation. It receives a structured prompt covering primary request, technical concepts, files and code snippets, errors and fixes, problem solving, all user messages (verbatim), pending tasks, and current work. The agent returns an analysis scratchpad plus a summary. Post-compaction, the system restores up to 5 recently-used files (50K token budget) and re-injects active skills and plan state.</p> <p>A circuit breaker stops retrying after 3 consecutive autocompact failures to avoid API spam.</p> <h3 id="the-lifecycle-of-a-long-conversation">The Lifecycle of a Long Conversation</h3> <p>Putting it all together, here’s what a typical long session looks like:</p> <table> <thead> <tr> <th>Phase</th> <th>Tokens</th> <th>What Happens</th> </tr> </thead> <tbody> <tr> <td>Turn 1</td> <td>~5K</td> <td>No compaction needed</td> </tr> <tr> <td>Turn 5</td> <td>~50K</td> <td>Session memory extraction triggers for the first time</td> </tr> <tr> <td>Turn 10</td> <td>~90K</td> <td>Microcompact clears old tool results each turn</td> </tr> <tr> <td>Turn 15</td> <td>~110K</td> <td>Session memory updates (15K new tokens since last)</td> </tr> <tr> <td>Turn 20</td> <td>~135K</td> <td>Snip clears more old tool contents</td> </tr> <tr> <td>Turn 25</td> <td>~155K</td> <td> <strong>Autocompact triggers</strong> — SM-compact or full compaction</td> </tr> <tr> <td>Post-compact</td> <td>~60-80K</td> <td>Fresh start, session memory keeps tracking new work</td> </tr> <tr> <td>Turn 26+</td> <td>Growing</td> <td>Cycle continues; if context fills again, another autocompact</td> </tr> </tbody> </table> <p>The proactive approach (compacting <em>before</em> hitting the API limit) is the default, with a 13K-token buffer for headroom. There’s also a reactive mode (feature-gated) that only compacts after the API returns a “prompt too long” error.</p> <h2 id="why-its-structured-this-way">Why It’s Structured This Way</h2> <p>A few architectural decisions worth calling out:</p> <ul> <li> <strong>Async generators everywhere</strong>: The streaming nature of LLM responses demands non-blocking, incremental processing. Async generators let the query loop yield events to the UI as they arrive, rather than waiting for the full response.</li> <li> <strong>Custom Ink renderer</strong>: Terminal UIs need pixel-level control. The custom Ink implementation (React reconciliation + Yoga layout) gives Claude Code the same component model as web React, but targeting terminal cells instead of DOM nodes.</li> <li> <strong>Tool interface as the core abstraction</strong>: By making every capability a Tool with a uniform interface, the system can add new tools without changing the query loop, permission system, or UI rendering. MCP tools from external servers plug in identically.</li> <li> <strong>Multi-layer permission system</strong>: The cascading permission model (rules -&gt; tool logic -&gt; mode -&gt; classifier -&gt; user) balances safety with usability — safe operations auto-approve, dangerous ones require explicit consent.</li> <li> <strong>Feature flags via compile-time elimination</strong>: Bun’s <code class="language-plaintext highlighter-rouge">feature()</code> intrinsic lets Anthropic ship a single binary with 108+ internal modules completely stripped out. The published CLI contains zero internal code.</li> <li> <strong>Bootstrap state as global mutable singleton</strong>: While controversial, this pattern enables fast startup (no DI container) and easy access from any module. It’s the “session object” that everything reads from.</li> <li> <strong>Fire-and-forget parallelism</strong>: Startup parallelizes aggressively — network pre-connection, auth prefetch, repository detection, and command loading all run concurrently. This is why Claude Code starts fast despite doing a lot of initialization.</li> </ul> <p>Claude Code is a good example of how to build an agentic system that’s responsive (streaming, parallelism), safe (layered permissions, hooks), and maintainable (layered architecture, single state store). The codebase is large (~512K LOC across 1,884 files), but the core loop is surprisingly readable once you know where to look.</p> </div> </article> </div> </div> <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> <script src="/assets/js/bootstrap.bundle.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/js/zoom.js?85ddb88934d28b74e78031fd54cf8308"></script> <script src="/assets/js/no_defer.js?2781658a0a2b13ed609542042a859126"></script> <script defer src="/assets/js/common.js?e0514a05c5c95ac1a93a8dfd5249b92e"></script> <script defer src="/assets/js/copy_code.js?c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?d9f17b6adc2311cbabd747f4538bb15f"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/js/mathjax-setup.js?a5bb4e6a542c546dd929b24b8b236dfd"></script> <script defer src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6" crossorigin="anonymous"></script> <script defer src="/assets/js/progress-bar.js?2f30e0e6801ea8f5036fa66e1ab0a71a" type="text/javascript"></script> <script src="/assets/js/vanilla-back-to-top.min.js?f40d453793ff4f64e238e420181a1d17"></script> <script>
+  </script> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">Zain</span> Hasan </a> <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse text-right" id="navbarNav"> <ul class="navbar-nav ml-auto flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">About </a> </li> <li class="nav-item "> <a class="nav-link" href="/writing/">Writing </a> </li> <li class="nav-item "> <a class="nav-link" href="/talks/">Talks </a> </li> <li class="nav-item "> <a class="nav-link" href="/teaching/">Teaching </a> </li> <li class="toggle-container"> <button id="light-toggle" title="Change theme"> <i class="ti ti-sun-moon" id="light-toggle-system"></i> <i class="ti ti-moon-filled" id="light-toggle-dark"></i> <i class="ti ti-sun-filled" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">Inside Claude Code: An Architecture Deep Dive</h1> <p class="post-meta"> Created on April 01, 2026 </p> <p class="post-tags"> <a href="/blog/2026"> <i class="fa-solid fa-calendar fa-sm"></i> 2026 </a>   ·   <a href="/blog/tag/llms"> <i class="fa-solid fa-hashtag fa-sm"></i> llms</a>   <a href="/blog/tag/ai-agents"> <i class="fa-solid fa-hashtag fa-sm"></i> ai-agents</a>   <a href="/blog/tag/developer-tools"> <i class="fa-solid fa-hashtag fa-sm"></i> developer-tools</a>   ·   <a href="/blog/category/technical-blog"> <i class="fa-solid fa-tag fa-sm"></i> technical-blog</a> </p> </header> <article class="post-content"> <div id="table-of-contents"> <ul id="toc" class="section-nav"> <li class="toc-entry toc-h1"> <a href="#claude-code-v2188--architecture-deep-dive">Claude Code v2.1.88 — Architecture Deep Dive</a> <ul> <li class="toc-entry toc-h2"><a href="#table-of-contents">Table of Contents</a></li> <li class="toc-entry toc-h2"> <a href="#1-high-level-architecture-diagram">1. High-Level Architecture Diagram</a> <ul> <li class="toc-entry toc-h3"><a href="#narrative">Narrative</a></li> </ul> </li> <li class="toc-entry toc-h2"><a href="#2-directory-map">2. Directory Map</a></li> <li class="toc-entry toc-h2"> <a href="#3-startup--bootstrap-sequence-diagram">3. Startup &amp; Bootstrap Sequence Diagram</a> <ul> <li class="toc-entry toc-h3"><a href="#narrative-1">Narrative</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#4-the-query-loop--core-interaction-flow">4. The Query Loop — Core Interaction Flow</a> <ul> <li class="toc-entry toc-h3"><a href="#narrative-2">Narrative</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#5-tool-execution-sequence-diagram">5. Tool Execution Sequence Diagram</a> <ul> <li class="toc-entry toc-h3"><a href="#narrative-3">Narrative</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#6-dependency--layer-diagram">6. Dependency &amp; Layer Diagram</a> <ul> <li class="toc-entry toc-h3"><a href="#narrative-4">Narrative</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#7-key-abstractions--data-models">7. Key Abstractions &amp; Data Models</a> <ul> <li class="toc-entry toc-h3"><a href="#the-tool-interface-srctoolts">The Tool Interface (src/Tool.ts)</a></li> <li class="toc-entry toc-h3"><a href="#appstate-srcstateappstatestorets">AppState (src/state/AppStateStore.ts)</a></li> <li class="toc-entry toc-h3"><a href="#message-types">Message Types</a></li> <li class="toc-entry toc-h3"><a href="#permission-decision-flow">Permission Decision Flow</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#8-communication-patterns">8. Communication Patterns</a> <ul> <li class="toc-entry toc-h3"><a href="#how-components-communicate">How Components Communicate</a></li> <li class="toc-entry toc-h3"><a href="#inter-agent-communication-swarms">Inter-Agent Communication (Swarms)</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#9-narrative-walkthrough-a-message-end-to-end">9. Narrative Walkthrough: A Message End-to-End</a> <ul> <li class="toc-entry toc-h3"><a href="#step-1-input-capture-presentation-layer">Step 1: Input Capture (Presentation Layer)</a></li> <li class="toc-entry toc-h3"><a href="#step-2-message-creation-application-layer">Step 2: Message Creation (Application Layer)</a></li> <li class="toc-entry toc-h3"><a href="#step-3-context-gathering-application-layer">Step 3: Context Gathering (Application Layer)</a></li> <li class="toc-entry toc-h3"><a href="#step-4-api-call-infrastructure-layer">Step 4: API Call (Infrastructure Layer)</a></li> <li class="toc-entry toc-h3"><a href="#step-5-streaming-response-application--presentation">Step 5: Streaming Response (Application → Presentation)</a></li> <li class="toc-entry toc-h3"><a href="#step-6-tool-calls-application--domain--infrastructure">Step 6: Tool Calls (Application → Domain → Infrastructure)</a></li> <li class="toc-entry toc-h3"><a href="#step-7-loop-back-application-layer">Step 7: Loop Back (Application Layer)</a></li> <li class="toc-entry toc-h3"><a href="#step-8-completion-application--presentation">Step 8: Completion (Application → Presentation)</a></li> <li class="toc-entry toc-h3"><a href="#step-9-persistence-infrastructure-layer">Step 9: Persistence (Infrastructure Layer)</a></li> </ul> </li> <li class="toc-entry toc-h2"><a href="#why-is-it-structured-this-way">Why Is It Structured This Way?</a></li> <li class="toc-entry toc-h2"> <a href="#10-deep-dive-the-grep-tool-agentic-search">10. Deep Dive: The Grep Tool (Agentic Search)</a> <ul> <li class="toc-entry toc-h3"><a href="#architecture">Architecture</a></li> <li class="toc-entry toc-h3"><a href="#input-schema">Input Schema</a></li> <li class="toc-entry toc-h3"><a href="#execution-flow">Execution Flow</a></li> <li class="toc-entry toc-h3"><a href="#ripgrep-binary-resolution-srcutilsripgrepts">Ripgrep Binary Resolution (src/utils/ripgrep.ts)</a></li> <li class="toc-entry toc-h3"><a href="#error-recovery">Error Recovery</a></li> <li class="toc-entry toc-h3"><a href="#pagination-system">Pagination System</a></li> <li class="toc-entry toc-h3"><a href="#result-formatting">Result Formatting</a></li> <li class="toc-entry toc-h3"><a href="#permission--security">Permission &amp; Security</a></li> <li class="toc-entry toc-h3"><a href="#tool-properties">Tool Properties</a></li> </ul> </li> <li class="toc-entry toc-h2"> <a href="#11-deep-dive-memory-management--context-compaction">11. Deep Dive: Memory Management &amp; Context Compaction</a> <ul> <li class="toc-entry toc-h3"><a href="#the-problem">The Problem</a></li> <li class="toc-entry toc-h3"><a href="#architecture-overview">Architecture Overview</a></li> <li class="toc-entry toc-h3"><a href="#key-files">Key Files</a></li> <li class="toc-entry toc-h3"><a href="#how-tokens-are-counted">How Tokens Are Counted</a></li> <li class="toc-entry toc-h3"><a href="#layer-1-tool-result-budget">Layer 1: Tool Result Budget</a></li> <li class="toc-entry toc-h3"><a href="#layer-2-snip-compaction-feature-gated-history_snip">Layer 2: Snip Compaction (feature-gated: HISTORY_SNIP)</a></li> <li class="toc-entry toc-h3"><a href="#layer-3-microcompaction-per-turn">Layer 3: Microcompaction (per-turn)</a></li> <li class="toc-entry toc-h3"><a href="#layer-4-context-collapse-feature-gated-context_collapse-internal">Layer 4: Context Collapse (feature-gated: CONTEXT_COLLAPSE, internal)</a></li> <li class="toc-entry toc-h3"> <a href="#layer-5-autocompact-threshold-based">Layer 5: Autocompact (threshold-based)</a> <ul> <li class="toc-entry toc-h4"><a href="#strategy-a-session-memory-compaction-sm-compact">Strategy A: Session Memory Compaction (SM-Compact)</a></li> <li class="toc-entry toc-h4"><a href="#strategy-b-full-conversation-compaction-fallback">Strategy B: Full Conversation Compaction (fallback)</a></li> </ul> </li> <li class="toc-entry toc-h3"><a href="#background-session-memory-extraction">Background: Session Memory Extraction</a></li> <li class="toc-entry toc-h3"><a href="#post-compact-cleanup">Post-Compact Cleanup</a></li> <li class="toc-entry toc-h3"><a href="#integration-in-the-query-loop-srcqueryts">Integration in the Query Loop (src/query.ts)</a></li> <li class="toc-entry toc-h3"><a href="#reactive-vs-proactive-compaction">Reactive vs. Proactive Compaction</a></li> <li class="toc-entry toc-h3"><a href="#lifecycle-of-a-long-conversation">Lifecycle of a Long Conversation</a></li> <li class="toc-entry toc-h3"><a href="#key-constants">Key Constants</a></li> </ul> </li> </ul> </li> </ul> </div> <hr> <div id="markdown-content"> <p><em>This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.</em></p> <h1 id="claude-code-v2188--architecture-deep-dive">Claude Code v2.1.88 — Architecture Deep Dive</h1> <blockquote> <p>A comprehensive visual and narrative guide to how Claude Code works internally. Written for someone new to the codebase.</p> </blockquote> <hr> <h2 id="table-of-contents">Table of Contents</h2> <ol> <li><a href="#1-high-level-architecture-diagram">High-Level Architecture Diagram</a></li> <li><a href="#2-directory-map">Directory Map</a></li> <li><a href="#3-startup--bootstrap-sequence-diagram">Startup &amp; Bootstrap Sequence Diagram</a></li> <li><a href="#4-the-query-loop--core-interaction-flow">The Query Loop — Core Interaction Flow</a></li> <li><a href="#5-tool-execution-sequence-diagram">Tool Execution Sequence Diagram</a></li> <li><a href="#6-dependency--layer-diagram">Dependency &amp; Layer Diagram</a></li> <li><a href="#7-key-abstractions--data-models">Key Abstractions &amp; Data Models</a></li> <li><a href="#8-communication-patterns">Communication Patterns</a></li> <li><a href="#9-narrative-walkthrough-a-message-end-to-end">Narrative Walkthrough: A Message End-to-End</a></li> <li><a href="#10-deep-dive-the-grep-tool-agentic-search">Deep Dive: The Grep Tool (Agentic Search)</a></li> <li><a href="#11-deep-dive-memory-management--context-compaction">Deep Dive: Memory Management &amp; Context Compaction</a></li> </ol> <hr> <h2 id="1-high-level-architecture-diagram">1. High-Level Architecture Diagram</h2> <p>This is the 30,000-foot view. Every box is a module group; every arrow is a dependency or data flow direction.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                          ENTRY POINTS                                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
+│  │ cli.tsx   │  │ mcp.ts   │  │ sdk      │  │ server   │  │ daemon/     │  │
+│  │ (default) │  │ (--mcp)  │  │ types.ts │  │ (HTTP)   │  │ bridge/ssh  │  │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬──────┘  │
+│       │              │             │              │               │          │
+│       └──────────────┴─────┬───────┴──────────────┴───────────────┘          │
+│                            ▼                                                 │
+│                    ┌──────────────┐                                          │
+│                    │   main.tsx   │  (orchestrator: init, setup, routing)    │
+│                    └──────┬───────┘                                          │
+└───────────────────────────┼─────────────────────────────────────────────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              ▼             ▼             ▼
+┌──────────────────┐ ┌───────────┐ ┌──────────────┐
+│   BOOTSTRAP &amp;    │ │  SETUP    │ │  COMMAND &amp;   │
+│   CONFIGURATION  │ │           │ │  ROUTING     │
+│                  │ │ • cwd     │ │              │
+│ • init()         │ │ • hooks   │ │ • getCommands│
+│ • configs        │ │ • worktree│ │ • agents     │
+│ • telemetry      │ │ • sinks   │ │ • skills     │
+│ • auth prefetch  │ │ • plugins │ │ • plugins    │
+│ • proxy/TLS      │ │ • memory  │ │              │
+└──────────────────┘ └───────────┘ └──────┬───────┘
+                                          │
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            UI LAYER (Ink/React TUI)                         │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  App.tsx  (providers: AppState, Stats, FPS, Voice, Mailbox)        │    │
+│  │  ┌──────────────────────────────────────────────────────────────┐  │    │
+│  │  │  REPL.tsx  (main interactive screen)                         │  │    │
+│  │  │  ┌────────────────┐  ┌──────────────┐  ┌─────────────────┐  │  │    │
+│  │  │  │ Messages.tsx   │  │ PromptInput  │  │  StatusLine     │  │  │    │
+│  │  │  │ (conversation) │  │ (user input) │  │  (cost/tokens)  │  │  │    │
+│  │  │  └────────────────┘  └──────┬───────┘  └─────────────────┘  │  │    │
+│  │  │  ┌────────────────┐         │          ┌─────────────────┐  │  │    │
+│  │  │  │ Spinner.tsx    │         │          │ Dialogs/Modals  │  │  │    │
+│  │  │  │ (loading)      │         │          │ (permissions)   │  │  │    │
+│  │  │  └────────────────┘         │          └─────────────────┘  │  │    │
+│  │  └─────────────────────────────┼────────────────────────────────┘  │    │
+│  └────────────────────────────────┼───────────────────────────────────┘    │
+└───────────────────────────────────┼─────────────────────────────────────────┘
+                                    │ user submits message
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         QUERY ENGINE LAYER                                  │
+│                                                                             │
+│  ┌─────────────────────────┐      ┌──────────────────────────────────────┐  │
+│  │    QueryEngine          │      │           query.ts                   │  │
+│  │                         │      │                                      │  │
+│  │  • message history      │─────▶│  • queryLoop() async generator      │  │
+│  │  • session management   │      │  • streaming API calls              │  │
+│  │  • permission tracking  │      │  • tool execution orchestration     │  │
+│  │  • file state cache     │      │  • context compaction/recovery      │  │
+│  │  • budget management    │      │  • error handling &amp; retries         │  │
+│  └─────────────────────────┘      └──────────────┬───────────────────────┘  │
+│                                                   │                         │
+│                          ┌────────────────────────┼────────────────┐        │
+│                          ▼                        ▼                ▼        │
+│                   ┌────────────┐          ┌──────────────┐  ┌──────────┐   │
+│                   │ Claude API │          │ Tool System  │  │ Compact  │   │
+│                   │ (streaming)│          │ (execution)  │  │ Service  │   │
+│                   └────────────┘          └──────┬───────┘  └──────────┘   │
+└──────────────────────────────────────────────────┼──────────────────────────┘
+                                                   │
+                                                   ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           TOOL SYSTEM                                       │
+│                                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │  File Tools  │  │  Shell Tools │  │  Web Tools   │  │  Agent Tools │   │
+│  │              │  │              │  │              │  │              │   │
+│  │  FileRead    │  │  Bash        │  │  WebFetch    │  │  AgentTool   │   │
+│  │  FileEdit    │  │  PowerShell  │  │  WebSearch   │  │  SendMessage │   │
+│  │  FileWrite   │  │              │  │              │  │  TeamCreate  │   │
+│  │  Glob/Grep   │  │              │  │              │  │              │   │
+│  │  NotebookEdit│  │              │  │              │  │              │   │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │  Plan Tools  │  │  Task Tools  │  │  MCP Tools   │  │  System      │   │
+│  │              │  │              │  │              │  │  Tools       │   │
+│  │  EnterPlan   │  │  TaskCreate  │  │  MCPTool     │  │  AskUser     │   │
+│  │  ExitPlan    │  │  TaskGet     │  │  (dynamic)   │  │  ToolSearch  │   │
+│  │  Worktree    │  │  TaskUpdate  │  │  ListMCPRes  │  │  Skill       │   │
+│  │              │  │  TaskList    │  │  ReadMCPRes  │  │  Brief       │   │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘   │
+│                                                                             │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    PERMISSION LAYER                                   │   │
+│  │  Rules (settings) → Tool Logic → Mode Check → Classifier → User Ask │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         SERVICES &amp; STATE                                    │
+│                                                                             │
+│  ┌─────────────┐ ┌──────────────┐ ┌────────────┐ ┌──────────────────────┐  │
+│  │ AppState    │ │ API Client   │ │ Analytics  │ │ Session Memory       │  │
+│  │ (Store)     │ │ (Anthropic   │ │ (1P + DD)  │ │ (claude.md files)    │  │
+│  │             │ │  Bedrock,    │ │ GrowthBook │ │                      │  │
+│  │ React hooks │ │  Vertex,     │ │ (flags)    │ │ extractMemories()    │  │
+│  │ selectors   │ │  Foundry)    │ │            │ │ teamMemorySync       │  │
+│  └─────────────┘ └──────────────┘ └────────────┘ └──────────────────────┘  │
+│  ┌─────────────┐ ┌──────────────┐ ┌────────────┐ ┌──────────────────────┐  │
+│  │ MCP Manager │ │ Plugin Mgr   │ │ Hooks      │ │ History              │  │
+│  │ (servers,   │ │ (load, install│ │ (pre/post  │ │ (JSONL persistence)  │  │
+│  │  tools,     │ │  enable,     │ │  tool use, │ │                      │  │
+│  │  resources) │ │  lifecycle)  │ │  session)  │ │ Transcript service   │  │
+│  └─────────────┘ └──────────────┘ └────────────┘ └──────────────────────┘  │
+│  ┌─────────────┐ ┌──────────────┐ ┌────────────┐ ┌──────────────────────┐  │
+│  │ Bootstrap   │ │ Settings     │ │ Token      │ │ Voice (STT/TTS)      │  │
+│  │ State       │ │ Sync         │ │ Estimation │ │ (feature-gated)      │  │
+│  │ (150+ props)│ │ (remote mgd) │ │            │ │                      │  │
+│  └─────────────┘ └──────────────┘ └────────────┘ └──────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
+</code></pre></div></div> <h3 id="narrative">Narrative</h3> <p>Claude Code is a <strong>terminal-based AI coding assistant</strong> built as a TypeScript application with a custom React/Ink TUI (Terminal User Interface). The architecture follows a layered pattern:</p> <ol> <li> <strong>Entry Points</strong> route to the right mode (CLI, MCP server, SDK, daemon, etc.)</li> <li> <strong>Bootstrap</strong> loads configuration, telemetry, auth, and networking</li> <li> <strong>Setup</strong> prepares the working directory, hooks, plugins, and file watchers</li> <li> <strong>UI Layer</strong> renders the terminal interface using a custom Ink/React renderer</li> <li> <strong>QueryEngine</strong> orchestrates the conversation: sending messages to Claude, streaming responses, and executing tools</li> <li> <strong>Tool System</strong> provides 50+ tools the model can invoke, each with its own permission logic</li> <li> <strong>Services &amp; State</strong> underpin everything: API clients, analytics, MCP servers, memory, history</li> </ol> <p>The key insight is that <strong>the QueryEngine is the heart</strong> — it sits between the UI and the Claude API, managing the agentic loop of “send message → get response → execute tools → send results → repeat.”</p> <hr> <h2 id="2-directory-map">2. Directory Map</h2> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>claude-code-source-code/
+│
+├── src/                          # All source code (1,884 files, 512K LOC)
+│   │
+│   ├── entrypoints/              # [ENTRY] CLI, MCP, SDK entry points
+│   │   ├── cli.tsx               #   Primary CLI entry — fast-path routing
+│   │   ├── init.ts               #   Lazy config/telemetry initialization
+│   │   ├── mcp.ts                #   MCP server mode (--mcp flag)
+│   │   └── agentSdkTypes.ts      #   SDK type exports
+│   │
+│   ├── main.tsx                  # [ORCHESTRATOR] Full CLI init, permission, REPL launch
+│   ├── setup.ts                  # [SETUP] CWD, hooks, worktree, sinks, memory
+│   ├── replLauncher.tsx          # [LAUNCH] Final step: renders &lt;App&gt;&lt;REPL/&gt;&lt;/App&gt;
+│   │
+│   ├── QueryEngine.ts            # [CORE] Conversation manager — message history, sessions
+│   ├── query.ts                  # [CORE] The query loop — API calls, tool orchestration
+│   ├── query/                    # [CORE] Query subsystems
+│   │   ├── config.ts             #   Query configuration builder
+│   │   ├── deps.ts               #   Dependency injection (API, compact, etc.)
+│   │   ├── tokenBudget.ts        #   Token budget tracking &amp; decisions
+│   │   └── stopHooks.ts          #   Lifecycle hooks at query boundaries
+│   │
+│   ├── Tool.ts                   # [TOOLS] Tool interface definition + buildTool()
+│   ├── tools.ts                  # [TOOLS] Tool registry — getAllBaseTools()
+│   ├── tools/                    # [TOOLS] 50+ tool implementations
+│   │   ├── AgentTool/            #   Spawn sub-agents
+│   │   ├── BashTool/             #   Shell command execution
+│   │   ├── FileReadTool/         #   File reading (images, PDFs, notebooks)
+│   │   ├── FileEditTool/         #   Diff-based file editing
+│   │   ├── FileWriteTool/        #   File creation
+│   │   ├── GlobTool/             #   File pattern matching
+│   │   ├── GrepTool/             #   Content search (ripgrep)
+│   │   ├── WebFetchTool/         #   HTTP fetching
+│   │   ├── WebSearchTool/        #   Web search
+│   │   └── ...                   #   40+ more tools
+│   │
+│   ├── commands.ts               # [COMMANDS] Slash command registry
+│   ├── commands/                  # [COMMANDS] 100+ slash command implementations
+│   │
+│   ├── state/                    # [STATE] Application state management
+│   │   ├── AppStateStore.ts      #   AppState type + defaults (300+ lines)
+│   │   ├── AppState.tsx          #   React hooks: useAppState, useSetAppState
+│   │   ├── store.ts              #   Generic Store&lt;T&gt; implementation
+│   │   ├── selectors.ts          #   Pure state selectors
+│   │   └── onChangeAppState.ts   #   Side-effect handler for state changes
+│   │
+│   ├── bootstrap/                # [BOOTSTRAP] Global mutable state container
+│   │   └── state.ts              #   150+ session properties (metrics, auth, UI)
+│   │
+│   ├── services/                 # [SERVICES] 18 service modules
+│   │   ├── api/                  #   Claude API client (Anthropic/Bedrock/Vertex)
+│   │   ├── analytics/            #   Event logging, Datadog, GrowthBook
+│   │   ├── mcp/                  #   MCP server management &amp; auth
+│   │   ├── tools/                #   Tool execution &amp; orchestration
+│   │   ├── plugins/              #   Plugin loading &amp; installation
+│   │   ├── compact/              #   Transcript compaction
+│   │   ├── SessionMemory/        #   Per-turn context gathering
+│   │   ├── extractMemories/      #   Memory extraction from conversations
+│   │   └── voice/                #   Voice mode (STT/TTS)
+│   │
+│   ├── components/               # [UI] React/Ink UI components
+│   │   ├── App.tsx               #   Root provider wrapper
+│   │   ├── Messages.tsx          #   Conversation message list
+│   │   ├── Message.tsx           #   Single message renderer
+│   │   ├── VirtualMessageList    #   Virtualized scrolling
+│   │   ├── PromptInput/          #   Text input area
+│   │   ├── Spinner.tsx           #   Loading indicators
+│   │   ├── StatusLine.tsx        #   Bottom status bar
+│   │   └── Markdown.tsx          #   Markdown rendering
+│   │
+│   ├── screens/                  # [SCREENS] Top-level screen views
+│   │   ├── REPL.tsx              #   Main interactive screen (895KB!)
+│   │   ├── Doctor.tsx            #   Diagnostics
+│   │   └── ResumeConversation    #   Session resumption
+│   │
+│   ├── hooks/                    # [REACT HOOKS] Custom React hooks
+│   ├── skills/                   # [SKILLS] Bundled skill definitions
+│   ├── plugins/                  # [PLUGINS] Built-in plugin definitions
+│   ├── context/                  # [CONTEXT] React context providers
+│   ├── schemas/                  # [SCHEMAS] Zod validation schemas
+│   ├── types/                    # [TYPES] Shared TypeScript types
+│   ├── utils/                    # [UTILS] Shared utilities
+│   │   ├── permissions/          #   Permission rule engine
+│   │   ├── hooks.ts              #   Hook execution engine
+│   │   └── tasks.ts              #   Task/todo persistence
+│   │
+│   ├── ink/                      # [INK] Custom terminal React renderer
+│   │   ├── ink.tsx               #   Core renderer (~9,000 lines)
+│   │   ├── reconciler.ts         #   React reconciler
+│   │   ├── dom.ts                #   Component tree → terminal output
+│   │   ├── layout/               #   Yoga-based layout engine
+│   │   └── events/               #   Keyboard, mouse, focus events
+│   │
+│   ├── context.ts                # [CONTEXT] System + user context builders
+│   ├── history.ts                # [HISTORY] JSONL command history
+│   ├── Task.ts                   # [TASKS] Task type definitions
+│   ├── tasks.ts                  # [TASKS] Task registration
+│   └── cost-tracker.ts           # [COST] USD cost tracking
+│
+├── stubs/                        # Build stubs for Bun intrinsics
+├── scripts/                      # Build scripts (esbuild)
+├── tools/                        # Build tooling
+├── vendor/                       # Native module stubs
+├── types/                        # Additional type declarations
+└── docs/                         # Analysis reports (EN/JA/KO/ZH)
+</code></pre></div></div> <hr> <h2 id="3-startup--bootstrap-sequence-diagram">3. Startup &amp; Bootstrap Sequence Diagram</h2> <p>This traces what happens from <code class="language-plaintext highlighter-rouge">node cli.js</code> to the interactive REPL appearing.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> User runs: node cli.js [args]
+ ═══════════════════════════════════════════════════════════════════════════
+ 
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │  PHASE 1: FAST-PATH ROUTING  (cli.tsx — zero imports for --version)│
+ └─────────────────────────────────────────────────────────────────────┘
+ 
+   cli.tsx:main()
+       │
+       ├──▶ --version / -v ?  ──────▶  print version, exit (no imports!)
+       ├──▶ --mcp ?  ───────────────▶  startMCPServer(), exit
+       ├──▶ --daemon-worker ?  ─────▶  daemon fast-path, exit
+       ├──▶ remote-control / ssh ? ─▶  bridge/remote, exit
+       ├──▶ ps / logs / attach ? ───▶  session management, exit
+       │
+       └──▶ (default) ──────────────▶  import('./main.js') → cliMain()
+ 
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │  PHASE 2: INITIALIZATION  (main.tsx + init.ts)                     │
+ └─────────────────────────────────────────────────────────────────────┘
+ 
+   main.tsx:main()
+       │
+       ├── Set security env vars, SIGINT handler
+       ├── Parse CLI flags (--model, --print, --debug, etc.)
+       │
+       ▼
+   init()  [memoized — runs once]
+       │
+       ├── enableConfigs()              ← load ~/.claude/settings.json
+       ├── applySafeConfigEnvironmentVariables()
+       ├── applyExtraCACertsFromConfig()
+       ├── setupGracefulShutdown()
+       ├── configureGlobalAgents()      ← proxy + mTLS setup
+       ├── preconnectAnthropicApi()     ← TCP pre-connect (latency opt)
+       │
+       ├── [fire-and-forget background]:
+       │   ├── initialize1PEventLogging()
+       │   ├── populateOAuthAccountInfo()
+       │   ├── detectCurrentRepository()
+       │   └── initRemoteManagedSettings()
+       │
+       └── Show trust dialog if needed
+ 
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │  PHASE 3: TELEMETRY + PERMISSIONS                                  │
+ └─────────────────────────────────────────────────────────────────────┘
+ 
+       │
+       ├── initializeTelemetryAfterTrust()  ← OpenTelemetry setup
+       ├── getPermissionContext()
+       ├── Show permission dialog (interactive only)
+       │
+       ├── initializeToolPermissionContext()
+       ├── initBuiltinPlugins()         ← register bundled plugins
+       └── initBundledSkills()          ← register bundled skills
+ 
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │  PHASE 4: SETUP  (setup.ts — parallel with command loading)        │
+ └─────────────────────────────────────────────────────────────────────┘
+ 
+   setup()
+       │
+       ├── Check Node.js &gt;= 18
+       ├── setCwd(cwd)                  ← MUST come before hooks load
+       ├── captureHooksConfigSnapshot() ← freeze hook config
+       ├── initializeFileChangedWatcher()
+       │
+       ├── [if --worktree]:
+       │   ├── createWorktreeForSession()
+       │   └── process.chdir(worktreePath)
+       │
+       ├── initSessionMemory()
+       ├── lockCurrentVersion()
+       │
+       ├── [fire-and-forget]:
+       │   ├── getCommands()            ← scan for slash commands
+       │   ├── loadPluginHooks()
+       │   ├── setupPluginHookHotReload()
+       │   ├── registerAttributionHooks()
+       │   └── prefetchApiKeyIfSafe()
+       │
+       ├── initSinks()                  ← error log + analytics
+       └── logEvent('tengu_started')    ← session start beacon
+ 
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │  PHASE 5: COMMAND &amp; AGENT LOADING  (parallel with setup)           │
+ └─────────────────────────────────────────────────────────────────────┘
+ 
+   await Promise.all([
+       getCommands(cwd),                ← all slash commands
+       getAgentDefinitionsWithOverrides(cwd)  ← agent registry
+   ])
+ 
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │  PHASE 6: REPL LAUNCH                                              │
+ └─────────────────────────────────────────────────────────────────────┘
+ 
+   launchRepl(root, appProps, replProps, renderAndRun)
+       │
+       ├── import('./components/App.js')
+       ├── import('./screens/REPL.js')
+       └── renderAndRun(root, &lt;App&gt;&lt;REPL /&gt;&lt;/App&gt;)
+               │
+               └── Ink TUI event loop starts ← user sees the prompt
+</code></pre></div></div> <h3 id="narrative-1">Narrative</h3> <p>The startup is designed for <strong>speed</strong>. Phase 1 handles trivial commands (<code class="language-plaintext highlighter-rouge">--version</code>) with zero module imports. Only the default interactive path loads the heavy <code class="language-plaintext highlighter-rouge">main.tsx</code>. Initialization is memoized and parallelized — network pre-connection, auth prefetching, and repository detection all happen concurrently. Setup and command loading run in parallel via <code class="language-plaintext highlighter-rouge">Promise.all</code>. The REPL is the final step: it dynamically imports the React components and starts the Ink terminal renderer.</p> <hr> <h2 id="4-the-query-loop--core-interaction-flow">4. The Query Loop — Core Interaction Flow</h2> <p>This is the most important flow in the entire codebase. It’s what happens every time you type a message.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> ┌──────────────────────────────────────────────────────────────────────────┐
+ │                    QUERY LOOP (query.ts → queryLoop())                   │
+ │                                                                          │
+ │  This is an async generator that yields streaming events back to the UI  │
+ └──────────────────────────────────────────────────────────────────────────┘
+
+  User types message
+       │
+       ▼
+  ┌─────────────────────┐
+  │ QueryEngine          │
+  │ .submitMessage()     │
+  │                      │
+  │ • Wraps canUseTool   │
+  │ • Processes input    │
+  │ • Updates AppState   │
+  │ • Records transcript │
+  └──────────┬──────────┘
+             │
+             ▼
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │  PREPARE                                                            │
+  │                                                                     │
+  │  1. Build system prompt (base + context + tools + skills)           │
+  │  2. Gather user context (claude.md files, git status, date)         │
+  │  3. Normalize message history for API                               │
+  │  4. Apply compaction if needed (snip, microcompact, autocompact)    │
+  └──────────────────────────────┬──────────────────────────────────────┘
+                                 │
+                                 ▼
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  CALL CLAUDE API (streaming)                                     │
+  │                                                                  │
+  │  POST /v1/messages  {                                            │
+  │    model: "claude-opus-4-6-...",                                 │
+  │    messages: [...conversation history...],                       │
+  │    system: "You are Claude Code...",                             │
+  │    tools: [...50+ tool schemas...],                              │
+  │    stream: true                                                  │
+  │  }                                                               │
+  │                                                                  │
+  │  ┌───────────────────────────────────────────────────────────┐   │
+  │  │  for await (const event of stream) {                      │   │
+  │  │    yield event  ──────────────────────▶  UI renders it    │   │
+  │  │  }                                                        │   │
+  │  └───────────────────────────────────────────────────────────┘   │
+  └──────────────────────────┬───────────────────────────────────────┘
+                             │
+                             ▼
+              ┌──────────────────────────────┐
+              │  Response contains tool_use  │
+              │  blocks?                     │
+              └──────────┬───────────────────┘
+                         │
+              ┌──────────┴──────────┐
+              │ NO                  │ YES
+              ▼                     ▼
+  ┌─────────────────┐   ┌──────────────────────────────────────────┐
+  │  DONE            │   │  EXECUTE TOOLS                           │
+  │                  │   │                                          │
+  │  Return Terminal │   │  ┌────────────────────────────────┐     │
+  │  { reason:       │   │  │  For each tool_use block:      │     │
+  │    'completed' } │   │  │                                │     │
+  └─────────────────┘   │  │  1. Find tool by name           │     │
+                        │  │  2. Validate input (Zod schema) │     │
+                        │  │  3. Check permissions            │     │
+                        │  │     ├─ Rule match? → allow/deny │     │
+                        │  │     ├─ Mode check? → auto/ask   │     │
+                        │  │     └─ User prompt? → wait       │     │
+                        │  │  4. Execute tool.call()          │     │
+                        │  │  5. Yield result as tool_result  │     │
+                        │  └────────────────────────────────┘     │
+                        │                                          │
+                        │  Concurrency:                            │
+                        │  • Read-only tools → parallel batch      │
+                        │  • Write tools → sequential              │
+                        └────────────────┬─────────────────────────┘
+                                         │
+                                         │  tool results added
+                                         │  to message history
+                                         │
+                                         ▼
+                              ┌─────────────────────┐
+                              │  LOOP BACK           │
+                              │  (send tool results  │
+                              │   to Claude API)     │
+                              │                      │
+                              │  → Go to CALL CLAUDE │
+                              │    API above          │
+                              └─────────────────────┘
+
+  ═══════════════════════════════════════════════════════════════════
+  RECOVERY PATHS (when things go wrong):
+  
+  • Context too long  →  autocompact / reactive compact / context collapse
+  • Max output tokens →  escalate output limit, retry
+  • Model error       →  fallback model retry
+  • User interrupt    →  abort controller, yield partial results
+  • Budget exceeded   →  stop with 'max_turns' or token budget reason
+  ═══════════════════════════════════════════════════════════════════
+</code></pre></div></div> <h3 id="narrative-2">Narrative</h3> <p>The query loop is an <strong>async generator</strong> — it <code class="language-plaintext highlighter-rouge">yield</code>s streaming events as they arrive from the Claude API, allowing the UI to render responses incrementally. When Claude’s response includes <code class="language-plaintext highlighter-rouge">tool_use</code> blocks (e.g., “read this file” or “run this command”), the loop pauses streaming, executes the tools (with permission checks), and then loops back to send the tool results to Claude. This continues until Claude responds with just text (no tool calls), at which point the loop terminates.</p> <p>The loop also handles recovery: if the context gets too long, it compacts the conversation history. If the model hits output limits, it escalates. If the user interrupts, it aborts gracefully.</p> <hr> <h2 id="5-tool-execution-sequence-diagram">5. Tool Execution Sequence Diagram</h2> <p>This traces a single tool call from Claude’s response to the result being sent back.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  Claude API                QueryLoop              ToolOrchestration        Permission System          Tool
+  (streaming)               (query.ts)             (toolOrchestration.ts)   (permissions.ts)           (e.g. BashTool)
+      │                         │                         │                        │                        │
+      │  assistant message      │                         │                        │                        │
+      │  with tool_use block    │                         │                        │                        │
+      │────────────────────────▶│                         │                        │                        │
+      │                         │                         │                        │                        │
+      │                         │  runTools(toolUseBlocks) │                        │                        │
+      │                         │────────────────────────▶│                        │                        │
+      │                         │                         │                        │                        │
+      │                         │                         │  Partition tools:      │                        │
+      │                         │                         │  read-only → parallel  │                        │
+      │                         │                         │  write    → serial     │                        │
+      │                         │                         │                        │                        │
+      │                         │                         │  For each tool:        │                        │
+      │                         │                         │                        │                        │
+      │                         │                         │  runToolUse()          │                        │
+      │                         │                         │─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐                        │
+      │                         │                         │                        │                        │
+      │                         │                         │  1. validateInput()    │                        │
+      │                         │                         │─────────────────────────────────────────────────▶│
+      │                         │                         │                        │                  (Zod) │
+      │                         │                         │◀─────────────────────────────────────────────────│
+      │                         │                         │                        │                        │
+      │                         │                         │  2. canUseTool()       │                        │
+      │                         │                         │───────────────────────▶│                        │
+      │                         │                         │                        │                        │
+      │                         │                         │                        │  Check rules:          │
+      │                         │                         │                        │  settings → tool logic │
+      │                         │                         │                        │  → mode → classifier   │
+      │                         │                         │                        │  → user prompt         │
+      │                         │                         │                        │                        │
+      │                         │                         │  PermissionDecision    │                        │
+      │                         │                         │◀───────────────────────│                        │
+      │                         │                         │                        │                        │
+      │                         │                         │  [if allowed]          │                        │
+      │                         │                         │                        │                        │
+      │                         │                         │  3. Pre-tool hooks     │                        │
+      │                         │                         │  (PreToolUse event)    │                        │
+      │                         │                         │                        │                        │
+      │                         │                         │  4. tool.call(input)   │                        │
+      │                         │                         │─────────────────────────────────────────────────▶│
+      │                         │                         │                        │                        │
+      │                         │                         │  yield progress ◀──────────── onProgress()     │
+      │                         │                         │                        │                        │
+      │                         │                         │  ToolResult  ◀─────────────────────────return   │
+      │                         │                         │                        │                        │
+      │                         │                         │  5. Post-tool hooks    │                        │
+      │                         │                         │  (PostToolUse event)   │                        │
+      │                         │                         │                        │                        │
+      │                         │  yield tool_result msg  │                        │                        │
+      │                         │◀────────────────────────│                        │                        │
+      │                         │                         │                        │                        │
+      │  Send tool results      │                         │                        │                        │
+      │  as next API request    │                         │                        │                        │
+      │◀────────────────────────│                         │                        │                        │
+      │                         │                         │                        │                        │
+</code></pre></div></div> <h3 id="narrative-3">Narrative</h3> <p>When Claude returns a tool call (e.g., <code class="language-plaintext highlighter-rouge">BashTool</code> with input <code class="language-plaintext highlighter-rouge">git status</code>), the orchestration layer:</p> <ol> <li> <strong>Validates</strong> the input against the tool’s Zod schema</li> <li> <strong>Checks permissions</strong> through a multi-layer system: static rules from settings, the tool’s own <code class="language-plaintext highlighter-rouge">checkPermissions()</code> logic, the current permission mode, and optionally an auto-classifier or user prompt</li> <li> <strong>Fires pre-tool hooks</strong> (user-configured shell commands or LLM checks)</li> <li> <strong>Executes</strong> the tool, streaming progress updates to the UI</li> <li><strong>Fires post-tool hooks</strong></li> <li> <strong>Returns</strong> the result to the query loop, which sends it back to Claude</li> </ol> <p>Read-only tools (FileRead, Glob, Grep) run in <strong>parallel batches</strong> for speed. Write tools (FileWrite, Bash) run <strong>sequentially</strong> to prevent race conditions.</p> <hr> <h2 id="6-dependency--layer-diagram">6. Dependency &amp; Layer Diagram</h2> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ┌─────────────────────────────────────────────────────────────────────┐
+  │                        PRESENTATION LAYER                           │
+  │                                                                     │
+  │   Ink Renderer ──▶ React Components ──▶ Screens (REPL, Doctor)     │
+  │   (custom)          (Messages, Input,    (top-level views)          │
+  │                      Spinner, Dialogs)                              │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │                        APPLICATION LAYER                            │
+  │                                                                     │
+  │   QueryEngine ──▶ queryLoop() ──▶ Tool Orchestration               │
+  │   (session mgr)    (async gen)     (runTools, permissions)          │
+  │                                                                     │
+  │   Commands ──▶ Skills ──▶ Plugins ──▶ Hooks                        │
+  │   (slash cmds)  (bundled)  (ext pkg)   (lifecycle)                  │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │                        DOMAIN LAYER                                 │
+  │                                                                     │
+  │   Tools (50+) ──▶ Tool Interface ◀── MCP Tools (dynamic)           │
+  │   (Bash, File,     (call, check       (from MCP servers)            │
+  │    Web, Agent)      permissions,                                    │
+  │                     schema)                                         │
+  │                                                                     │
+  │   AppState ──▶ Store&lt;T&gt; ──▶ React Hooks (useAppState)              │
+  │   (300+ props)  (pub/sub)    (useSyncExternalStore)                 │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │                        INFRASTRUCTURE LAYER                         │
+  │                                                                     │
+  │   API Client ──▶ Anthropic SDK (Bedrock, Vertex, Foundry, Direct)  │
+  │   Analytics  ──▶ 1P Logger + Datadog + GrowthBook (feature flags)  │
+  │   MCP Manager──▶ Client connections, OAuth, tool registration       │
+  │   History    ──▶ JSONL file persistence with file locking           │
+  │   Memory     ──▶ claude.md discovery, extraction, team sync         │
+  │   Bootstrap  ──▶ Global state (150+ session properties)             │
+  │   Settings   ──▶ User/project/local/remote-managed/policy           │
+  │   Telemetry  ──▶ OpenTelemetry (spans, metrics, counters)           │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  Dependencies flow DOWNWARD only. Each layer may only call the layer
+  below it. Cross-layer access goes through the Application layer.
+</code></pre></div></div> <h3 id="narrative-4">Narrative</h3> <p>The architecture follows a <strong>layered dependency model</strong>:</p> <ul> <li> <strong>Presentation</strong> knows about components and screens, but not about API calls or tool execution</li> <li> <strong>Application</strong> orchestrates the flow: the QueryEngine manages conversations, commands route user intent, hooks inject lifecycle behavior</li> <li> <strong>Domain</strong> defines the core abstractions: what a Tool is, what AppState looks like, how permissions work</li> <li> <strong>Infrastructure</strong> handles I/O: API calls, file persistence, analytics, MCP connections</li> </ul> <p>This separation means you can understand any layer independently. The Tool interface is the key domain abstraction — it defines a contract that 50+ implementations fulfill, and the Application layer orchestrates them without knowing their internals.</p> <hr> <h2 id="7-key-abstractions--data-models">7. Key Abstractions &amp; Data Models</h2> <h3 id="the-tool-interface-srctoolts">The Tool Interface (src/Tool.ts)</h3> <p>The most important abstraction in the codebase. Every capability Claude can invoke is a Tool.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ┌─────────────────────────────────────────────────┐
+  │  Tool&lt;Input, Output, Progress&gt;                   │
+  │                                                   │
+  │  Identity:                                        │
+  │    name: string              "BashTool"           │
+  │    userFacingName(): string  "Bash"               │
+  │    description(input)        "Run shell command"  │
+  │                                                   │
+  │  Schema:                                          │
+  │    inputSchema: ZodSchema    { command: string }  │
+  │    outputSchema?: ZodSchema                       │
+  │                                                   │
+  │  Execution:                                       │
+  │    call(input, context)      → ToolResult         │
+  │    isConcurrencySafe()       → boolean            │
+  │    isReadOnly()              → boolean            │
+  │                                                   │
+  │  Permissions:                                     │
+  │    checkPermissions(input)   → allow|deny|ask     │
+  │    validateInput(input)      → ok|error           │
+  │                                                   │
+  │  UI Rendering:                                    │
+  │    prompt()                  → system prompt text  │
+  │    renderToolUseMessage()    → React component    │
+  │    renderToolResultMessage() → React component    │
+  │    renderToolUseProgressMessage() → React comp    │
+  └─────────────────────────────────────────────────┘
+</code></pre></div></div> <h3 id="appstate-srcstateappstatestorets">AppState (src/state/AppStateStore.ts)</h3> <p>The single source of truth for all reactive UI state.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ┌────────────────────────────────────────────────────────────────────┐
+  │  AppState                                                          │
+  │                                                                    │
+  │  ┌─────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
+  │  │ Core            │  │ Tasks            │  │ Permissions      │  │
+  │  │                 │  │                  │  │                  │  │
+  │  │ settings        │  │ tasks: {}        │  │ toolPermission   │  │
+  │  │ mainLoopModel   │  │ foregroundedTask │  │   Context        │  │
+  │  │ verbose         │  │ agentNameRegistry│  │ activeOverlays   │  │
+  │  │ statusLineText  │  │                  │  │                  │  │
+  │  └─────────────────┘  └──────────────────┘  └──────────────────┘  │
+  │  ┌─────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
+  │  │ MCP             │  │ Plugins          │  │ UI               │  │
+  │  │                 │  │                  │  │                  │  │
+  │  │ clients: []     │  │ enabled: []      │  │ expandedView     │  │
+  │  │ tools: []       │  │ disabled: []     │  │ fastMode         │  │
+  │  │ resources: {}   │  │ errors: []       │  │ thinkingEnabled  │  │
+  │  │                 │  │                  │  │ notifications    │  │
+  │  └─────────────────┘  └──────────────────┘  └──────────────────┘  │
+  │                                                                    │
+  │  Access: useAppState(selector) → React re-render on change        │
+  │  Update: useSetAppState() → setState(prev =&gt; newState)            │
+  └────────────────────────────────────────────────────────────────────┘
+</code></pre></div></div> <h3 id="message-types">Message Types</h3> <p>The conversation is a sequence of typed messages:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  Message = UserMessage | AssistantMessage | SystemMessage
+            | AttachmentMessage | CompactBoundaryMessage
+            | ToolUseSummaryMessage | TombstoneMessage
+
+  UserMessage {
+    role: 'user'
+    content: TextBlock | ImageBlock | ToolResultBlock
+  }
+
+  AssistantMessage {
+    role: 'assistant'
+    content: TextBlock | ThinkingBlock | ToolUseBlock
+  }
+</code></pre></div></div> <h3 id="permission-decision-flow">Permission Decision Flow</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  Tool call arrives
+       │
+       ▼
+  ┌─────────────────────────────────────────────┐
+  │  1. Static Rules (settings.json)             │
+  │     Match tool name + pattern?               │
+  │     → allow / deny / ask                     │
+  └───────────────────┬─────────────────────────┘
+                      │ no match
+                      ▼
+  ┌─────────────────────────────────────────────┐
+  │  2. Tool Logic (tool.checkPermissions())     │
+  │     Tool-specific safety checks              │
+  │     e.g., BashTool checks for dangerous cmds │
+  │     → allow / deny / ask                     │
+  └───────────────────┬─────────────────────────┘
+                      │ ask
+                      ▼
+  ┌─────────────────────────────────────────────┐
+  │  3. Permission Mode                          │
+  │     'bypassPermissions' → allow everything   │
+  │     'auto' → check classifier                │
+  │     'default' → prompt user                  │
+  │     'plan' → deny writes                     │
+  └───────────────────┬─────────────────────────┘
+                      │ ask
+                      ▼
+  ┌─────────────────────────────────────────────┐
+  │  4. User Prompt                              │
+  │     Show permission dialog in terminal       │
+  │     User chooses: allow once / always / deny │
+  └─────────────────────────────────────────────┘
+</code></pre></div></div> <hr> <h2 id="8-communication-patterns">8. Communication Patterns</h2> <h3 id="how-components-communicate">How Components Communicate</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ┌────────────────────────────────────────────────────────────────────────┐
+  │                                                                        │
+  │   ┌──────────────┐          ┌──────────────┐       ┌──────────────┐   │
+  │   │  Components   │◀─ read ─│   AppState   │─ set ─▶│  Effects     │   │
+  │   │  (React)      │         │   (Store)    │        │  (onChange)  │   │
+  │   └──────┬───────┘          └──────────────┘        └──────────────┘   │
+  │          │                         ▲                                    │
+  │          │ user action             │ setState()                         │
+  │          ▼                         │                                    │
+  │   ┌──────────────┐          ┌──────────────┐                           │
+  │   │  Input        │─────────▶│  QueryEngine │                           │
+  │   │  Handler      │          │  (submit)    │                           │
+  │   └──────────────┘          └──────┬───────┘                           │
+  │                                    │                                    │
+  │                          ┌─────────┴──────────┐                        │
+  │                          ▼                    ▼                         │
+  │                   ┌────────────┐       ┌────────────┐                  │
+  │                   │ Claude API │       │ Tool Exec  │                  │
+  │                   │ (stream)   │       │ (hooks)    │                  │
+  │                   └────────────┘       └────────────┘                  │
+  │                                                                        │
+  │   Pattern: Unidirectional data flow with async generators              │
+  │   State: Single Store&lt;AppState&gt; with React hooks                       │
+  │   I/O: AsyncGenerator yields for streaming                             │
+  │   Events: Hook system (25+ lifecycle events)                           │
+  │   IPC: Unix Domain Sockets (agent swarms)                              │
+  │   External: MCP protocol (tool servers)                                │
+  └────────────────────────────────────────────────────────────────────────┘
+</code></pre></div></div> <h3 id="inter-agent-communication-swarms">Inter-Agent Communication (Swarms)</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ┌──────────────┐     UDS Inbox      ┌──────────────┐
+  │  Leader       │◀──────────────────▶│  Teammate 1  │
+  │  Agent        │                    │  (subagent)  │
+  │               │     UDS Inbox      ├──────────────┤
+  │  Shared task  │◀──────────────────▶│  Teammate 2  │
+  │  list (files) │                    │  (subagent)  │
+  └──────────────┘                    └──────────────┘
+        │
+        │  Task list: ~/.claude/tasks/{team-id}/
+        │  Each task: {id}.json (file-locked for concurrency)
+        │
+        ▼
+  ┌──────────────────────────────────────────────────┐
+  │  Coordination:                                    │
+  │  • Leader creates tasks with dependencies         │
+  │  • Teammates claim tasks (conflict-safe)          │
+  │  • Results reported via task status updates        │
+  │  • SendMessageTool for direct communication       │
+  └──────────────────────────────────────────────────┘
+</code></pre></div></div> <hr> <h2 id="9-narrative-walkthrough-a-message-end-to-end">9. Narrative Walkthrough: A Message End-to-End</h2> <p>Let’s trace exactly what happens when you type <code class="language-plaintext highlighter-rouge">"Fix the bug in auth.ts"</code> and press Enter.</p> <h3 id="step-1-input-capture-presentation-layer">Step 1: Input Capture (Presentation Layer)</h3> <p>Your keystrokes flow through Ink’s custom event system → <code class="language-plaintext highlighter-rouge">PromptInput</code> component → <code class="language-plaintext highlighter-rouge">TextInput</code> with history support. When you press Enter, <code class="language-plaintext highlighter-rouge">handlePromptSubmit()</code> in <code class="language-plaintext highlighter-rouge">utils/handlePromptSubmit.ts</code> is called. It checks for slash commands (none here), and passes the raw text to the REPL’s message handler.</p> <h3 id="step-2-message-creation-application-layer">Step 2: Message Creation (Application Layer)</h3> <p>The REPL creates a <code class="language-plaintext highlighter-rouge">UserMessage</code> with your text as a <code class="language-plaintext highlighter-rouge">TextBlock</code>. It adds the message to the conversation history and records it to the session transcript (async, fire-and-forget for performance).</p> <h3 id="step-3-context-gathering-application-layer">Step 3: Context Gathering (Application Layer)</h3> <p>Before calling the API, the system gathers context:</p> <ul> <li> <strong>System context</strong>: git status (branch, recent commits, dirty files)</li> <li> <strong>User context</strong>: contents of <code class="language-plaintext highlighter-rouge">CLAUDE.md</code> files found in the project, current date</li> <li> <strong>System prompt</strong>: the full system prompt including tool descriptions, permission rules, and behavioral instructions</li> </ul> <p>This context is <strong>memoized per session</strong> — computed once, then cached.</p> <h3 id="step-4-api-call-infrastructure-layer">Step 4: API Call (Infrastructure Layer)</h3> <p><code class="language-plaintext highlighter-rouge">QueryEngine.submitMessage()</code> delegates to <code class="language-plaintext highlighter-rouge">query()</code> which calls <code class="language-plaintext highlighter-rouge">queryLoop()</code>. The loop calls <code class="language-plaintext highlighter-rouge">deps.callModel()</code> which maps to <code class="language-plaintext highlighter-rouge">queryModelWithStreaming</code> in <code class="language-plaintext highlighter-rouge">services/api/claude.ts</code>. This makes a streaming POST to the Anthropic Messages API with:</p> <ul> <li>The full conversation history (normalized)</li> <li>The system prompt</li> <li>All 50+ tool schemas</li> <li>Model selection and thinking configuration</li> </ul> <h3 id="step-5-streaming-response-application--presentation">Step 5: Streaming Response (Application → Presentation)</h3> <p>As tokens arrive from the API, the async generator <code class="language-plaintext highlighter-rouge">yield</code>s them. Each yield updates the UI in real-time — you see Claude’s response character by character. The <code class="language-plaintext highlighter-rouge">Messages.tsx</code> component renders each <code class="language-plaintext highlighter-rouge">AssistantMessage</code> with <code class="language-plaintext highlighter-rouge">Markdown.tsx</code> for formatting and <code class="language-plaintext highlighter-rouge">HighlightedCode.tsx</code> for code blocks.</p> <h3 id="step-6-tool-calls-application--domain--infrastructure">Step 6: Tool Calls (Application → Domain → Infrastructure)</h3> <p>Claude decides it needs to read the file first. Its response includes:</p> <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w"> </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tool_use"</span><span class="p">,</span><span class="w"> </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Read"</span><span class="p">,</span><span class="w"> </span><span class="nl">"input"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"file_path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/project/auth.ts"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></code></pre></div></div> <p>The query loop detects this and enters tool execution:</p> <ol> <li> <code class="language-plaintext highlighter-rouge">toolOrchestration.ts</code> finds <code class="language-plaintext highlighter-rouge">FileReadTool</code> by name</li> <li> <code class="language-plaintext highlighter-rouge">FileReadTool.validateInput()</code> checks the path is valid</li> <li> <code class="language-plaintext highlighter-rouge">FileReadTool.checkPermissions()</code> — reading is typically allowed</li> <li>Pre-tool hooks fire (if configured in settings)</li> <li> <code class="language-plaintext highlighter-rouge">FileReadTool.call()</code> reads the file from disk</li> <li>Post-tool hooks fire</li> <li>The file contents are returned as a <code class="language-plaintext highlighter-rouge">tool_result</code> message</li> </ol> <h3 id="step-7-loop-back-application-layer">Step 7: Loop Back (Application Layer)</h3> <p>The tool result is added to the message history. The query loop sends the entire updated history (including the tool result) back to the Claude API. Claude now has the file contents and can analyze the bug.</p> <p>Claude might then call <code class="language-plaintext highlighter-rouge">FileEdit</code> to fix the bug, triggering another round of tool execution. This time, the permission system shows a dialog because file editing requires user approval (in default mode). You see the proposed diff and press ‘y’ to approve.</p> <h3 id="step-8-completion-application--presentation">Step 8: Completion (Application → Presentation)</h3> <p>After fixing the file, Claude responds with just text (no more tool calls): <em>“I’ve fixed the authentication bug in auth.ts. The issue was…“</em>. The query loop detects no <code class="language-plaintext highlighter-rouge">tool_use</code> blocks and returns <code class="language-plaintext highlighter-rouge">Terminal { reason: 'completed' }</code>. The UI shows Claude’s final message and re-displays the input prompt.</p> <h3 id="step-9-persistence-infrastructure-layer">Step 9: Persistence (Infrastructure Layer)</h3> <p>Throughout this flow, several things were persisted:</p> <ul> <li> <strong>Transcript</strong>: Full conversation saved to <code class="language-plaintext highlighter-rouge">~/.claude/projects/{hash}/</code> as JSONL</li> <li> <strong>History</strong>: Your input “Fix the bug in auth.ts” added to <code class="language-plaintext highlighter-rouge">~/.claude/history.jsonl</code> </li> <li> <strong>Analytics</strong>: Events logged (session, tool use, model, tokens, cost)</li> <li> <strong>File state</strong>: The read file cached in <code class="language-plaintext highlighter-rouge">FileStateCache</code> (LRU) for subsequent reads</li> <li> <strong>Cost</strong>: Token usage tracked in <code class="language-plaintext highlighter-rouge">cost-tracker.ts</code> and displayed in StatusLine</li> </ul> <hr> <h2 id="why-is-it-structured-this-way">Why Is It Structured This Way?</h2> <ol> <li> <p><strong>Async generators everywhere</strong>: The streaming nature of LLM responses demands non-blocking, incremental processing. Async generators let the query loop yield events to the UI as they arrive, rather than waiting for the full response.</p> </li> <li> <p><strong>Custom Ink renderer</strong>: Terminal UIs need pixel-level control. The custom Ink implementation (based on React reconciliation + Yoga layout) gives Claude Code the same component model as web React, but targeting terminal cells instead of DOM nodes.</p> </li> <li> <p><strong>Tool interface as the core abstraction</strong>: By making every capability a Tool with a uniform interface (schema, permissions, execution), the system can add new tools without changing the query loop, permission system, or UI rendering. MCP tools from external servers plug in identically.</p> </li> <li> <p><strong>Multi-layer permission system</strong>: Security is critical for a code agent. The cascading permission model (rules → tool logic → mode → classifier → user) balances safety with usability — safe operations auto-approve, dangerous ones require explicit consent.</p> </li> <li> <p><strong>Feature flags via compile-time elimination</strong>: Bun’s <code class="language-plaintext highlighter-rouge">feature()</code> intrinsic lets Anthropic ship a single binary with 108+ internal modules completely stripped out. The published CLI contains zero internal code — it’s all dead-code-eliminated at build time.</p> </li> <li> <p><strong>Bootstrap state as global mutable singleton</strong>: While controversial, this pattern enables fast startup (no DI container) and easy access from any module. The <code class="language-plaintext highlighter-rouge">bootstrap/state.ts</code> file is the “session object” that everything reads from.</p> </li> <li> <p><strong>Fire-and-forget parallelism</strong>: Startup parallelizes aggressively — network pre-connection, auth prefetch, repository detection, and command loading all run concurrently. This is why Claude Code starts fast despite doing a lot of initialization.</p> </li> </ol> <hr> <h2 id="10-deep-dive-the-grep-tool-agentic-search">10. Deep Dive: The Grep Tool (Agentic Search)</h2> <p>The Grep tool is one of the most frequently invoked tools in the agentic loop. It’s a read-only, concurrency-safe wrapper around <a href="https://github.com/BurntSushi/ripgrep" rel="external nofollow noopener" target="_blank">ripgrep</a> (<code class="language-plaintext highlighter-rouge">rg</code>) that the model uses to search codebases.</p> <h3 id="architecture">Architecture</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  Model requests Grep
+        │
+        ▼
+  ┌──────────────────┐      ┌───────────────────┐      ┌────────────────┐
+  │  GrepTool.ts      │─────▶│  ripgrep.ts        │─────▶│  rg binary     │
+  │  (tool logic,     │      │  (process spawn,   │      │  (native C     │
+  │   schema, perms,  │      │   timeout, retry,  │      │   search)      │
+  │   result format)  │      │   error handling)  │      │                │
+  └──────────────────┘      └───────────────────┘      └────────────────┘
+        │
+        ▼
+  ┌──────────────────┐
+  │  UI.tsx            │  (renders results in terminal)
+  └──────────────────┘
+</code></pre></div></div> <p><strong>Key files:</strong></p> <ul> <li> <code class="language-plaintext highlighter-rouge">src/tools/GrepTool/GrepTool.ts</code> — Tool definition, input schema, execution logic, result formatting</li> <li> <code class="language-plaintext highlighter-rouge">src/tools/GrepTool/prompt.ts</code> — Tool description injected into Claude’s system prompt</li> <li> <code class="language-plaintext highlighter-rouge">src/tools/GrepTool/UI.tsx</code> — Terminal rendering of search results</li> <li> <code class="language-plaintext highlighter-rouge">src/utils/ripgrep.ts</code> — Low-level ripgrep binary management, process spawning, error recovery</li> </ul> <h3 id="input-schema">Input Schema</h3> <p>Defined via Zod with the following parameters:</p> <table> <thead> <tr> <th>Parameter</th> <th>Purpose</th> </tr> </thead> <tbody> <tr> <td><code class="language-plaintext highlighter-rouge">pattern</code></td> <td>Regex pattern (ripgrep syntax, not POSIX grep)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">path</code></td> <td>Directory or file to search (defaults to CWD)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">glob</code></td> <td>File filter like <code class="language-plaintext highlighter-rouge">"*.ts"</code> or <code class="language-plaintext highlighter-rouge">"*.{js,tsx}"</code> </td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">type</code></td> <td>Ripgrep file type shorthand (<code class="language-plaintext highlighter-rouge">js</code>, <code class="language-plaintext highlighter-rouge">py</code>, <code class="language-plaintext highlighter-rouge">rust</code>)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">output_mode</code></td> <td> <code class="language-plaintext highlighter-rouge">files_with_matches</code> (default), <code class="language-plaintext highlighter-rouge">content</code>, or <code class="language-plaintext highlighter-rouge">count</code> </td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">-A/-B/-C/context</code></td> <td>Context lines around matches (content mode only)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">-n</code></td> <td>Line numbers (defaults <code class="language-plaintext highlighter-rouge">true</code>, content mode only)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">-i</code></td> <td>Case-insensitive search</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">multiline</code></td> <td>Enable cross-line matching (<code class="language-plaintext highlighter-rouge">-U --multiline-dotall</code>)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">head_limit</code></td> <td>Cap results (default <strong>250</strong>, <code class="language-plaintext highlighter-rouge">0</code> = unlimited)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">offset</code></td> <td>Skip first N entries (for pagination)</td> </tr> </tbody> </table> <p>The schema uses <code class="language-plaintext highlighter-rouge">semanticNumber</code> and <code class="language-plaintext highlighter-rouge">semanticBoolean</code> wrappers that handle the model sending strings like <code class="language-plaintext highlighter-rouge">"true"</code> or <code class="language-plaintext highlighter-rouge">"3"</code> instead of actual booleans/numbers.</p> <h3 id="execution-flow">Execution Flow</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  GrepTool.call()
+       │
+       ├── 1. BUILD RIPGREP ARGS
+       │   ├── Always: --hidden, --max-columns 500
+       │   ├── Auto-exclude VCS dirs: .git, .svn, .hg, .bzr, .jj, .sl
+       │   ├── Map output_mode → rg flags (-l, -c, or default)
+       │   ├── If pattern starts with "-" → use -e flag
+       │   ├── Apply glob filters (split on spaces, preserve brace patterns)
+       │   ├── Apply permission-based ignore patterns (e.g. node_modules, .env)
+       │   └── Exclude orphaned plugin cache directories
+       │
+       ├── 2. SPAWN RIPGREP (ripgrep.ts)
+       │   ├── Resolve rg binary (system → embedded → builtin vendor)
+       │   ├── Timeout: 20s (60s on WSL), configurable via env var
+       │   ├── Buffer: 20MB max stdout
+       │   ├── On EAGAIN error → retry with -j 1 (single-threaded)
+       │   ├── On timeout with no output → throw RipgrepTimeoutError
+       │   └── On macOS → auto-codesign vendored binary if needed
+       │
+       └── 3. PROCESS RESULTS (by output_mode)
+           │
+           ├── files_with_matches (default):
+           │   ├── stat() each file (Promise.allSettled, tolerates deletions)
+           │   ├── Sort by modification time (most recent first)
+           │   ├── Apply head_limit/offset pagination
+           │   └── Convert to relative paths
+           │
+           ├── content:
+           │   ├── Apply head_limit/offset first (avoid wasted path conversion)
+           │   └── Convert absolute paths in "path:line:content" to relative
+           │
+           └── count:
+               ├── Apply head_limit/offset
+               ├── Convert paths to relative
+               └── Parse "path:count" lines → total matches + file count
+</code></pre></div></div> <h3 id="ripgrep-binary-resolution-srcutilsripgrepts">Ripgrep Binary Resolution (<code class="language-plaintext highlighter-rouge">src/utils/ripgrep.ts</code>)</h3> <p>The <code class="language-plaintext highlighter-rouge">getRipgrepConfig()</code> function (memoized, resolved once per process) picks the <code class="language-plaintext highlighter-rouge">rg</code> binary in priority order:</p> <ol> <li> <strong>System</strong> — user’s installed <code class="language-plaintext highlighter-rouge">rg</code> (used if <code class="language-plaintext highlighter-rouge">USE_BUILTIN_RIPGREP</code> is not set to falsy). Uses just the command name <code class="language-plaintext highlighter-rouge">rg</code> rather than the resolved path to prevent PATH hijacking.</li> <li> <strong>Embedded</strong> — in the production Bun build, ripgrep is statically compiled into the binary. Spawned via <code class="language-plaintext highlighter-rouge">argv0='rg'</code> so the Bun process dispatches to the embedded rg.</li> <li> <strong>Builtin</strong> — vendored platform-specific binary from <code class="language-plaintext highlighter-rouge">vendor/ripgrep/{arch}-{platform}/rg</code>.</li> </ol> <h3 id="error-recovery">Error Recovery</h3> <p>The ripgrep wrapper has several resilience mechanisms:</p> <ul> <li> <strong>EAGAIN retry</strong>: Resource-constrained environments (Docker, CI) can fail with “resource temporarily unavailable” when rg spawns too many threads. The wrapper detects this and retries with <code class="language-plaintext highlighter-rouge">-j 1</code> (single-threaded) for that call only — it doesn’t persist single-threaded mode globally, which would cause timeouts on large repos.</li> <li> <strong>Timeout with partial results</strong>: If rg times out but has partial stdout, the last line is dropped (may be incomplete) and the partial results are returned. If there’s no output at all, a <code class="language-plaintext highlighter-rouge">RipgrepTimeoutError</code> is thrown so the model knows the search didn’t complete (vs. thinking there were no matches).</li> <li> <strong>Buffer overflow</strong>: At 20MB stdout, partial results are returned with the last line dropped.</li> <li> <strong>File deletion races</strong>: <code class="language-plaintext highlighter-rouge">files_with_matches</code> mode uses <code class="language-plaintext highlighter-rouge">Promise.allSettled</code> for stat calls, so a file deleted between rg’s scan and the stat doesn’t crash the whole search — it just gets <code class="language-plaintext highlighter-rouge">mtime: 0</code>.</li> </ul> <h3 id="pagination-system">Pagination System</h3> <p>The default <code class="language-plaintext highlighter-rouge">head_limit</code> of <strong>250</strong> prevents context bloat — unbounded content-mode greps can fill the 20KB tool-result persistence threshold (6–24K tokens). When truncation occurs, <code class="language-plaintext highlighter-rouge">appliedLimit</code> is set in the output:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[Showing results with pagination = limit: 250]
+</code></pre></div></div> <p>This tells the model “there are more results.” It can then call Grep again with <code class="language-plaintext highlighter-rouge">offset: 250</code> to see the next page. This is how the model implements <strong>multi-round search</strong> — paginating through large result sets across multiple tool calls.</p> <h3 id="result-formatting">Result Formatting</h3> <p><code class="language-plaintext highlighter-rouge">mapToolResultToToolResultBlockParam()</code> formats output into text <code class="language-plaintext highlighter-rouge">tool_result</code> blocks sent back to Claude:</p> <ul> <li> <strong>files_with_matches</strong>: <code class="language-plaintext highlighter-rouge">"Found 5 files\nsrc/a.ts\nsrc/b.ts\n..."</code> — files sorted by mtime (most recently modified first, a heuristic that the most task-relevant files were touched recently)</li> <li> <strong>content</strong>: Matching lines with relative paths and line numbers</li> <li> <strong>count</strong>: <code class="language-plaintext highlighter-rouge">"src/a.ts:12\nsrc/b.ts:3\n\nFound 15 total occurrences across 2 files."</code> </li> </ul> <p>If results exceed <code class="language-plaintext highlighter-rouge">maxResultSizeChars</code> (20,000 chars), the tool system persists them to disk and sends Claude a preview + filepath instead, preventing context window overflow.</p> <h3 id="permission--security">Permission &amp; Security</h3> <ul> <li> <code class="language-plaintext highlighter-rouge">validateInput()</code> checks the path exists, suggests corrections if not found, and <strong>blocks UNC paths</strong> (<code class="language-plaintext highlighter-rouge">\\server\share</code>) to prevent NTLM credential leaks on Windows</li> <li> <code class="language-plaintext highlighter-rouge">checkPermissions()</code> delegates to <code class="language-plaintext highlighter-rouge">checkReadPermissionForTool()</code> — standard read-permission check against <code class="language-plaintext highlighter-rouge">toolPermissionContext</code> </li> <li> <code class="language-plaintext highlighter-rouge">preparePermissionMatcher()</code> enables wildcard permission rules like <code class="language-plaintext highlighter-rouge">Grep(*.env)</code> to deny searching sensitive file patterns</li> <li>Permission-based ignore patterns from settings (e.g., <code class="language-plaintext highlighter-rouge">node_modules</code>, <code class="language-plaintext highlighter-rouge">.env</code> files) are automatically applied as <code class="language-plaintext highlighter-rouge">--glob !pattern</code> arguments</li> <li>The tool’s prompt explicitly instructs the model to <strong>never</strong> run <code class="language-plaintext highlighter-rouge">grep</code> or <code class="language-plaintext highlighter-rouge">rg</code> via BashTool — always use this tool, which enforces the correct permission and ignore-pattern rules</li> </ul> <h3 id="tool-properties">Tool Properties</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  isConcurrencySafe: true    ← multiple Greps run in parallel batches
+  isReadOnly: true           ← no filesystem mutations
+  maxResultSizeChars: 20,000 ← results &gt;20K persisted to disk
+  strict: true               ← no extra input fields allowed
+</code></pre></div></div> <hr> <h2 id="11-deep-dive-memory-management--context-compaction">11. Deep Dive: Memory Management &amp; Context Compaction</h2> <p>Claude Code operates within a finite context window (e.g., ~200K tokens). Conversations with heavy tool use can fill this quickly. The system uses a <strong>multi-layered compaction strategy</strong> that operates at three timescales to keep conversations going indefinitely.</p> <h3 id="the-problem">The Problem</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  Turn 1     Turn 5      Turn 15       Turn 25         Turn 30+
+  ┌───┐    ┌────────┐   ┌───────────┐  ┌─────────────┐  ┌──────────────────┐
+  │5K │    │  50K   │   │   110K    │  │    155K     │  │  OVER LIMIT!     │
+  │   │    │        │   │           │  │  ▲ threshold│  │  API rejects     │
+  └───┘    └────────┘   └───────────┘  └──┼──────────┘  └──────────────────┘
+                                          │
+                                   Autocompact fires here
+</code></pre></div></div> <p>Without compaction, long sessions would hit the context limit and stop working. The system must compress old context while preserving the information the model needs to continue working effectively.</p> <h3 id="architecture-overview">Architecture Overview</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ┌───────────────────────────────────────────────────────────────────┐
+  │                    CONTEXT MANAGEMENT PIPELINE                     │
+  │                    (runs at start of each query turn)              │
+  │                                                                    │
+  │  Messages from conversation history                                │
+  │       │                                                            │
+  │       ▼                                                            │
+  │  ┌─────────────────────┐                                          │
+  │  │ 1. Tool Result      │  Enforce per-message size budgets        │
+  │  │    Budget            │  (persist large results to disk)         │
+  │  └──────────┬──────────┘                                          │
+  │             ▼                                                      │
+  │  ┌─────────────────────┐                                          │
+  │  │ 2. Snip Compaction  │  Clear old tool result contents          │
+  │  │    (HISTORY_SNIP)   │  (keep message structure, free tokens)   │
+  │  └──────────┬──────────┘                                          │
+  │             ▼                                                      │
+  │  ┌─────────────────────┐                                          │
+  │  │ 3. Microcompaction  │  Remove/edit old tool results via        │
+  │  │    (per-turn)       │  cache_edits or content clearing         │
+  │  └──────────┬──────────┘                                          │
+  │             ▼                                                      │
+  │  ┌─────────────────────┐                                          │
+  │  │ 4. Context Collapse │  Model-side compression (internal)       │
+  │  │    (CONTEXT_COLLAPSE)│  (projection over commit log)           │
+  │  └──────────┬──────────┘                                          │
+  │             ▼                                                      │
+  │  ┌─────────────────────┐                                          │
+  │  │ 5. Autocompact      │  Full conversation compaction            │
+  │  │    (threshold-based)│  if still over limit after 1-4           │
+  │  └──────────┬──────────┘                                          │
+  │             ▼                                                      │
+  │       Messages ready for API call                                  │
+  └───────────────────────────────────────────────────────────────────┘
+
+  ═══════════════════════════════════════════════════════════════════
+  BACKGROUND PROCESS (runs asynchronously between turns):
+
+  ┌─────────────────────┐
+  │ Session Memory       │  Maintains persistent summary file
+  │ Extraction           │  (~/.claude/session_memory)
+  │ (post-sampling hook) │  Used by SM-compact as summary source
+  └─────────────────────┘
+  ═══════════════════════════════════════════════════════════════════
+</code></pre></div></div> <h3 id="key-files">Key Files</h3> <table> <thead> <tr> <th>File</th> <th>Purpose</th> </tr> </thead> <tbody> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/compact/autoCompact.ts</code></td> <td>Autocompact threshold logic, orchestration</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/compact/compact.ts</code></td> <td>Full conversation compaction (forked agent)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/compact/sessionMemoryCompact.ts</code></td> <td>Session-memory-based compaction (lightweight)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/compact/microCompact.ts</code></td> <td>Per-turn tool result clearing</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/compact/apiMicrocompact.ts</code></td> <td>API-native context management</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/compact/postCompactCleanup.ts</code></td> <td>Cache invalidation after compaction</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/SessionMemory/sessionMemory.ts</code></td> <td>Background session memory extraction</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/services/tokenEstimation.ts</code></td> <td>Token counting (API + heuristic)</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/utils/tokens.ts</code></td> <td>Canonical token count function</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">src/query.ts</code></td> <td>Integration point — runs the pipeline each turn</td> </tr> </tbody> </table> <h3 id="how-tokens-are-counted">How Tokens Are Counted</h3> <p>The system uses <strong>hybrid token counting</strong> (<code class="language-plaintext highlighter-rouge">src/services/tokenEstimation.ts</code>):</p> <ul> <li> <strong>API-based</strong>: <code class="language-plaintext highlighter-rouge">anthropic.beta.messages.countTokens()</code> for precise counts</li> <li> <strong>Heuristic fallback</strong>: ~1 token per 4 characters (2 chars/token for JSON, fixed 2000 tokens for images)</li> <li> <strong>Canonical function</strong> (<code class="language-plaintext highlighter-rouge">tokenCountWithEstimation()</code> in <code class="language-plaintext highlighter-rouge">src/utils/tokens.ts</code>): Finds the last API response with usage data, walks backward to include all interleaved tool_results, then adds rough estimates for messages added since. Returns: <code class="language-plaintext highlighter-rouge">API usage (input + output + cache) + estimated new messages</code> </li> </ul> <p>The effective context window is calculated as:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>effectiveWindow = modelContextWindow - reservedForSummary(20,000 tokens)
+</code></pre></div></div> <p>The 20K reserve ensures the compaction API call itself doesn’t hit “prompt too long.”</p> <h3 id="layer-1-tool-result-budget">Layer 1: Tool Result Budget</h3> <p>Before any compaction runs, <code class="language-plaintext highlighter-rouge">applyToolResultBudget()</code> enforces per-message size limits. Tool results exceeding <code class="language-plaintext highlighter-rouge">maxResultSizeChars</code> (e.g., 20K chars for Grep) are persisted to disk and replaced with a preview + filepath. This prevents individual messages from consuming disproportionate context.</p> <h3 id="layer-2-snip-compaction-feature-gated-history_snip">Layer 2: Snip Compaction (feature-gated: <code class="language-plaintext highlighter-rouge">HISTORY_SNIP</code>)</h3> <p>The lightest compaction. Clears old tool result <strong>contents</strong> to <code class="language-plaintext highlighter-rouge">[Old tool result content cleared]</code> while keeping the message structure intact (tool_use/tool_result pairing preserved). No API call needed. The tokens freed are tracked and passed to autocompact so its threshold calculation accounts for the savings.</p> <h3 id="layer-3-microcompaction-per-turn">Layer 3: Microcompaction (per-turn)</h3> <p>Removes old tool results without invalidating the prompt cache. Two mechanisms:</p> <p><strong>Cached Microcompaction</strong> (primary, feature-gated: <code class="language-plaintext highlighter-rouge">CACHED_MICROCOMPACT</code>): Uses the <code class="language-plaintext highlighter-rouge">cache_edits</code> API to delete old tool results while keeping the prompt prefix cached. No message content is modified — edits are piggybacked on the next API request. The system tracks compactable tools (Bash, Glob, Grep, WebSearch, WebFetch, FileEdit, FileWrite, FileRead) and keeps only the N most recent results.</p> <p><strong>Time-Based Microcompaction</strong> (fallback): If the gap since the last assistant message exceeds a threshold (~1 hour, meaning the prompt cache has expired), content-clears old tool results directly. Since the cache is cold anyway, mutating messages is safe.</p> <h3 id="layer-4-context-collapse-feature-gated-context_collapse-internal">Layer 4: Context Collapse (feature-gated: <code class="language-plaintext highlighter-rouge">CONTEXT_COLLAPSE</code>, internal)</h3> <p>An alternative model-side compression system. Projects a collapsed view over a commit log of conversation segments. When enabled, it suppresses proactive autocompact (they’d race and corrupt each other). Operates with its own thresholds: 90% commit point, 95% blocking-spawn headroom.</p> <h3 id="layer-5-autocompact-threshold-based">Layer 5: Autocompact (threshold-based)</h3> <p>The main compaction mechanism. Triggered when tokens reach <code class="language-plaintext highlighter-rouge">effectiveContextWindow - 13,000</code>.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  shouldAutoCompact() decision:
+       │
+       ├── Is autocompact enabled? (not disabled via env/config)
+       ├── Token count &gt;= threshold? (effectiveWindow - 13K)
+       ├── Not a forked agent? (session_memory, compact agents excluded)
+       ├── Not in reactive-only mode? (REACTIVE_COMPACT gate)
+       └── Not in context-collapse mode? (CONTEXT_COLLAPSE gate)
+           │
+           ▼ All true → attempt compaction
+</code></pre></div></div> <p><strong>Autocompact has two strategies, tried in order:</strong></p> <h4 id="strategy-a-session-memory-compaction-sm-compact">Strategy A: Session Memory Compaction (SM-Compact)</h4> <p>The lightweight path. Uses the session memory summary file (maintained in background) to replace old messages without an API call.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  trySessionMemoryCompaction()
+       │
+       ├── 1. Wait for in-flight session memory extraction to finish
+       ├── 2. Load session memory summary from disk
+       ├── 3. Find lastSummarizedMessageId (boundary marker)
+       ├── 4. Calculate which messages to keep:
+       │       ├── Preserve messages after summarization boundary
+       │       ├── Expand backward to meet minimums:
+       │       │     min 10K tokens, min 5 text-block messages
+       │       ├── Cap at 40K tokens max
+       │       └── Adjust for API invariants:
+       │             ├── Never split tool_use/tool_result pairs
+       │             ├── Never orphan thinking blocks (same message.id)
+       │             └── Never drop below last compact_boundary_message
+       │
+       ├── 5. Build post-compact messages:
+       │       [CompactBoundary] + [SessionMemorySummary] + [KeptRecentMessages]
+       │
+       ├── 6. Estimate post-compact token count
+       │       └── If still &gt;= threshold → abort (not effective enough)
+       │
+       └── 7. Return CompactionResult
+</code></pre></div></div> <h4 id="strategy-b-full-conversation-compaction-fallback">Strategy B: Full Conversation Compaction (fallback)</h4> <p>If SM-compact isn’t available or wasn’t effective, runs a <strong>forked agent</strong> to summarize the entire conversation.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  compactConversation()
+       │
+       ├── 1. Strip images (replace with [image] placeholders)
+       ├── 2. Group messages by API round
+       ├── 3. Send to forked compaction agent with structured prompt:
+       │       ├── Primary Request and Intent
+       │       ├── Key Technical Concepts
+       │       ├── Files and Code Sections (with snippets)
+       │       ├── Errors and Fixes
+       │       ├── Problem Solving
+       │       ├── All User Messages (verbatim)
+       │       ├── Pending Tasks
+       │       ├── Current Work
+       │       └── Optional Next Step
+       │
+       ├── 4. Agent returns &lt;analysis&gt; (scratchpad) + &lt;summary&gt; (output)
+       ├── 5. Build post-compact messages:
+       │       [CompactBoundary] + [Summary] + [Attachments] + [KeptMessages]
+       │
+       └── 6. Post-compact attachments:
+               ├── Restore up to 5 recently-used files (50K token budget)
+               ├── Re-inject invoked skills (up to 5, 25K budget)
+               ├── Re-inject plan mode state (if active)
+               └── Notify about running async agents
+</code></pre></div></div> <p><strong>Circuit Breaker</strong>: After 3 consecutive autocompact failures, the system stops retrying to avoid API spam.</p> <h3 id="background-session-memory-extraction">Background: Session Memory Extraction</h3> <p>Running asynchronously via a post-sampling hook, the Session Memory service maintains a persistent summary file at <code class="language-plaintext highlighter-rouge">~/.claude/projects/&lt;path&gt;/.claude/session_memory</code>.</p> <p><strong>Trigger conditions</strong> (all must be true):</p> <ul> <li>First extraction: total context &gt;= 8,000 tokens</li> <li>Subsequent extractions: context grown &gt;= 15,000 tokens since last extraction AND (&gt;= 5 tool calls OR natural break point)</li> </ul> <p><strong>Process</strong>: A forked agent updates structured sections of the session memory file using the Edit tool:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Session Title
+# Current State          ← what's being worked on now
+# Task specification     ← original user request
+# Files and Functions    ← important files and contents
+# Workflow               ← commands, execution order
+# Errors &amp; Corrections   ← failed approaches, fixes
+# Codebase Documentation ← how components fit together
+# Learnings              ← what worked, what to avoid
+# Key results            ← outputs user requested
+# Worklog                ← step-by-step summary
+</code></pre></div></div> <p>Each section capped at ~2,000 tokens, total file at ~12,000 tokens. The extraction coalesces rapid calls — if an extraction is in progress, the next one queues and runs after.</p> <h3 id="post-compact-cleanup">Post-Compact Cleanup</h3> <p>After any compaction, <code class="language-plaintext highlighter-rouge">runPostCompactCleanup()</code> invalidates stale caches:</p> <ul> <li>Microcompact state (tool registrations become invalid)</li> <li>Context collapse state</li> <li>Memory file cache (CLAUDE.md files might have changed)</li> <li>Session message cache</li> <li>Classifier approvals (file permissions might change)</li> <li>Speculative shell checks</li> <li>Beta tracing state</li> </ul> <p>Only main-thread state is cleared for main-thread compactions (subagents share module-level state).</p> <h3 id="integration-in-the-query-loop-srcqueryts">Integration in the Query Loop (<code class="language-plaintext highlighter-rouge">src/query.ts</code>)</h3> <p>Every turn, the pipeline runs in this exact order at lines 365–468:</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  1. getMessagesAfterCompactBoundary()     ← start from last compact point
+  2. applyToolResultBudget()               ← enforce per-message size limits
+  3. snipCompactIfNeeded()                 ← clear old tool contents (HISTORY_SNIP)
+  4. microcompactMessages()                ← remove old tool results
+  5. contextCollapse.applyCollapsesIfNeeded()  ← model-side compression
+  6. autoCompactIfNeeded()                 ← full compaction if still over
+  7. → messages ready for API call
+</code></pre></div></div> <p>Each layer reduces the token count. If an earlier layer brings the count below the autocompact threshold, later layers become no-ops.</p> <h3 id="reactive-vs-proactive-compaction">Reactive vs. Proactive Compaction</h3> <p><strong>Proactive</strong> (default): Compact before hitting the API limit. The 13K-token buffer gives headroom to compaction completes before the API rejects requests.</p> <p><strong>Reactive</strong> (feature-gated: <code class="language-plaintext highlighter-rouge">REACTIVE_COMPACT</code>): Only compact after the API returns a “prompt too long” error (HTTP 413). When enabled, suppresses proactive autocompact. The query loop withholds 413 errors, runs compaction, then retries.</p> <h3 id="lifecycle-of-a-long-conversation">Lifecycle of a Long Conversation</h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  Turn 1:   ~5K tokens    No compaction needed
+  Turn 5:   ~50K tokens   Session memory extraction triggers (first time)
+  Turn 10:  ~90K tokens   Microcompact clearing old tool results each turn
+  Turn 15:  ~110K tokens  Session memory updates again (15K new tokens)
+  Turn 20:  ~135K tokens  Snip clears more old tool contents
+  Turn 25:  ~155K tokens  ═══ AUTOCOMPACT TRIGGERS ═══
+                          │
+                          ├── Try SM-compact → uses session memory summary
+                          │   └── If effective: messages = [summary] + [recent ~40K]
+                          ├── Else: full compaction via forked agent
+                          │   └── messages = [summary] + [attachments] + [recent tail]
+                          ├── Post-compact cleanup (invalidate caches)
+                          └── Result: ~60-80K tokens (fresh start)
+                          
+  Turn 26+: Resume from compact boundary, cycle continues
+            Session memory keeps tracking NEW work
+            If context fills again → another autocompact cycle
+</code></pre></div></div> <h3 id="key-constants">Key Constants</h3> <table> <thead> <tr> <th>Constant</th> <th>Value</th> <th>Purpose</th> </tr> </thead> <tbody> <tr> <td><code class="language-plaintext highlighter-rouge">AUTOCOMPACT_BUFFER_TOKENS</code></td> <td>13,000</td> <td>Trigger: effectiveWindow - 13K</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">WARNING_THRESHOLD_BUFFER_TOKENS</code></td> <td>20,000</td> <td>User warning zone</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">MAX_OUTPUT_TOKENS_FOR_SUMMARY</code></td> <td>20,000</td> <td>Reserved for compaction API call</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">MAX_CONSECUTIVE_AUTOCOMPACT_FAILURES</code></td> <td>3</td> <td>Circuit breaker</td> </tr> <tr> <td>SM-compact <code class="language-plaintext highlighter-rouge">minTokens</code> </td> <td>10,000</td> <td>Minimum tokens to preserve</td> </tr> <tr> <td>SM-compact <code class="language-plaintext highlighter-rouge">maxTokens</code> </td> <td>40,000</td> <td>Maximum tokens to preserve</td> </tr> <tr> <td>SM-compact <code class="language-plaintext highlighter-rouge">minTextBlockMessages</code> </td> <td>5</td> <td>Minimum messages with text</td> </tr> <tr> <td>Session memory init threshold</td> <td>8,000</td> <td>First extraction trigger</td> </tr> <tr> <td>Session memory update interval</td> <td>15,000</td> <td>Subsequent extraction gap</td> </tr> <tr> <td>Session memory section max</td> <td>~2,000</td> <td>Per-section token limit</td> </tr> <tr> <td>Session memory total max</td> <td>~12,000</td> <td>Total summary file limit</td> </tr> <tr> <td>Post-compact file budget</td> <td>50,000</td> <td>Token budget for file restoration</td> </tr> <tr> <td>Post-compact skill budget</td> <td>25,000</td> <td>Token budget for skill restoration</td> </tr> </tbody> </table> </div> </article> </div> </div> <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> <script src="/assets/js/bootstrap.bundle.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/js/zoom.js?85ddb88934d28b74e78031fd54cf8308"></script> <script src="/assets/js/no_defer.js?2781658a0a2b13ed609542042a859126"></script> <script defer src="/assets/js/common.js?e0514a05c5c95ac1a93a8dfd5249b92e"></script> <script defer src="/assets/js/copy_code.js?c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?d9f17b6adc2311cbabd747f4538bb15f"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/js/mathjax-setup.js?a5bb4e6a542c546dd929b24b8b236dfd"></script> <script defer src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6" crossorigin="anonymous"></script> <script defer src="/assets/js/progress-bar.js?2f30e0e6801ea8f5036fa66e1ab0a71a" type="text/javascript"></script> <script src="/assets/js/vanilla-back-to-top.min.js?f40d453793ff4f64e238e420181a1d17"></script> <script>
     addBackToTop();
   </script> <script>
       (function () {
