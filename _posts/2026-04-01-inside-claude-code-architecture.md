@@ -9,7 +9,7 @@ toc:
   beginning: true
 ---
 
-*This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.*
+_This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc._
 
 # Claude Code v2.1.88 — Architecture Deep Dive
 
@@ -296,11 +296,11 @@ This traces what happens from `node cli.js` to the interactive REPL appearing.
 ```
  User runs: node cli.js [args]
  ═══════════════════════════════════════════════════════════════════════════
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 1: FAST-PATH ROUTING  (cli.tsx — zero imports for --version)│
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    cli.tsx:main()
        │
        ├──▶ --version / -v ?  ──────▶  print version, exit (no imports!)
@@ -310,11 +310,11 @@ This traces what happens from `node cli.js` to the interactive REPL appearing.
        ├──▶ ps / logs / attach ? ───▶  session management, exit
        │
        └──▶ (default) ──────────────▶  import('./main.js') → cliMain()
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 2: INITIALIZATION  (main.tsx + init.ts)                     │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    main.tsx:main()
        │
        ├── Set security env vars, SIGINT handler
@@ -337,11 +337,11 @@ This traces what happens from `node cli.js` to the interactive REPL appearing.
        │   └── initRemoteManagedSettings()
        │
        └── Show trust dialog if needed
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 3: TELEMETRY + PERMISSIONS                                  │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
        │
        ├── initializeTelemetryAfterTrust()  ← OpenTelemetry setup
        ├── getPermissionContext()
@@ -350,11 +350,11 @@ This traces what happens from `node cli.js` to the interactive REPL appearing.
        ├── initializeToolPermissionContext()
        ├── initBuiltinPlugins()         ← register bundled plugins
        └── initBundledSkills()          ← register bundled skills
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 4: SETUP  (setup.ts — parallel with command loading)        │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    setup()
        │
        ├── Check Node.js >= 18
@@ -378,20 +378,20 @@ This traces what happens from `node cli.js` to the interactive REPL appearing.
        │
        ├── initSinks()                  ← error log + analytics
        └── logEvent('tengu_started')    ← session start beacon
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 5: COMMAND & AGENT LOADING  (parallel with setup)           │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    await Promise.all([
        getCommands(cwd),                ← all slash commands
        getAgentDefinitionsWithOverrides(cwd)  ← agent registry
    ])
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 6: REPL LAUNCH                                              │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    launchRepl(root, appProps, replProps, renderAndRun)
        │
        ├── import('./components/App.js')
@@ -505,7 +505,7 @@ This is the most important flow in the entire codebase. It's what happens every 
 
   ═══════════════════════════════════════════════════════════════════
   RECOVERY PATHS (when things go wrong):
-  
+
   • Context too long  →  autocompact / reactive compact / context collapse
   • Max output tokens →  escalate output limit, retry
   • Model error       →  fallback model retry
@@ -859,6 +859,7 @@ The REPL creates a `UserMessage` with your text as a `TextBlock`. It adds the me
 ### Step 3: Context Gathering (Application Layer)
 
 Before calling the API, the system gathers context:
+
 - **System context**: git status (branch, recent commits, dirty files)
 - **User context**: contents of `CLAUDE.md` files found in the project, current date
 - **System prompt**: the full system prompt including tool descriptions, permission rules, and behavioral instructions
@@ -868,6 +869,7 @@ This context is **memoized per session** — computed once, then cached.
 ### Step 4: API Call (Infrastructure Layer)
 
 `QueryEngine.submitMessage()` delegates to `query()` which calls `queryLoop()`. The loop calls `deps.callModel()` which maps to `queryModelWithStreaming` in `services/api/claude.ts`. This makes a streaming POST to the Anthropic Messages API with:
+
 - The full conversation history (normalized)
 - The system prompt
 - All 50+ tool schemas
@@ -880,11 +882,13 @@ As tokens arrive from the API, the async generator `yield`s them. Each yield upd
 ### Step 6: Tool Calls (Application → Domain → Infrastructure)
 
 Claude decides it needs to read the file first. Its response includes:
+
 ```json
 { "type": "tool_use", "name": "Read", "input": { "file_path": "/project/auth.ts" } }
 ```
 
 The query loop detects this and enters tool execution:
+
 1. `toolOrchestration.ts` finds `FileReadTool` by name
 2. `FileReadTool.validateInput()` checks the path is valid
 3. `FileReadTool.checkPermissions()` — reading is typically allowed
@@ -901,11 +905,12 @@ Claude might then call `FileEdit` to fix the bug, triggering another round of to
 
 ### Step 8: Completion (Application → Presentation)
 
-After fixing the file, Claude responds with just text (no more tool calls): *"I've fixed the authentication bug in auth.ts. The issue was..."*. The query loop detects no `tool_use` blocks and returns `Terminal { reason: 'completed' }`. The UI shows Claude's final message and re-displays the input prompt.
+After fixing the file, Claude responds with just text (no more tool calls): _"I've fixed the authentication bug in auth.ts. The issue was..."_. The query loop detects no `tool_use` blocks and returns `Terminal { reason: 'completed' }`. The UI shows Claude's final message and re-displays the input prompt.
 
 ### Step 9: Persistence (Infrastructure Layer)
 
 Throughout this flow, several things were persisted:
+
 - **Transcript**: Full conversation saved to `~/.claude/projects/{hash}/` as JSONL
 - **History**: Your input "Fix the bug in auth.ts" added to `~/.claude/history.jsonl`
 - **Analytics**: Events logged (session, tool use, model, tokens, cost)
@@ -956,6 +961,7 @@ The Grep tool is one of the most frequently invoked tools in the agentic loop. I
 ```
 
 **Key files:**
+
 - `src/tools/GrepTool/GrepTool.ts` — Tool definition, input schema, execution logic, result formatting
 - `src/tools/GrepTool/prompt.ts` — Tool description injected into Claude's system prompt
 - `src/tools/GrepTool/UI.tsx` — Terminal rendering of search results
@@ -965,19 +971,19 @@ The Grep tool is one of the most frequently invoked tools in the agentic loop. I
 
 Defined via Zod with the following parameters:
 
-| Parameter | Purpose |
-|-----------|---------|
-| `pattern` | Regex pattern (ripgrep syntax, not POSIX grep) |
-| `path` | Directory or file to search (defaults to CWD) |
-| `glob` | File filter like `"*.ts"` or `"*.{js,tsx}"` |
-| `type` | Ripgrep file type shorthand (`js`, `py`, `rust`) |
-| `output_mode` | `files_with_matches` (default), `content`, or `count` |
-| `-A/-B/-C/context` | Context lines around matches (content mode only) |
-| `-n` | Line numbers (defaults `true`, content mode only) |
-| `-i` | Case-insensitive search |
-| `multiline` | Enable cross-line matching (`-U --multiline-dotall`) |
-| `head_limit` | Cap results (default **250**, `0` = unlimited) |
-| `offset` | Skip first N entries (for pagination) |
+| Parameter          | Purpose                                               |
+| ------------------ | ----------------------------------------------------- |
+| `pattern`          | Regex pattern (ripgrep syntax, not POSIX grep)        |
+| `path`             | Directory or file to search (defaults to CWD)         |
+| `glob`             | File filter like `"*.ts"` or `"*.{js,tsx}"`           |
+| `type`             | Ripgrep file type shorthand (`js`, `py`, `rust`)      |
+| `output_mode`      | `files_with_matches` (default), `content`, or `count` |
+| `-A/-B/-C/context` | Context lines around matches (content mode only)      |
+| `-n`               | Line numbers (defaults `true`, content mode only)     |
+| `-i`               | Case-insensitive search                               |
+| `multiline`        | Enable cross-line matching (`-U --multiline-dotall`)  |
+| `head_limit`       | Cap results (default **250**, `0` = unlimited)        |
+| `offset`           | Skip first N entries (for pagination)                 |
 
 The schema uses `semanticNumber` and `semanticBoolean` wrappers that handle the model sending strings like `"true"` or `"3"` instead of actual booleans/numbers.
 
@@ -1146,18 +1152,18 @@ Without compaction, long sessions would hit the context limit and stop working. 
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/services/compact/autoCompact.ts` | Autocompact threshold logic, orchestration |
-| `src/services/compact/compact.ts` | Full conversation compaction (forked agent) |
-| `src/services/compact/sessionMemoryCompact.ts` | Session-memory-based compaction (lightweight) |
-| `src/services/compact/microCompact.ts` | Per-turn tool result clearing |
-| `src/services/compact/apiMicrocompact.ts` | API-native context management |
-| `src/services/compact/postCompactCleanup.ts` | Cache invalidation after compaction |
-| `src/services/SessionMemory/sessionMemory.ts` | Background session memory extraction |
-| `src/services/tokenEstimation.ts` | Token counting (API + heuristic) |
-| `src/utils/tokens.ts` | Canonical token count function |
-| `src/query.ts` | Integration point — runs the pipeline each turn |
+| File                                           | Purpose                                         |
+| ---------------------------------------------- | ----------------------------------------------- |
+| `src/services/compact/autoCompact.ts`          | Autocompact threshold logic, orchestration      |
+| `src/services/compact/compact.ts`              | Full conversation compaction (forked agent)     |
+| `src/services/compact/sessionMemoryCompact.ts` | Session-memory-based compaction (lightweight)   |
+| `src/services/compact/microCompact.ts`         | Per-turn tool result clearing                   |
+| `src/services/compact/apiMicrocompact.ts`      | API-native context management                   |
+| `src/services/compact/postCompactCleanup.ts`   | Cache invalidation after compaction             |
+| `src/services/SessionMemory/sessionMemory.ts`  | Background session memory extraction            |
+| `src/services/tokenEstimation.ts`              | Token counting (API + heuristic)                |
+| `src/utils/tokens.ts`                          | Canonical token count function                  |
+| `src/query.ts`                                 | Integration point — runs the pipeline each turn |
 
 ### How Tokens Are Counted
 
@@ -1168,9 +1174,11 @@ The system uses **hybrid token counting** (`src/services/tokenEstimation.ts`):
 - **Canonical function** (`tokenCountWithEstimation()` in `src/utils/tokens.ts`): Finds the last API response with usage data, walks backward to include all interleaved tool_results, then adds rough estimates for messages added since. Returns: `API usage (input + output + cache) + estimated new messages`
 
 The effective context window is calculated as:
+
 ```
 effectiveWindow = modelContextWindow - reservedForSummary(20,000 tokens)
 ```
+
 The 20K reserve ensures the compaction API call itself doesn't hit "prompt too long."
 
 ### Layer 1: Tool Result Budget
@@ -1280,6 +1288,7 @@ If SM-compact isn't available or wasn't effective, runs a **forked agent** to su
 Running asynchronously via a post-sampling hook, the Session Memory service maintains a persistent summary file at `~/.claude/projects/<path>/.claude/session_memory`.
 
 **Trigger conditions** (all must be true):
+
 - First extraction: total context >= 8,000 tokens
 - Subsequent extractions: context grown >= 15,000 tokens since last extraction AND (>= 5 tool calls OR natural break point)
 
@@ -1352,7 +1361,7 @@ Each layer reduces the token count. If an earlier layer brings the count below t
                           │   └── messages = [summary] + [attachments] + [recent tail]
                           ├── Post-compact cleanup (invalidate caches)
                           └── Result: ~60-80K tokens (fresh start)
-                          
+
   Turn 26+: Resume from compact boundary, cycle continues
             Session memory keeps tracking NEW work
             If context fills again → another autocompact cycle
@@ -1360,18 +1369,18 @@ Each layer reduces the token count. If an earlier layer brings the count below t
 
 ### Key Constants
 
-| Constant | Value | Purpose |
-|----------|-------|---------|
-| `AUTOCOMPACT_BUFFER_TOKENS` | 13,000 | Trigger: effectiveWindow - 13K |
-| `WARNING_THRESHOLD_BUFFER_TOKENS` | 20,000 | User warning zone |
-| `MAX_OUTPUT_TOKENS_FOR_SUMMARY` | 20,000 | Reserved for compaction API call |
-| `MAX_CONSECUTIVE_AUTOCOMPACT_FAILURES` | 3 | Circuit breaker |
-| SM-compact `minTokens` | 10,000 | Minimum tokens to preserve |
-| SM-compact `maxTokens` | 40,000 | Maximum tokens to preserve |
-| SM-compact `minTextBlockMessages` | 5 | Minimum messages with text |
-| Session memory init threshold | 8,000 | First extraction trigger |
-| Session memory update interval | 15,000 | Subsequent extraction gap |
-| Session memory section max | ~2,000 | Per-section token limit |
-| Session memory total max | ~12,000 | Total summary file limit |
-| Post-compact file budget | 50,000 | Token budget for file restoration |
-| Post-compact skill budget | 25,000 | Token budget for skill restoration |
+| Constant                               | Value   | Purpose                            |
+| -------------------------------------- | ------- | ---------------------------------- |
+| `AUTOCOMPACT_BUFFER_TOKENS`            | 13,000  | Trigger: effectiveWindow - 13K     |
+| `WARNING_THRESHOLD_BUFFER_TOKENS`      | 20,000  | User warning zone                  |
+| `MAX_OUTPUT_TOKENS_FOR_SUMMARY`        | 20,000  | Reserved for compaction API call   |
+| `MAX_CONSECUTIVE_AUTOCOMPACT_FAILURES` | 3       | Circuit breaker                    |
+| SM-compact `minTokens`                 | 10,000  | Minimum tokens to preserve         |
+| SM-compact `maxTokens`                 | 40,000  | Maximum tokens to preserve         |
+| SM-compact `minTextBlockMessages`      | 5       | Minimum messages with text         |
+| Session memory init threshold          | 8,000   | First extraction trigger           |
+| Session memory update interval         | 15,000  | Subsequent extraction gap          |
+| Session memory section max             | ~2,000  | Per-section token limit            |
+| Session memory total max               | ~12,000 | Total summary file limit           |
+| Post-compact file budget               | 50,000  | Token budget for file restoration  |
+| Post-compact skill budget              | 25,000  | Token budget for skill restoration |
