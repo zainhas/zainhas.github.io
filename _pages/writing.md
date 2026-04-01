@@ -133,6 +133,10 @@ html[data-theme="dark"] .blog-tag {
   background: #6366f1;
 }
 
+.external-tag.blog {
+  background: #e67e22;
+}
+
 @media (max-width: 768px) {
   .blog-grid {
     grid-template-columns: 1fr;
@@ -148,9 +152,17 @@ Display them in chronological order (newest first)
 
 {% assign weaviate_posts = site.data.weaviate_posts.weaviate_posts %}
 {% assign external_posts = site.data.weaviate_posts.external_posts %}
+{% assign local_posts = site.data.weaviate_posts.local_posts %}
 
 {% comment %} Create a combined array manually sorted by date {% endcomment %}
 {% assign all_posts_with_dates = "" | split: "" %}
+
+{% comment %} Add local posts with their dates for sorting {% endcomment %}
+{% for post in local_posts %}
+{% assign date_string = post.date | date: "%Y%m%d" %}
+{% assign post_with_sort = post.title | prepend: date_string | append: "|local|" | append: forloop.index0 %}
+{% assign all_posts_with_dates = all_posts_with_dates | push: post_with_sort %}
+{% endfor %}
 
 {% comment %} Add external posts (Together AI, etc.) with their dates for sorting {% endcomment %}
 {% for post in external_posts %}
@@ -174,7 +186,9 @@ Display them in chronological order (newest first)
   {% assign post_type = ref_parts[1] %}
   {% assign post_index = ref_parts[2] | plus: 0 %}
   
-  {% if post_type == "external" %}
+  {% if post_type == "local" %}
+    {% assign current_post = local_posts[post_index] %}
+  {% elsif post_type == "external" %}
     {% assign current_post = external_posts[post_index] %}
   {% else %}
     {% assign current_post = weaviate_posts[post_index] %}
@@ -183,7 +197,11 @@ Display them in chronological order (newest first)
   <div class="blog-card">
     <div class="blog-content">
       <h3 class="blog-title">
+        {% if post_type == "local" %}
+        <a href="{{ current_post.url }}">{{ current_post.title }}</a>
+        {% else %}
         <a href="{{ current_post.url }}" target="_blank">{{ current_post.title }}<span class="external-link-icon">↗</span></a>
+        {% endif %}
       </h3>
       <p class="blog-description">
         {{ current_post.description }}
@@ -193,6 +211,8 @@ Display them in chronological order (newest first)
         <div class="blog-tags">
           {% if current_post.source == "Weaviate" %}
             <span class="external-tag weaviate">{{ current_post.source }}</span>
+          {% elsif current_post.source == "Blog" %}
+            <span class="external-tag blog">{{ current_post.source }}</span>
           {% else %}
             <span class="external-tag together">{{ current_post.source }}</span>
           {% endif %}

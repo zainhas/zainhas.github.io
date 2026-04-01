@@ -138,6 +138,16 @@ weaviate_posts:
     source: "Weaviate"
     type: "external"
 
+# Local posts
+local_posts:
+  - title: "Inside Claude Code: An Architecture Deep Dive"
+    date: 2026-04-01
+    url: "/blog/2026/inside-claude-code-architecture/"
+    description: "A walkthrough of how Claude Code works internally — from its layered architecture and query loop to its tool system, permission model, and context compaction strategy."
+    tags: ["LLMs", "AI Agents"]
+    source: "Blog"
+    type: "local"
+
 # External posts from other sources (keeping existing ones)
 external_posts:
   - title: "Fine-Tuning Open LLM Judges to Outperform GPT-5.2"
