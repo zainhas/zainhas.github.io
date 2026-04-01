@@ -244,11 +244,11 @@
 └── docs/                         # Analysis reports (EN/JA/KO/ZH)
 </code></pre></div></div> <hr> <h2 id="3-startup--bootstrap-sequence-diagram">3. Startup &amp; Bootstrap Sequence Diagram</h2> <p>This traces what happens from <code class="language-plaintext highlighter-rouge">node cli.js</code> to the interactive REPL appearing.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> User runs: node cli.js [args]
  ═══════════════════════════════════════════════════════════════════════════
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 1: FAST-PATH ROUTING  (cli.tsx — zero imports for --version)│
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    cli.tsx:main()
        │
        ├──▶ --version / -v ?  ──────▶  print version, exit (no imports!)
@@ -258,11 +258,11 @@
        ├──▶ ps / logs / attach ? ───▶  session management, exit
        │
        └──▶ (default) ──────────────▶  import('./main.js') → cliMain()
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 2: INITIALIZATION  (main.tsx + init.ts)                     │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    main.tsx:main()
        │
        ├── Set security env vars, SIGINT handler
@@ -285,11 +285,11 @@
        │   └── initRemoteManagedSettings()
        │
        └── Show trust dialog if needed
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 3: TELEMETRY + PERMISSIONS                                  │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
        │
        ├── initializeTelemetryAfterTrust()  ← OpenTelemetry setup
        ├── getPermissionContext()
@@ -298,11 +298,11 @@
        ├── initializeToolPermissionContext()
        ├── initBuiltinPlugins()         ← register bundled plugins
        └── initBundledSkills()          ← register bundled skills
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 4: SETUP  (setup.ts — parallel with command loading)        │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    setup()
        │
        ├── Check Node.js &gt;= 18
@@ -326,20 +326,20 @@
        │
        ├── initSinks()                  ← error log + analytics
        └── logEvent('tengu_started')    ← session start beacon
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 5: COMMAND &amp; AGENT LOADING  (parallel with setup)           │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    await Promise.all([
        getCommands(cwd),                ← all slash commands
        getAgentDefinitionsWithOverrides(cwd)  ← agent registry
    ])
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 6: REPL LAUNCH                                              │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    launchRepl(root, appProps, replProps, renderAndRun)
        │
        ├── import('./components/App.js')
@@ -440,7 +440,7 @@
 
   ═══════════════════════════════════════════════════════════════════
   RECOVERY PATHS (when things go wrong):
-  
+
   • Context too long  →  autocompact / reactive compact / context collapse
   • Max output tokens →  escalate output limit, retry
   • Model error       →  fallback model retry
@@ -877,7 +877,7 @@
                           │   └── messages = [summary] + [attachments] + [recent tail]
                           ├── Post-compact cleanup (invalidate caches)
                           └── Result: ~60-80K tokens (fresh start)
-                          
+
   Turn 26+: Resume from compact boundary, cycle continues
             Session memory keeps tracking NEW work
             If context fills again → another autocompact cycle

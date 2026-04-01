@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://zainhas.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://zainhas.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-04-01T09:30:33+00:00</updated><id>https://zainhas.github.io/feed.xml</id><title type="html">blank</title><subtitle>Zain Hasan — Staff AI/ML Engineer - DX at Together AI. Speaker, educator, and builder in AI, vector databases, and RAG. </subtitle><entry><title type="html">Inside Claude Code: An Architecture Deep Dive</title><link href="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/" rel="alternate" type="text/html" title="Inside Claude Code: An Architecture Deep Dive"/><published>2026-04-01T00:00:00+00:00</published><updated>2026-04-01T00:00:00+00:00</updated><id>https://zainhas.github.io/blog/2026/inside-claude-code-architecture</id><content type="html" xml:base="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/"><![CDATA[<p><em>This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.</em></p> <h1 id="claude-code-v2188--architecture-deep-dive">Claude Code v2.1.88 — Architecture Deep Dive</h1> <blockquote> <p>A comprehensive visual and narrative guide to how Claude Code works internally. Written for someone new to the codebase.</p> </blockquote> <hr/> <h2 id="table-of-contents">Table of Contents</h2> <ol> <li><a href="#1-high-level-architecture-diagram">High-Level Architecture Diagram</a></li> <li><a href="#2-directory-map">Directory Map</a></li> <li><a href="#3-startup--bootstrap-sequence-diagram">Startup &amp; Bootstrap Sequence Diagram</a></li> <li><a href="#4-the-query-loop--core-interaction-flow">The Query Loop — Core Interaction Flow</a></li> <li><a href="#5-tool-execution-sequence-diagram">Tool Execution Sequence Diagram</a></li> <li><a href="#6-dependency--layer-diagram">Dependency &amp; Layer Diagram</a></li> <li><a href="#7-key-abstractions--data-models">Key Abstractions &amp; Data Models</a></li> <li><a href="#8-communication-patterns">Communication Patterns</a></li> <li><a href="#9-narrative-walkthrough-a-message-end-to-end">Narrative Walkthrough: A Message End-to-End</a></li> <li><a href="#10-deep-dive-the-grep-tool-agentic-search">Deep Dive: The Grep Tool (Agentic Search)</a></li> <li><a href="#11-deep-dive-memory-management--context-compaction">Deep Dive: Memory Management &amp; Context Compaction</a></li> </ol> <hr/> <h2 id="1-high-level-architecture-diagram">1. High-Level Architecture Diagram</h2> <p>This is the 30,000-foot view. Every box is a module group; every arrow is a dependency or data flow direction.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────────────────────────┐
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://zainhas.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://zainhas.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-04-01T09:31:00+00:00</updated><id>https://zainhas.github.io/feed.xml</id><title type="html">blank</title><subtitle>Zain Hasan — Staff AI/ML Engineer - DX at Together AI. Speaker, educator, and builder in AI, vector databases, and RAG. </subtitle><entry><title type="html">Inside Claude Code: An Architecture Deep Dive</title><link href="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/" rel="alternate" type="text/html" title="Inside Claude Code: An Architecture Deep Dive"/><published>2026-04-01T00:00:00+00:00</published><updated>2026-04-01T00:00:00+00:00</updated><id>https://zainhas.github.io/blog/2026/inside-claude-code-architecture</id><content type="html" xml:base="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/"><![CDATA[<p><em>This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.</em></p> <h1 id="claude-code-v2188--architecture-deep-dive">Claude Code v2.1.88 — Architecture Deep Dive</h1> <blockquote> <p>A comprehensive visual and narrative guide to how Claude Code works internally. Written for someone new to the codebase.</p> </blockquote> <hr/> <h2 id="table-of-contents">Table of Contents</h2> <ol> <li><a href="#1-high-level-architecture-diagram">High-Level Architecture Diagram</a></li> <li><a href="#2-directory-map">Directory Map</a></li> <li><a href="#3-startup--bootstrap-sequence-diagram">Startup &amp; Bootstrap Sequence Diagram</a></li> <li><a href="#4-the-query-loop--core-interaction-flow">The Query Loop — Core Interaction Flow</a></li> <li><a href="#5-tool-execution-sequence-diagram">Tool Execution Sequence Diagram</a></li> <li><a href="#6-dependency--layer-diagram">Dependency &amp; Layer Diagram</a></li> <li><a href="#7-key-abstractions--data-models">Key Abstractions &amp; Data Models</a></li> <li><a href="#8-communication-patterns">Communication Patterns</a></li> <li><a href="#9-narrative-walkthrough-a-message-end-to-end">Narrative Walkthrough: A Message End-to-End</a></li> <li><a href="#10-deep-dive-the-grep-tool-agentic-search">Deep Dive: The Grep Tool (Agentic Search)</a></li> <li><a href="#11-deep-dive-memory-management--context-compaction">Deep Dive: Memory Management &amp; Context Compaction</a></li> </ol> <hr/> <h2 id="1-high-level-architecture-diagram">1. High-Level Architecture Diagram</h2> <p>This is the 30,000-foot view. Every box is a module group; every arrow is a dependency or data flow direction.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────────────────────────┐
 │                          ENTRY POINTS                                       │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
 │  │ cli.tsx   │  │ mcp.ts   │  │ sdk      │  │ server   │  │ daemon/     │  │
@@ -225,11 +225,11 @@
 └── docs/                         # Analysis reports (EN/JA/KO/ZH)
 </code></pre></div></div> <hr/> <h2 id="3-startup--bootstrap-sequence-diagram">3. Startup &amp; Bootstrap Sequence Diagram</h2> <p>This traces what happens from <code class="language-plaintext highlighter-rouge">node cli.js</code> to the interactive REPL appearing.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> User runs: node cli.js [args]
  ═══════════════════════════════════════════════════════════════════════════
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 1: FAST-PATH ROUTING  (cli.tsx — zero imports for --version)│
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    cli.tsx:main()
        │
        ├──▶ --version / -v ?  ──────▶  print version, exit (no imports!)
@@ -239,11 +239,11 @@
        ├──▶ ps / logs / attach ? ───▶  session management, exit
        │
        └──▶ (default) ──────────────▶  import('./main.js') → cliMain()
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 2: INITIALIZATION  (main.tsx + init.ts)                     │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    main.tsx:main()
        │
        ├── Set security env vars, SIGINT handler
@@ -266,11 +266,11 @@
        │   └── initRemoteManagedSettings()
        │
        └── Show trust dialog if needed
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 3: TELEMETRY + PERMISSIONS                                  │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
        │
        ├── initializeTelemetryAfterTrust()  ← OpenTelemetry setup
        ├── getPermissionContext()
@@ -279,11 +279,11 @@
        ├── initializeToolPermissionContext()
        ├── initBuiltinPlugins()         ← register bundled plugins
        └── initBundledSkills()          ← register bundled skills
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 4: SETUP  (setup.ts — parallel with command loading)        │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    setup()
        │
        ├── Check Node.js &gt;= 18
@@ -307,20 +307,20 @@
        │
        ├── initSinks()                  ← error log + analytics
        └── logEvent('tengu_started')    ← session start beacon
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 5: COMMAND &amp; AGENT LOADING  (parallel with setup)           │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    await Promise.all([
        getCommands(cwd),                ← all slash commands
        getAgentDefinitionsWithOverrides(cwd)  ← agent registry
    ])
- 
+
  ┌─────────────────────────────────────────────────────────────────────┐
  │  PHASE 6: REPL LAUNCH                                              │
  └─────────────────────────────────────────────────────────────────────┘
- 
+
    launchRepl(root, appProps, replProps, renderAndRun)
        │
        ├── import('./components/App.js')
@@ -421,7 +421,7 @@
 
   ═══════════════════════════════════════════════════════════════════
   RECOVERY PATHS (when things go wrong):
-  
+
   • Context too long  →  autocompact / reactive compact / context collapse
   • Max output tokens →  escalate output limit, retry
   • Model error       →  fallback model retry
@@ -858,7 +858,7 @@
                           │   └── messages = [summary] + [attachments] + [recent tail]
                           ├── Post-compact cleanup (invalidate caches)
                           └── Result: ~60-80K tokens (fresh start)
-                          
+
   Turn 26+: Resume from compact boundary, cycle continues
             Session memory keeps tracking NEW work
             If context fills again → another autocompact cycle
