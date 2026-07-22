@@ -4,5 +4,5 @@ I build & teach AI stuff | ai/ml @ Together AI | ℕΨ @ UofT Engineering | prev
 
 Best way to reach me is via DM on LinkedIn/X.
 
-[![Twitter Badge](https://img.shields.io/badge/Twitter-black?style=flat&logo=X&logoColor=white&link=https://x.com/ZainHasan6)](https://x.com/ZainHasan6)
+[![Twitter Badge](https://img.shields.io/badge/Twitter-black?style=flat&logo=X&logoColor=white&link=https://x.com/zainhas)](https://x.com/zainhas)
 [![Linkedin Badge](https://img.shields.io/badge/LinkedIn-blue?style=flat&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/zainhas)](https://www.linkedin.com/in/zainhas)
