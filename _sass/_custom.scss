@@ -421,6 +421,17 @@ progress {
   margin: 0;
 }
 
+.home-portrait {
+  position: relative;
+}
+
+// Canvas version of the portrait (assets/js/portrait.js), drawn over the hidden <pre>
+.ascii-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
 .portrait-mobile {
   display: none;
 }
@@ -515,5 +526,72 @@ progress {
 
   pre code {
     color: var(--global-text-color);
+  }
+}
+
+// Cursor interactions, only for mouse/trackpad users who haven't asked for reduced motion
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  // List focus: the hovered row stays bright, the rest dim, and an arrow slides in
+  .entries .entry {
+    transition: opacity 0.2s ease;
+  }
+
+  .entries:hover .entry {
+    opacity: 0.45;
+  }
+
+  .entries .entry:hover {
+    opacity: 1;
+  }
+
+  .entry-title::after {
+    content: "\2192";
+    display: inline-block;
+    margin-left: 0.4rem;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .entry:hover .entry-title::after {
+    opacity: 1;
+    transform: none;
+  }
+
+  // Thumbnail tilt (assets/js/tilt.js) with a soft light that follows the cursor
+  .talk-thumb {
+    position: relative;
+    transition:
+      transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.25s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(300px circle at var(--light-x, 50%) var(--light-y, 50%), rgba(255, 255, 255, 0.18), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    &.is-tilting {
+      transition:
+        transform 0.08s linear,
+        box-shadow 0.25s ease;
+      box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.35);
+
+      &::after {
+        opacity: 1;
+      }
+    }
+  }
+
+  // The tilt replaces the plain hover fade on thumbnails
+  .talk:hover .talk-thumb img {
+    opacity: 1;
   }
 }

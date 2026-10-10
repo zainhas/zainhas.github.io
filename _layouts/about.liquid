@@ -53,38 +53,4 @@ layout: default
   </div>
 </div>
 
-<script>
-  // Reveal the ASCII portrait character by character in random order.
-  (function () {
-    var pre = document.querySelector('.ascii-profile');
-    if (!pre || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var chars = pre.textContent.split('');
-    var indices = [];
-    for (var i = 0; i < chars.length; i++) {
-      if (chars[i] !== ' ' && chars[i] !== '\n') indices.push(i);
-    }
-    var shown = chars.slice();
-    indices.forEach(function (i) {
-      shown[i] = ' ';
-    });
-    pre.textContent = shown.join('');
-    for (var k = indices.length - 1; k > 0; k--) {
-      var r = Math.floor(Math.random() * (k + 1));
-      var tmp = indices[k];
-      indices[k] = indices[r];
-      indices[r] = tmp;
-    }
-    var duration = 2500;
-    var revealed = 0;
-    var start = null;
-    function step(ts) {
-      if (start === null) start = ts;
-      var progress = Math.min((ts - start) / duration, 1);
-      var target = Math.floor(progress * indices.length);
-      for (; revealed < target; revealed++) shown[indices[revealed]] = chars[indices[revealed]];
-      pre.textContent = shown.join('');
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  })();
-</script>
+<script src="{{ '/assets/js/portrait.js' | relative_url | bust_file_cache }}"></script>
