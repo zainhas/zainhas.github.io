@@ -1,6 +1,12 @@
 ---
 layout: default
 ---
+<script>
+  // Hide the static portrait before first paint; assets/js/portrait.js reveals it.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.documentElement.classList.add('portrait-pending');
+  }
+</script>
 <div class="post">
   <section class="home-hero">
     <div>
