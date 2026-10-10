@@ -11,21 +11,21 @@ ninja.data = [{
     },
   },{id: "nav-writing",
           title: "Writing",
-          description: "Technical articles and insights on AI, machine learning, and vector databases.",
+          description: "Technical deep dives and guides on fine-tuning, evaluation, inference, agents, RAG, and vector search, published on the Together AI and Weaviate blogs.",
           section: "Navigation",
           handler: () => {
             window.location.href = "/writing/";
           },
         },{id: "nav-talks",
           title: "Talks",
-          description: "Conference talks, workshops, and presentations.",
+          description: "Conference talks, workshops, podcasts, and livestreams on open models, inference, fine-tuning, agents, RAG, and vector search. If you&#39;d like me to speak at your event, reach out on LinkedIn or X.",
           section: "Navigation",
           handler: () => {
             window.location.href = "/talks/";
           },
         },{id: "nav-teaching",
           title: "Teaching",
-          description: "Online courses and educational content on AI, machine learning, and vector databases.",
+          description: "Hands-on, code-first courses for practitioners, from production RAG systems to multimodal search.",
           section: "Navigation",
           handler: () => {
             window.location.href = "/teaching/";
