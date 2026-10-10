@@ -10,38 +10,6 @@ nav_order: 5
 I build courses that bridge the gap between AI research and real-world implementation. From production RAG systems to multimodal search, my courses are hands-on, code-first, and designed for practitioners.
 
 <style>
-.stats-bar {
-  display: flex;
-  justify-content: center;
-  gap: 2.5rem;
-  margin: 2rem 0 2.5rem;
-  padding: 1.25rem 2rem;
-  background: var(--global-card-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 12px;
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--global-theme-color);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: var(--global-text-color-light);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-top: 0.15rem;
-}
-
 .course-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -185,34 +153,8 @@ html[data-theme="dark"] .course-card:hover {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  .stats-bar {
-    gap: 1.5rem;
-    padding: 1rem 0.75rem;
-  }
-  .stat-number {
-    font-size: 1.25rem;
-  }
 }
 </style>
-
-<div class="stats-bar">
-  <div class="stat-item">
-    <div class="stat-number">4</div>
-    <div class="stat-label">Courses</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-number">250K+</div>
-    <div class="stat-label">Learners</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-number">4.8</div>
-    <div class="stat-label">Avg. Rating</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-number">3</div>
-    <div class="stat-label">Platforms</div>
-  </div>
-</div>
 
 ## Courses
 

@@ -157,6 +157,116 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <div class="video-grid">
 
+<!-- 2026-10-07 -->
+<div class="video-card">
+  <div class="video-embed" data-id="5j93Ca03tBM">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Parth Sareen &amp; Zain Hasan: Evaluating Open Models on Production Traffic</div>
+    <div class="video-meta">26:16 • 23 views</div>
+    <div class="video-channel">The AI Conference™</div>
+  </div>
+</div>
+
+<!-- 2026-08-27 -->
+<div class="video-card">
+  <div class="video-embed" data-id="a7ZqZ0ZrrE4">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Serving Kimi K3 at scale: An inference deep dive with Together AI</div>
+    <div class="video-meta">1:03:05 • 463 views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2026-08-17 -->
+<div class="video-card">
+  <div class="video-embed" data-id="vjcPM1QFaQk">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Together evaluations: score model outputs with Zain Hasan</div>
+    <div class="video-meta">5:41 • 31 views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2026-08-17 -->
+<div class="video-card">
+  <div class="video-embed" data-id="_VYjnHCfqSs">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Together evaluations: Classify model outputs with Zain Hasan</div>
+    <div class="video-meta">6:42 • 64 views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2026-08-17 -->
+<div class="video-card">
+  <div class="video-embed" data-id="P83iyW_mdig">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Together evaluations: Compare model outputs with Zain Hasan</div>
+    <div class="video-meta">8:48 • 73 views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2026-08-07 -->
+<div class="video-card">
+  <div class="video-embed" data-id="RNGPAfgubW4">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Running open models in production: A live walkthrough of our new inference platform - Together AI</div>
+    <div class="video-meta">58:54 • 249 views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2026-07-31 -->
+<div class="video-card">
+  <div class="video-embed" data-id="5VfN8SMNs4k">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Everything you need to know about Kimi K3: A conversation with Moonshot AI and Together AI</div>
+    <div class="video-meta">1:07:51 • 618 views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2026-07-23 -->
+<div class="video-card">
+  <div class="video-embed" data-id="U-cbuRrEuj4">
+  </div>
+  <div class="video-info">
+    <div class="video-title">How to deploy &amp; scale open models in production – Together AI Inference Demo</div>
+    <div class="video-meta">8:09 • 551 views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2026-05-06 -->
+<div class="video-card">
+  <div class="video-embed" data-id="D_K_xVePFdU">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Building with DeepSeek-V4: long-context agents and efficient inference - Together AI</div>
+    <div class="video-meta">1:01:24 • 1.2K views</div>
+    <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2025-12-15 -->
+<div class="video-card">
+  <div class="video-embed" data-id="ZMVa08n9FtU">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Introduction to Agents - Industry Engagement Series # 2</div>
+    <div class="video-meta">1:40:53 • 107 views</div>
+    <div class="video-channel">KarachiDotAI</div>
+  </div>
+</div>
+
 <!-- 2025-11-19 -->
 <div class="video-card">
   <div class="video-embed" data-id="oeehZQ9Embg">
@@ -165,6 +275,17 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="video-title">How advanced tool calling transforms agentic use cases: A conversation with Moonshot AI</div>
     <div class="video-meta">58:50 • 619 views</div>
     <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2025-09-26 -->
+<div class="video-card">
+  <div class="video-embed" data-id="UhhAgc9tvic">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Panel 1: Designing Intelligent Agents | Future of Data and AI | Agentic AI Conference</div>
+    <div class="video-meta">53:50 • 522 views</div>
+    <div class="video-channel">Data Science Dojo</div>
   </div>
 </div>
 
@@ -187,6 +308,17 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="video-title">LLM-as-a-Judge Evals: Comparing Kimi, Qwen, and GLM</div>
     <div class="video-meta">1:04:26 • 434 views</div>
     <div class="video-channel">Together AI</div>
+  </div>
+</div>
+
+<!-- 2025-07-29 -->
+<div class="video-card">
+  <div class="video-embed" data-id="b3Qyt6qMvpQ">
+  </div>
+  <div class="video-info">
+    <div class="video-title">How to build a Recommendation System with Vector Search and Graph References KGC 2023</div>
+    <div class="video-meta">1:35:29 • 806 views</div>
+    <div class="video-channel">The Knowledge Graph Conference</div>
   </div>
 </div>
 
@@ -300,6 +432,17 @@ document.addEventListener("DOMContentLoaded", function() {
   </div>
 </div>
 
+<!-- 2025-01-31 -->
+<div class="video-card">
+  <div class="video-embed" data-id="6xQL4w4KtPg">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Inside Vector Database Quantization: Product, Binary, and Scalar | S2 E23</div>
+    <div class="video-meta">52:11 • 319 views</div>
+    <div class="video-channel">How AI Is Built</div>
+  </div>
+</div>
+
 <!-- 2025-01-28 -->
 <div class="video-card">
   <div class="video-embed" data-id="QpxDEPXPZfI">
@@ -366,6 +509,17 @@ document.addEventListener("DOMContentLoaded", function() {
   </div>
 </div>
 
+<!-- 2024-10-01 -->
+<div class="video-card">
+  <div class="video-embed" data-id="ujQ_6OTAZ_E">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Vector search without breaking the bank: Quantization and Adaptive Retrieval</div>
+    <div class="video-meta">20:17 • 96 views</div>
+    <div class="video-channel">John Snow Labs</div>
+  </div>
+</div>
+
 <!-- 2024-09-18 -->
 <div class="video-card">
   <div class="video-embed" data-id="Ilkxb2Qe3xY">
@@ -374,6 +528,17 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="video-title">RAG Insights w/ Sebastian Witalec & Zain Hasan (Weaviate)</div>
     <div class="video-meta">56:20 • 132 views</div>
     <div class="video-channel">AI Tinkerers Ottawa</div>
+  </div>
+</div>
+
+<!-- 2024-08-13 -->
+<div class="video-card">
+  <div class="video-embed" data-id="TgvN4gllP-o">
+  </div>
+  <div class="video-info">
+    <div class="video-title">#011 Mastering Vector Databases, Product &amp; Binary Quantization, Multi-Vector Search</div>
+    <div class="video-meta">40:05 • 47 views</div>
+    <div class="video-channel">How AI Is Built</div>
   </div>
 </div>
 
@@ -542,6 +707,17 @@ document.addEventListener("DOMContentLoaded", function() {
   </div>
 </div>
 
+<!-- 2023-11-28 -->
+<div class="video-card">
+  <div class="video-embed" data-id="XSo7SH_2Dy0">
+  </div>
+  <div class="video-info">
+    <div class="video-title">Getting Unstuck From 1 LLM with Pulze AI and Multimodal RAG with Weaviate | Multimodal Weekly 25</div>
+    <div class="video-meta">1:15:09 • 204 views</div>
+    <div class="video-channel">TwelveLabs</div>
+  </div>
+</div>
+
 <!-- 2023-11-14 -->
 <div class="video-card">
   <div class="video-embed" data-id="3WUobZryyok">
@@ -572,6 +748,28 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="video-title">Using Vector DBs to Scale Multimodal Embeddings, Retrieval & Generation</div>
     <div class="video-meta">41:17 • 459 views</div>
     <div class="video-channel">OpenSource Connections</div>
+  </div>
+</div>
+
+<!-- 2023-09-18 -->
+<div class="video-card">
+  <div class="video-embed" data-id="zhXfKQFO3QY">
+  </div>
+  <div class="video-info">
+    <div class="video-title">OSDI Meetup London - Vector Databases and Data Matching with AI</div>
+    <div class="video-meta">1:06:09 • 121 views</div>
+    <div class="video-channel">Aiven</div>
+  </div>
+</div>
+
+<!-- 2023-09-08 -->
+<div class="video-card">
+  <div class="video-embed" data-id="IzpDKizUdlk">
+  </div>
+  <div class="video-info">
+    <div class="video-title">AI Meetup (London 20230906): LLMs and Vector Databases</div>
+    <div class="video-meta">50:42 • 258 views</div>
+    <div class="video-channel">AICamp</div>
   </div>
 </div>
 
