@@ -1,0 +1,519 @@
+/*******************************************************************************
+ * Site design layer: typography, navigation, and page components.
+ * Loaded after the theme's base styles, so rules here take precedence.
+ ******************************************************************************/
+
+$serif: "Newsreader", Georgia, "Times New Roman", serif;
+$mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+// Typography
+
+body {
+  background-color: var(--global-bg-color);
+  font-size: 1rem;
+  line-height: 1.65;
+  letter-spacing: -0.006em;
+}
+
+h1,
+h2,
+.post-title {
+  font-family: $serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+h3 {
+  font-size: 1.1rem;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--global-theme-color) 22%, transparent);
+}
+
+// Links inside prose: quiet underline that picks up the accent on hover
+#markdown-content a,
+.prose a {
+  color: var(--global-text-color);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--global-text-color) 30%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+
+  &:hover {
+    color: var(--global-theme-color);
+    text-decoration-color: currentColor;
+  }
+}
+
+// Page header
+
+.post-header {
+  margin: 3rem 0 2.5rem;
+
+  .post-title {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.post-description {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 38rem;
+  margin-bottom: 0;
+}
+
+// Navigation
+
+.navbar {
+  background-color: color-mix(in srgb, var(--global-bg-color) 88%, transparent);
+  border-bottom: 1px solid var(--global-divider-color);
+}
+
+html[data-theme="dark"] .navbar {
+  background-color: color-mix(in srgb, var(--global-bg-color) 88%, transparent);
+  border-bottom-color: var(--global-divider-color);
+}
+
+.navbar.navbar-light {
+  .navbar-brand {
+    font-family: $serif;
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+
+    &:hover {
+      color: var(--global-text-color);
+    }
+  }
+
+  .navbar-nav .nav-item .nav-link {
+    color: var(--global-text-color-light);
+    font-weight: 450;
+    padding: 0.5rem 0.75rem;
+
+    &:hover {
+      color: var(--global-text-color);
+      background-color: transparent;
+    }
+  }
+
+  .navbar-nav .nav-item.active > .nav-link {
+    color: var(--global-text-color);
+    font-weight: 500;
+
+    &:hover {
+      color: var(--global-text-color);
+    }
+  }
+}
+
+html[data-theme="dark"] .navbar.navbar-light .navbar-nav .nav-item .nav-link:hover {
+  background-color: transparent;
+}
+
+#light-toggle {
+  color: var(--global-text-color-light);
+
+  &:hover {
+    color: var(--global-text-color);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar-collapse .navbar-nav {
+    padding: 0.5rem 0 0.75rem;
+  }
+}
+
+progress {
+  height: 2px;
+}
+
+// Section heading with an optional "view all" link
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 3.5rem 0 0.75rem;
+
+  h2 {
+    font-size: 1.4rem;
+    margin: 0;
+  }
+
+  a {
+    font-size: 0.875rem;
+    color: var(--global-text-color-light);
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--global-text-color);
+    }
+  }
+}
+
+// Writing: dated list grouped by year
+
+.year-label {
+  font-family: $serif;
+  font-size: 1.15rem;
+  color: var(--global-text-color-light);
+  margin: 2.5rem 0 0.25rem;
+}
+
+.entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.entry {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--global-divider-color);
+
+  &:last-child {
+    border-bottom: 1px solid var(--global-divider-color);
+  }
+}
+
+.entry-date {
+  flex: 0 0 4.75rem;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--global-text-color-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.entry-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-title {
+  color: var(--global-text-color);
+  font-weight: 500;
+  line-height: 1.4;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--global-theme-color);
+  }
+}
+
+.entry-source {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: var(--global-text-color-light);
+  white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+  .entry {
+    flex-wrap: wrap;
+    gap: 0.15rem 1rem;
+  }
+
+  .entry-date {
+    order: 2;
+    flex-basis: auto;
+  }
+
+  .entry-main {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .entry-source {
+    order: 3;
+  }
+}
+
+// Talks: thumbnail grid
+
+.talk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem 1.25rem;
+}
+
+@media (max-width: 767.98px) {
+  .talk-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 479.98px) {
+  .talk-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.talk {
+  display: block;
+  color: var(--global-text-color);
+
+  &:hover {
+    color: var(--global-text-color);
+
+    .talk-thumb img {
+      opacity: 0.85;
+    }
+
+    .talk-title {
+      color: var(--global-theme-color);
+    }
+  }
+}
+
+.talk-thumb {
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--global-divider-color);
+  border: 1px solid var(--global-divider-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.15s ease;
+  }
+}
+
+.talk-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 0.65rem;
+  font-size: 0.925rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: color 0.15s ease;
+}
+
+.talk-meta {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--global-text-color-light);
+}
+
+// Teaching: course list
+
+.course {
+  padding: 1.75rem 0;
+  border-top: 1px solid var(--global-divider-color);
+
+  &:last-child {
+    border-bottom: 1px solid var(--global-divider-color);
+  }
+
+  h3 {
+    font-family: $serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin: 0.2rem 0 0.6rem;
+
+    a {
+      color: var(--global-text-color);
+
+      &:hover {
+        color: var(--global-theme-color);
+      }
+    }
+  }
+
+  p {
+    margin-bottom: 0.6rem;
+    max-width: 40rem;
+  }
+}
+
+.course-meta,
+.course-topics {
+  font-size: 0.85rem;
+  color: var(--global-text-color-light);
+}
+
+.course-topics {
+  margin-bottom: 0.9rem;
+}
+
+.text-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--global-theme-color);
+
+  &:hover {
+    color: var(--global-hover-color);
+  }
+}
+
+// Home
+
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3rem;
+  align-items: start;
+  margin-top: 3rem;
+
+  h1 {
+    font-size: 2.75rem;
+    line-height: 1.05;
+    margin-bottom: 0.5rem;
+  }
+
+  .tagline {
+    font-size: 1.1rem;
+    color: var(--global-text-color-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .prose p {
+    max-width: 36rem;
+  }
+}
+
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin-top: 1.25rem;
+  font-size: 0.925rem;
+
+  a {
+    color: var(--global-text-color);
+    font-weight: 500;
+
+    &:hover {
+      color: var(--global-theme-color);
+    }
+  }
+
+  .contact-hint {
+    color: var(--global-text-color-light);
+  }
+}
+
+.ascii-profile {
+  font-family: $mono;
+  font-size: 3.3px;
+  line-height: 1.05;
+  letter-spacing: 0.05em;
+  white-space: pre;
+  overflow: hidden;
+  color: var(--global-text-color);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.portrait-mobile {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .home-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+
+    h1 {
+      font-size: 2.25rem;
+    }
+  }
+
+  .home-portrait {
+    order: -1;
+  }
+
+  .ascii-profile {
+    display: none;
+  }
+
+  .portrait-mobile {
+    display: block;
+    width: 140px;
+  }
+
+  // The portrait image is light text on transparent; darken it for the light theme.
+  html:not([data-theme="dark"]) .portrait-mobile {
+    filter: invert(1);
+  }
+}
+
+.talk-grid.compact {
+  gap: 1.5rem 1.25rem;
+}
+
+// Footer
+
+.site-footer span {
+  color: inherit;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-top: 5rem;
+  padding: 1.75rem 0 2.5rem;
+  border-top: 1px solid var(--global-divider-color);
+  font-size: 0.85rem;
+  color: var(--global-text-color-light);
+
+  a {
+    color: var(--global-text-color-light);
+    margin-left: 1.25rem;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &:hover {
+      color: var(--global-text-color);
+    }
+  }
+}
+
+// Blog posts
+
+.post-meta {
+  font-size: 0.9rem;
+  color: var(--global-text-color-light);
+  margin-bottom: 0;
+}
+
+.post-content {
+  max-width: 44rem;
+}
+
+#markdown-content {
+  h1,
+  h2 {
+    margin-top: 2.5rem;
+  }
+
+  pre {
+    border-radius: 8px;
+    border: 1px solid var(--global-divider-color);
+  }
+
+  pre code {
+    color: var(--global-text-color);
+  }
+}

@@ -1,0 +1,7 @@
+<a class="talk" href="https://www.youtube.com/watch?v={{ include.talk.id }}">
+  <div class="talk-thumb">
+    <img src="https://i.ytimg.com/vi/{{ include.talk.id }}/mqdefault.jpg" alt="" loading="lazy" width="320" height="180">
+  </div>
+  <div class="talk-title">{{ include.talk.title }}</div>
+  <div class="talk-meta">{{ include.talk.channel }} &middot; {{ include.talk.date | date: '%b %Y' }}</div>
+</a>

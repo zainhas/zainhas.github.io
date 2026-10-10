@@ -1,0 +1,42 @@
+# Courses shown on /teaching/, in display order.
+
+courses:
+  - title: "Retrieval Augmented Generation (RAG)"
+    platform: "Coursera x DeepLearning.AI"
+    url: "https://www.coursera.org/learn/retrieval-augmented-generation-rag"
+    meta: "5 modules · 30 hours"
+    description: "Build production-ready RAG systems from the ground up. Covers retrievers, vector databases, LLMs, prompt engineering, agentic RAG, evaluation, and real-world deployment with hands-on labs using Weaviate and Together AI."
+    topics:
+      - "Hybrid search pipeline with BM25 and semantic search"
+      - "Domain-specific chatbot with dynamic pricing"
+      - "Monitored, production-grade RAG system"
+
+  - title: "Vector Databases: from Embeddings to Applications"
+    platform: "DeepLearning.AI"
+    url: "https://www.deeplearning.ai/short-courses/vector-databases-embeddings-applications/"
+    meta: "Short course · 55 min · Free"
+    description: "A concise, hands-on introduction to vector databases. Learn how embeddings capture meaning, explore ANN algorithms for fast search, and build applications from hybrid search to multilingual retrieval."
+    topics:
+      - "Vector embedding and similarity search pipelines"
+      - "Sparse, dense, and hybrid search systems"
+      - "Multilingual search application"
+
+  - title: "Building Multimodal Search and RAG"
+    platform: "DeepLearning.AI"
+    url: "https://www.deeplearning.ai/short-courses/building-multimodal-search-and-rag/"
+    meta: "Short course · 1 hr 22 min · Free"
+    description: "Go beyond text-only RAG. Learn contrastive learning, build any-to-any multimodal search across text, images, and video, and implement end-to-end multimodal RAG with visual instruction tuning."
+    topics:
+      - "Contrastive learning on a real dataset"
+      - "End-to-end multimodal RAG system"
+      - "Multi-vector recommender system"
+
+  - title: "Introduction to AI-Native Vector Databases"
+    platform: "LinkedIn Learning"
+    url: "https://www.linkedin.com/learning/introduction-to-ai-native-vector-databases"
+    meta: "Course · Certificate"
+    description: "Understand why vector databases are a critical infrastructure layer for modern AI. Covers fundamentals, AI-native architectures, real-world use cases, and best practices for professionals entering the space."
+    topics:
+      - "Vector database fundamentals and architectures"
+      - "Real-world AI infrastructure use cases"
+      - "Industry best practices and patterns"

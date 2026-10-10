@@ -2,15 +2,7 @@
 layout: about
 title: About
 permalink: /
-subtitle: "I build and teach AI • AI/ML Together AI • EngSci ℕΨ/PhD University of Toronto • Previously: vector DBs, data scientist, lecturer & health tech founder"
-
-profile:
-  align: right
-  image: prof_pic.jpg
-  image_circular: false # crops the image to make it circular
-  more_info:
-
-social: true # includes social icons at the bottom of the page
+subtitle: I build and teach AI.
 ---
 
 Currently a **Staff AI/ML Engineer - DX** at [Together AI](https://www.together.ai/), focused on large-scale models, tooling, and developer education.

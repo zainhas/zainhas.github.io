@@ -1,0 +1,387 @@
+# Talks, workshops, podcasts, and livestreams shown on /talks/.
+# The page sorts by date, so order here does not matter. `id` is the YouTube video ID.
+
+talks:
+  - title: "Parth Sareen & Zain Hasan: Evaluating Open Models on Production Traffic"
+    date: 2026-10-07
+    id: "5j93Ca03tBM"
+    channel: "The AI Conference"
+    duration: "26:16"
+
+  - title: "Serving Kimi K3 at scale: An inference deep dive with Together AI"
+    date: 2026-08-27
+    id: "a7ZqZ0ZrrE4"
+    channel: "Together AI"
+    duration: "1:03:05"
+
+  - title: "Together evaluations: score model outputs with Zain Hasan"
+    date: 2026-08-17
+    id: "vjcPM1QFaQk"
+    channel: "Together AI"
+    duration: "5:41"
+
+  - title: "Together evaluations: Classify model outputs with Zain Hasan"
+    date: 2026-08-17
+    id: "_VYjnHCfqSs"
+    channel: "Together AI"
+    duration: "6:42"
+
+  - title: "Together evaluations: Compare model outputs with Zain Hasan"
+    date: 2026-08-17
+    id: "P83iyW_mdig"
+    channel: "Together AI"
+    duration: "8:48"
+
+  - title: "Running open models in production: A live walkthrough of our new inference platform - Together AI"
+    date: 2026-08-07
+    id: "RNGPAfgubW4"
+    channel: "Together AI"
+    duration: "58:54"
+
+  - title: "Everything you need to know about Kimi K3: A conversation with Moonshot AI and Together AI"
+    date: 2026-07-31
+    id: "5VfN8SMNs4k"
+    channel: "Together AI"
+    duration: "1:07:51"
+
+  - title: "How to deploy & scale open models in production – Together AI Inference Demo"
+    date: 2026-07-23
+    id: "U-cbuRrEuj4"
+    channel: "Together AI"
+    duration: "8:09"
+
+  - title: "Building with DeepSeek-V4: long-context agents and efficient inference - Together AI"
+    date: 2026-05-06
+    id: "D_K_xVePFdU"
+    channel: "Together AI"
+    duration: "1:01:24"
+
+  - title: "Introduction to Agents - Industry Engagement Series # 2"
+    date: 2025-12-15
+    id: "ZMVa08n9FtU"
+    channel: "KarachiDotAI"
+    duration: "1:40:53"
+
+  - title: "How advanced tool calling transforms agentic use cases: A conversation with Moonshot AI"
+    date: 2025-11-19
+    id: "oeehZQ9Embg"
+    channel: "Together AI"
+    duration: "58:50"
+
+  - title: "Panel 1: Designing Intelligent Agents | Future of Data and AI | Agentic AI Conference"
+    date: 2025-09-26
+    id: "UhhAgc9tvic"
+    channel: "Data Science Dojo"
+    duration: "53:50"
+
+  - title: "GPT-OSS: Deep Dive + Live Q&A with OpenAI's Dominik Kundel"
+    date: 2025-08-27
+    id: "1cHvhv3U1iY"
+    channel: "Together AI"
+    duration: "58:40"
+
+  - title: "LLM-as-a-Judge Evals: Comparing Kimi, Qwen, and GLM"
+    date: 2025-07-31
+    id: "9AwRQh9rMyM"
+    channel: "Together AI"
+    duration: "1:04:26"
+
+  - title: "How to build a Recommendation System with Vector Search and Graph References KGC 2023"
+    date: 2025-07-29
+    id: "b3Qyt6qMvpQ"
+    channel: "The Knowledge Graph Conference"
+    duration: "1:35:29"
+
+  - title: "A new course on Retrieval Augmented Generation (RAG) is live!"
+    date: 2025-07-16
+    id: "dFHEgsJTmDI"
+    channel: "DeepLearning.AI"
+    duration: "1:40"
+
+  - title: "End to end coding agent examples"
+    date: 2025-06-14
+    id: "JbkRgq_QzYI"
+    channel: "Together AI"
+    duration: "7:11"
+
+  - title: "Code Execution for Coding Agents"
+    date: 2025-06-13
+    id: "3ZIwFeitLRY"
+    channel: "Together AI"
+    duration: "4:56"
+
+  - title: "Retrieval and Context in coding agents"
+    date: 2025-06-12
+    id: "ARIg9kcjxs4"
+    channel: "Together AI"
+    duration: "17:31"
+
+  - title: "Function Calling in Coding Agents"
+    date: 2025-06-11
+    id: "WZJTmTCmi_M"
+    channel: "Together AI"
+    duration: "20:01"
+
+  - title: "How to build a coding agent from scratch"
+    date: 2025-06-03
+    id: "lxgfhPQ1GSI"
+    channel: "Together AI"
+    duration: "59:03"
+
+  - title: "Learning Together Episode 1: Matryoshka Principles for Adaptive Intelligence"
+    date: 2025-05-05
+    id: "SNWLv2ULNaI"
+    channel: "Together AI"
+    duration: "49:21"
+
+  - title: "Finetuning 3.0 – How to finetune models on Together AI"
+    date: 2025-05-01
+    id: "DOjEuvaNiGk"
+    channel: "Together AI"
+    duration: "1:01:28"
+
+  - title: "ColPali's Vision-Powered RAG for Enterprise Documents | PyData Global 2024"
+    date: 2025-04-13
+    id: "pnacsAWnjV8"
+    channel: "PyData"
+    duration: "35:52"
+
+  - title: "DeepSeek-R1: How It Works, Simplified!"
+    date: 2025-02-06
+    id: "Uzi-cGmRalI"
+    channel: "Together AI"
+    duration: "1:00:55"
+
+  - title: "Inside Vector Database Quantization: Product, Binary, and Scalar | S2 E23"
+    date: 2025-01-31
+    id: "6xQL4w4KtPg"
+    channel: "How AI Is Built"
+    duration: "52:11"
+
+  - title: "Kernels: High Performance Building Blocks for AI"
+    date: 2025-01-28
+    id: "QpxDEPXPZfI"
+    channel: "Together AI"
+    duration: "57:35"
+
+  - title: "Fine-tuning Large Language Models"
+    date: 2025-01-16
+    id: "e9-bzNVlsQ4"
+    channel: "Together AI"
+    duration: "1:02:31"
+
+  - title: "A Deep Dive Into The RedPajama Datasets"
+    date: 2024-12-06
+    id: "_HFxuQUg51k"
+    channel: "Together AI"
+    duration: "1:01:29"
+
+  - title: "Scaling Vector Database Usage Without Breaking the Bank - Quantization and Adaptive Retrieval"
+    date: 2024-10-31
+    id: "BtMXkUr5tj4"
+    channel: "Toronto Machine Learning Series (TMLS)"
+    duration: "1:11:24"
+
+  - title: "How to Build Multimodal Document RAG with Llama 3.2 Vision and ColQwen2"
+    date: 2024-10-14
+    id: "IluARWPYAUc"
+    channel: "Together AI"
+    duration: "59:50"
+
+  - title: "Building Scalable Multimodal Search Applications with Python"
+    date: 2024-10-02
+    id: "LQHyyOsT61k"
+    channel: "EuroPython Conference"
+    duration: "25:11"
+
+  - title: "Vector search without breaking the bank: Quantization and Adaptive Retrieval"
+    date: 2024-10-01
+    id: "ujQ_6OTAZ_E"
+    channel: "John Snow Labs"
+    duration: "20:17"
+
+  - title: "RAG Insights w/ Sebastian Witalec & Zain Hasan (Weaviate)"
+    date: 2024-09-18
+    id: "Ilkxb2Qe3xY"
+    channel: "AI Tinkerers Ottawa"
+    duration: "56:20"
+
+  - title: "#011 Mastering Vector Databases, Product & Binary Quantization, Multi-Vector Search"
+    date: 2024-08-13
+    id: "TgvN4gllP-o"
+    channel: "How AI Is Built"
+    duration: "40:05"
+
+  - title: "Learn Advanced RAG Tricks with Zain"
+    date: 2024-07-31
+    id: "RlghyhIPXJY"
+    channel: "Weaviate"
+    duration: "57:58"
+
+  - title: "Using Vector Databases for Multimodal Search and Retrieval Augmented Generation"
+    date: 2024-07-25
+    id: "CiUNt-J8ZVY"
+    channel: "Data Phoenix Events"
+    duration: "1:07:17"
+
+  - title: 'Make Your RAG Workflow "WOW" with Weaviate and Generative Feedback Loops'
+    date: 2024-07-14
+    id: "LGcQEz4xSTQ"
+    channel: "Yujian Tang"
+    duration: "29:42"
+
+  - title: "Powering Vector Search with Real-Time Data"
+    date: 2024-06-27
+    id: "9pG1pspgELU"
+    channel: "Quix"
+    duration: "1:04:25"
+
+  - title: "LLM Bootcamp - Day 2 Highlights"
+    date: 2024-06-26
+    id: "Izt1cOeptx8"
+    channel: "Data Science Dojo"
+    duration: "42 sec"
+
+  - title: "Vector Quantization: The Vector Clubhouse Episode 2"
+    date: 2024-06-18
+    id: "6Emcpz_f9EQ"
+    channel: "Weaviate"
+    duration: "59:40"
+
+  - title: "Using Retrieval Augmented Generation (RAG) in Production | Weaviate x Merantix AI Campus"
+    date: 2024-06-12
+    id: "iD5hwrTSJmo"
+    channel: "Merantix AI Campus"
+    duration: "59:00"
+
+  - title: "Advanced Retrieval-Augmented Generation Techniques"
+    date: 2024-06-11
+    id: "RZl4pe88sUU"
+    channel: "Plain Schwarz"
+    duration: "42:32"
+
+  - title: "Better Chatbots with Advanced RAG Techniques"
+    date: 2024-05-16
+    id: "nZQ0RMVyykg"
+    channel: "Toronto Machine Learning Society (TMLS)"
+    duration: "49:12"
+
+  - title: "Using Vector Databases for Multimodal Embeddings and Search - NDC London 2024"
+    date: 2024-05-15
+    id: "2O81YU_VHDc"
+    channel: "NDC Conferences"
+    duration: "57:21"
+
+  - title: "How I Built a Super-Doctor Using Advanced RAG"
+    date: 2024-05-01
+    id: "gnLMGzhv1b8"
+    channel: "John Snow Labs"
+    duration: "21:19"
+
+  - title: "Vector embedding models for AI"
+    date: 2024-04-19
+    id: "lpdN3aw-yTg"
+    channel: "Weaviate"
+    duration: "40:57"
+
+  - title: "Building Chatbots with Retrieval-Augmented Generation Techniques | Conf42 LLMs 2024"
+    date: 2024-04-11
+    id: "rCFcZDs4V14"
+    channel: "Conf42"
+    duration: "32:01"
+
+  - title: "Building Multi-Modal Search and RAG with Vector Databases | LLMOps"
+    date: 2024-03-14
+    id: "b5DtAl8VulY"
+    channel: "LLMOps Space"
+    duration: "51:38"
+
+  - title: "Matryoshka Embeddings - Weaviate Podcast #89"
+    date: 2024-02-20
+    id: "-0m2dZJ6zos"
+    channel: "Weaviate"
+    duration: "1:12:15"
+
+  - title: "Getting Unstuck From 1 LLM with Pulze AI and Multimodal RAG with Weaviate | Multimodal Weekly 25"
+    date: 2023-11-28
+    id: "XSo7SH_2Dy0"
+    channel: "TwelveLabs"
+    duration: "1:15:09"
+
+  - title: "Building Multi-Modal Search with Vector Databases"
+    date: 2023-11-14
+    id: "3WUobZryyok"
+    channel: "DeepLearning.AI"
+    duration: "1:01:12"
+
+  - title: "Semantic Search: A Deep Dive Into Vector Databases"
+    date: 2023-10-18
+    id: "kS9DazKNX-Y"
+    channel: "Developer Voices"
+    duration: "1:02:12"
+
+  - title: "Using Vector DBs to Scale Multimodal Embeddings, Retrieval & Generation"
+    date: 2023-10-17
+    id: "prO9tkKjTqw"
+    channel: "OpenSource Connections"
+    duration: "41:17"
+
+  - title: "OSDI Meetup London - Vector Databases and Data Matching with AI"
+    date: 2023-09-18
+    id: "zhXfKQFO3QY"
+    channel: "Aiven"
+    duration: "1:06:09"
+
+  - title: "AI Meetup (London 20230906): LLMs and Vector Databases"
+    date: 2023-09-08
+    id: "IzpDKizUdlk"
+    channel: "AICamp"
+    duration: "50:42"
+
+  - title: "Going Beyond Vector Search and RAG - Semantic Kernel Community"
+    date: 2023-08-21
+    id: "poRHLfVWg7E"
+    channel: "Alex Chao"
+    duration: "21:24"
+
+  - title: "Using Weaviate with the Semantic Kernel pt.1 | Semantic Kernel Community"
+    date: 2023-08-18
+    id: "Hz_hzAZ-gvU"
+    channel: "Alex Chao"
+    duration: "20:39"
+
+  - title: "Vector Search - A gentle introduction"
+    date: 2023-08-17
+    id: "P5VpaUyh8Iw"
+    channel: "Open Data Science"
+    duration: "44:27"
+
+  - title: "ControlNet for Interior Design & Weaviate Vector Database for Multimodal AI"
+    date: 2023-08-11
+    id: "riwPb2hSrEI"
+    channel: "TwelveLabs"
+    duration: "55:45"
+
+  - title: "Computer Vision Applications at Scale with Vector Databases"
+    date: 2023-07-13
+    id: "YTIDj7jeRbs"
+    channel: "Voxel51"
+    duration: "35:11"
+
+  - title: "A gentle introduction to Vector Databases | Conf42 Machine Learning 2023"
+    date: 2023-06-20
+    id: "h4yC0MGWrHQ"
+    channel: "Conf42"
+    duration: "44:48"
+
+  - title: "Using Weaviate for building Generative AI apps"
+    date: 2023-04-06
+    id: "RsplYfp8f7Q"
+    channel: "Hasgeek TV"
+    duration: "26:48"
+
+  - title: "Sam Bean, Zain Hasan, and John Trengrove on You.com and Spark - Weaviate Podcast #32"
+    date: 2023-01-04
+    id: "pP8CZbDkUKU"
+    channel: "Weaviate"
+    duration: "51:35"

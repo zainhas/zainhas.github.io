@@ -1,1 +1,14 @@
-{% comment %}Footer removed{% endcomment %}
+<footer class="container">
+  <div class="site-footer">
+    <span
+      >&copy; {{ 'now' | date: '%Y' }}
+      {{ site.first_name }}
+      {{ site.last_name -}}
+    </span>
+    <span>
+      <a href="https://github.com/{{ site.data.socials.github_username }}">GitHub</a>
+      <a href="https://www.linkedin.com/in/{{ site.data.socials.linkedin_username }}">LinkedIn</a>
+      <a href="https://x.com/{{ site.data.socials.x_username }}">X</a>
+    </span>
+  </div>
+</footer>

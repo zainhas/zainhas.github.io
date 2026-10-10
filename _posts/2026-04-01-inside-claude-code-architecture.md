@@ -5,8 +5,6 @@ date: 2026-04-01
 description: A walkthrough of how Claude Code works internally — from its layered architecture and query loop to its tool system and permission model.
 tags: llms ai-agents developer-tools
 categories: technical-blog
-toc:
-  beginning: true
 ---
 
 _This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc._

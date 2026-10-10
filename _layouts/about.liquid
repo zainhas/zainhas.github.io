@@ -1,120 +1,90 @@
 ---
 layout: default
 ---
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var c = document.querySelector('.container.mt-5');
-    if (c) c.classList.replace('mt-5', 'mt-3');
-  });
-</script>
 <div class="post">
-  {% if page.profile %}
-    <style>
-      .ascii-profile {
-        font-family: 'JetBrains Mono', 'DejaVu Sans Mono', 'Courier New', monospace;
-        font-size: 3.3px;
-        line-height: 1.05;
-        letter-spacing: 0.05em;
-        white-space: pre;
-        overflow: hidden;
-        color: var(--global-text-color);
-        background-color: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        margin: 0;
-        display: block;
-        width: fit-content;
-      }
-      .ascii-profile-mobile {
-        display: none;
-      }
-      @media (max-width: 768px) {
-        .ascii-profile {
-          display: none;
-        }
-        .ascii-profile-mobile {
-          display: block;
-        }
-        .ascii-profile-mobile img {
-          width: 100%;
-          max-width: 320px;
-          border-radius: 12px;
-        }
-      }
-    </style>
-    <div class="profile float-{% if page.profile.align == 'left' %}left{% else %}right{% endif %}" style="margin-top: 0;">
-      <pre class="ascii-profile">{% include prof_pic_ascii.txt %}</pre>
-      <script>
-        (function () {
-          var pre = document.querySelector('.ascii-profile');
-          if (!pre) return;
-          var full = pre.textContent;
-          var chars = full.split('');
-          var indices = [];
-          for (var i = 0; i < chars.length; i++) {
-            if (chars[i] !== ' ' && chars[i] !== '\n') indices.push(i);
-          }
-          var blank = chars.slice();
-          for (var j = 0; j < indices.length; j++) blank[indices[j]] = ' ';
-          pre.textContent = blank.join('');
-          // Fisher-Yates shuffle
-          for (var k = indices.length - 1; k > 0; k--) {
-            var r = Math.floor(Math.random() * (k + 1));
-            var tmp = indices[k];
-            indices[k] = indices[r];
-            indices[r] = tmp;
-          }
-          var duration = 3000;
-          var total = indices.length;
-          var revealed = 0;
-          var start = null;
-          function step(ts) {
-            if (!start) start = ts;
-            var progress = Math.min((ts - start) / duration, 1);
-            var target = Math.floor(progress * total);
-            var current = blank.slice();
-            for (var n = revealed; n < target; n++) {
-              blank[indices[n]] = chars[indices[n]];
-            }
-            revealed = target;
-            pre.textContent = blank.join('');
-            if (progress < 1) requestAnimationFrame(step);
-          }
-          requestAnimationFrame(step);
-        })();
-      </script>
-      <div class="ascii-profile-mobile">
-        <img src="{{ 'assets/img/prof_pic_ascii.png' | relative_url }}" alt="Profile picture ASCII art" loading="eager">
-      </div>
-      {% if page.profile.more_info %}
-        <div class="more-info">{{ page.profile.more_info }}</div>
-      {% endif %}
-    </div>
-  {% endif %}
-
-  <header class="post-header" style="margin-bottom: 0.75rem;">
-    <h1 class="post-title">
-      {% if site.title == 'blank' %}
-        <span class="font-weight-bold">{{ site.first_name }}</span> {{ site.middle_name }}
+  <section class="home-hero">
+    <div>
+      <h1>
+        {{ site.first_name }}
         {{ site.last_name }}
-      {% else %}
-        {{ site.title }}
-      {% endif %}
-    </h1>
-    <p class="desc" style="margin-bottom: 0;">{{ page.subtitle }}</p>
-  </header>
-
-  <article>
-    <div class="clearfix">{{ content }}</div>
-
-    <!-- Social -->
-    {% if page.social %}
-      <div class="social" style="margin-top: 0.25rem;">
-        <div class="contact-icons" style="font-size: 2.4rem;">{% include social.liquid %}</div>
-
-        <div class="contact-note">{{ site.contact_note }}</div>
+      </h1>
+      <p class="tagline">{{ page.subtitle }}</p>
+      <div class="prose">{{ content }}</div>
+      <div class="home-links">
+        <a href="https://www.linkedin.com/in/{{ site.data.socials.linkedin_username }}">LinkedIn</a>
+        <a href="https://x.com/{{ site.data.socials.x_username }}">X</a>
+        <a href="https://github.com/{{ site.data.socials.github_username }}">GitHub</a>
+        <span class="contact-hint">{{ site.contact_note }}</span>
       </div>
-    {% endif %}
-  </article>
+    </div>
+
+    <div class="home-portrait">
+      <pre class="ascii-profile" aria-hidden="true">{% include prof_pic_ascii.txt %}</pre>
+      <img class="portrait-mobile" src="{{ 'assets/img/prof_pic_ascii.png' | relative_url }}" alt="Zain Hasan">
+    </div>
+  </section>
+
+  <div class="section-head">
+    <h2>Recent writing</h2>
+    <a href="{{ '/writing/' | relative_url }}">All writing &rarr;</a>
+  </div>
+  {% assign posts = site.data.writing.posts | sort: 'date' | reverse %}
+  <ul class="entries">
+    {% for post in posts limit: 5 %}
+      <li class="entry">
+        <span class="entry-date">{{ post.date | date: '%b %Y' }}</span>
+        <div class="entry-main">
+          <a class="entry-title" href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        </div>
+        <span class="entry-source">{{ post.source }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="section-head">
+    <h2>Recent talks</h2>
+    <a href="{{ '/talks/' | relative_url }}">All talks &rarr;</a>
+  </div>
+  {% assign talks = site.data.talks.talks | sort: 'date' | reverse %}
+  <div class="talk-grid compact">
+    {% for talk in talks limit: 3 %}
+      {% include talk.liquid talk=talk %}
+    {% endfor %}
+  </div>
 </div>
+
+<script>
+  // Reveal the ASCII portrait character by character in random order.
+  (function () {
+    var pre = document.querySelector('.ascii-profile');
+    if (!pre || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var chars = pre.textContent.split('');
+    var indices = [];
+    for (var i = 0; i < chars.length; i++) {
+      if (chars[i] !== ' ' && chars[i] !== '\n') indices.push(i);
+    }
+    var shown = chars.slice();
+    indices.forEach(function (i) {
+      shown[i] = ' ';
+    });
+    pre.textContent = shown.join('');
+    for (var k = indices.length - 1; k > 0; k--) {
+      var r = Math.floor(Math.random() * (k + 1));
+      var tmp = indices[k];
+      indices[k] = indices[r];
+      indices[r] = tmp;
+    }
+    var duration = 2500;
+    var revealed = 0;
+    var start = null;
+    function step(ts) {
+      if (start === null) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var target = Math.floor(progress * indices.length);
+      for (; revealed < target; revealed++) shown[indices[revealed]] = chars[indices[revealed]];
+      pre.textContent = shown.join('');
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  })();
+</script>
