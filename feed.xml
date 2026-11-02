@@ -1,4 +1,542 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://zainhas.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://zainhas.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-10-10T08:46:42+00:00</updated><id>https://zainhas.github.io/feed.xml</id><title type="html">blank</title><subtitle>Zain Hasan — Staff AI/ML Engineer - DX at Together AI. Speaker, educator, and builder in AI, vector databases, and RAG. </subtitle><entry><title type="html">Inside Claude Code: An Architecture Deep Dive</title><link href="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/" rel="alternate" type="text/html" title="Inside Claude Code: An Architecture Deep Dive"/><published>2026-04-01T00:00:00+00:00</published><updated>2026-04-01T00:00:00+00:00</updated><id>https://zainhas.github.io/blog/2026/inside-claude-code-architecture</id><content type="html" xml:base="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/"><![CDATA[<p><em>This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.</em></p> <h1 id="claude-code-v2188--architecture-deep-dive">Claude Code v2.1.88 — Architecture Deep Dive</h1> <blockquote> <p>A comprehensive visual and narrative guide to how Claude Code works internally. Written for someone new to the codebase.</p> </blockquote> <hr/> <h2 id="table-of-contents">Table of Contents</h2> <ol> <li><a href="#1-high-level-architecture-diagram">High-Level Architecture Diagram</a></li> <li><a href="#2-directory-map">Directory Map</a></li> <li><a href="#3-startup--bootstrap-sequence-diagram">Startup &amp; Bootstrap Sequence Diagram</a></li> <li><a href="#4-the-query-loop--core-interaction-flow">The Query Loop — Core Interaction Flow</a></li> <li><a href="#5-tool-execution-sequence-diagram">Tool Execution Sequence Diagram</a></li> <li><a href="#6-dependency--layer-diagram">Dependency &amp; Layer Diagram</a></li> <li><a href="#7-key-abstractions--data-models">Key Abstractions &amp; Data Models</a></li> <li><a href="#8-communication-patterns">Communication Patterns</a></li> <li><a href="#9-narrative-walkthrough-a-message-end-to-end">Narrative Walkthrough: A Message End-to-End</a></li> <li><a href="#10-deep-dive-the-grep-tool-agentic-search">Deep Dive: The Grep Tool (Agentic Search)</a></li> <li><a href="#11-deep-dive-memory-management--context-compaction">Deep Dive: Memory Management &amp; Context Compaction</a></li> </ol> <hr/> <h2 id="1-high-level-architecture-diagram">1. High-Level Architecture Diagram</h2> <p>This is the 30,000-foot view. Every box is a module group; every arrow is a dependency or data flow direction.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────────────────────────┐
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://zainhas.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://zainhas.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-11-02T05:39:51+00:00</updated><id>https://zainhas.github.io/feed.xml</id><title type="html">blank</title><subtitle>Zain Hasan — Staff AI/ML Engineer - DX at Together AI. Speaker, educator, and builder in AI, vector databases, and RAG. </subtitle><entry><title type="html">DeepSeek’s Super-agent, explained</title><link href="https://zainhas.github.io/blog/2026/deepseek-super-agent/" rel="alternate" type="text/html" title="DeepSeek’s Super-agent, explained"/><published>2026-11-01T00:00:00+00:00</published><updated>2026-11-01T00:00:00+00:00</updated><id>https://zainhas.github.io/blog/2026/deepseek-super-agent</id><content type="html" xml:base="https://zainhas.github.io/blog/2026/deepseek-super-agent/"><![CDATA[<style>.dsa{--ink:var(--global-text-color);--ink-soft:var(--global-text-color-light);--rule:var(--global-divider-color);--surface:var(--global-card-bg-color);--code-bg:var(--global-code-bg-color);--router:#b86a00;--worker:#127a74;--trig:#5b4bb7;--store:#2f64ae;--warn:#b3261e;--plate:#fbfcfd;--plate-edge:#d3d9e1}html[data-theme="dark"] .dsa{--router:#e8a043;--worker:#4fc1b8;--trig:#a99bf2;--store:#7fa7e6;--warn:#f08a82;--plate:#f4f6f8;--plate-edge:#3a4350}.dsa .dek{font-size:1.25rem;line-height:1.45;color:var(--ink-soft);margin:0 0 .8rem}.dsa .meta{font-size:.86rem;color:var(--ink-soft);margin:0 0 1rem;line-height:1.5}.dsa h2{margin:3rem 0 .8rem}.dsa .key{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;font-size:.86rem;color:var(--ink-soft);margin:.9rem 0 0;padding:0;list-style:none}.dsa .key li{display:flex;align-items:center;gap:.45rem}.dsa .key i{width:.9rem;height:.9rem;border-radius:2px;border:1.5px solid;display:inline-block}.dsa figure{margin:1.6rem 0 2rem}.dsa .plate{background:var(--plate);border:1px solid var(--plate-edge);border-radius:6px;padding:1rem;overflow-x:auto}.dsa .plate img{display:block;width:100%;height:auto;min-width:var(--minw,620px);margin:0 auto}.dsa .plate.narrow img{max-width:820px}.dsa figcaption{font-size:.88rem;line-height:1.5;color:var(--ink-soft);margin-top:.6rem}.dsa details{margin-top:.5rem;font-size:.88rem}.dsa summary{cursor:pointer;color:var(--ink-soft);width:max-content;max-width:100%}.dsa summary:hover{color:var(--ink)}.dsa .src{position:relative;margin-top:.5rem}.dsa .src pre{margin:0;background:var(--code-bg);color:var(--ink);border-radius:5px;padding:.9rem 1rem;overflow-x:auto;font-size:.74rem;line-height:1.5;max-height:26rem}.dsa .src button{position:absolute;top:.5rem;right:.5rem;font:inherit;font-size:.8rem;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:.25rem .6rem;cursor:pointer}.dsa .callout{border-left:3px solid var(--router);padding:.2rem 0 .2rem 1rem;margin:1.4rem 0}.dsa table{border-collapse:collapse;font-size:.9rem;width:100%;margin:1rem 0 1.4rem}.dsa .tbl{overflow-x:auto}.dsa th,.dsa td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}.dsa td.num{font-variant-numeric:tabular-nums;white-space:nowrap}.dsa ul.plain{padding-left:1.1rem;margin:0 0 1.1rem}.dsa ul.plain li{margin-bottom:.45rem}.dsa .sources{font-size:.9rem;line-height:1.55}.dsa .sources li{margin-bottom:.35rem}.dsa .endnote{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1.2rem;font-size:.85rem;color:var(--ink-soft)}@media(max-width:640px){.dsa .plate{padding:.6rem}}</style> <div class="dsa"> <div class="hero"> <p class="dek"> DeepSeek’s Harness team has designed a single coding agent that lives in a team’s chat and GitHub repository and handles many requests in parallel. </p> <p class="meta"> Based on the team’s design essay and open-source prototype, both published October 31, 2026, and on press coverage from November 1. </p> </div> <figure> <div class="plate" style="--minw: 860px"> <img src="/assets/img/blog/deepseek-super-agent/fig-01.svg" alt="The whole system on one page. Every later diagram zooms into one part of this picture." loading="lazy"/> </div> <ul class="key" aria-label="Colour key"> <li><i style="border-color: #5b4bb7; background: #eceaf7"></i>events from the outside world</li> <li><i style="border-color: #b86a00; background: #f6ebdd"></i>the Router</li> <li><i style="border-color: #127a74; background: #e5f1f0"></i>Workers</li> <li><i style="border-color: #2f64ae; background: #e7edf6"></i>state and machines</li> </ul> <figcaption>The whole system on one page. Every later diagram zooms into one part of this picture.</figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}[node distance=6mm]
+% channels
+\node[trig, text width=2.6cm] (im) at (0,3.0) {IM group chat};
+\node[trig, text width=2.6cm] (em) at (0,1.9) {Email \&amp; calendar};
+\node[trig, text width=2.6cm] (gh) at (0,0.8) {GitHub issues \&amp; PR reviews};
+\node[trig, text width=2.6cm] (ci) at (0,-0.3) {CI results};
+\begin{scope}[on background layer]
+\node[draw=trig, dashed, rounded corners=3pt, fit=(im)(ci), inner sep=6pt, label={[title]above:Triggers}] (chan) {};
+\end{scope}
+% filter
+\node[plain, text width=2.5cm] (fast) at (4.0,2.1) {\textbf{Fast path}\\[-1pt]{\scriptsize rules: source, group, allow-list}};
+\node[plain, text width=2.5cm] (slow) at (4.0,0.2) {\textbf{Slow path}\\[-1pt]{\scriptsize an LLM reads the team&#x27;s written policy}};
+\draw[arr] (fast) -- node[lab, right]{passes} (slow);
+\foreach \c in {im,em,gh,ci} \draw[arr] (\c.east) -- (fast.west);
+% router
+\node[rout, text width=3.3cm, minimum height=2.3cm] (router) at (7.7,1.0) {\textbf{Router}\\[2pt]{\scriptsize one resident session\\talks to people\\dispatches work\\lighter model, no Bash}};
+\draw[arr] (slow.east) -- (router.west |- slow.east);
+% workers
+\node[work, text width=2.9cm] (w1) at (12.6,2.7) {\textbf{Worker A}\\[-1pt]{\scriptsize fix bug in PR \#88}};
+\node[work, text width=2.9cm] (w2) at (12.6,1.0) {\textbf{Worker B}\\[-1pt]{\scriptsize add font setting}};
+\node[work, text width=2.9cm] (w3) at (12.6,-0.7) {\textbf{Worker C}\\[-1pt]{\scriptsize answer review comments}};
+\node[note, text width=3.2cm, below=1mm of w3] (wn) {isolated context, full tools,\\strongest model; never\\talks to people directly};
+\draw[arr] (router.east) -- (w1.west);
+\draw[arr, &lt;-&gt;] (router.east) -- node[lab, above=1pt]{dispatch} node[lab, below=1pt]{report back} (w2.west);
+\draw[arr] (router.east) -- (w3.west);
+% direct delivery
+\draw[darr, draw=trig] (fast.north) to[out=70, in=150] node[lab, text=trig, pos=0.45]{follow-ups in a known thread go straight to its Worker} (w1.north west);
+% replies
+\draw[arr, draw=router, line width=1pt] (router.south) -- ++(0,-1.9) -| node[lab, pos=0.25, text=router]{one voice: replies land in the original thread} (chan.south);
+% exec env
+\node[stor, text width=2.5cm] (lap) at (16.6,2.0) {Dev laptop\\[-1pt]{\scriptsize daemon only}};
+\node[stor, text width=2.5cm] (box) at (16.6,0.0) {Cloud sandbox\\[-1pt]{\scriptsize daemon only}};
+\node[title, above=2mm of lap] {Where commands run};
+\draw[arr, &lt;-&gt;] (w1.east) -- (lap.west);
+\draw[arr, &lt;-&gt;] (w2.east) -- (lap.west);
+\draw[arr, &lt;-&gt;] (w3.east) -- (box.west);
+% session db
+\node[stor, text width=7.5cm] (db) at (10.2,-3.4) {\textbf{Session database}: every session&#x27;s state lives here, so the cloud containers running the loop can restart at any time};
+\draw[arr, dotted, &lt;-&gt;] (router.south east) -- (router.south east |- db.north);
+\draw[arr, dotted, &lt;-&gt;] (wn.south) -- (wn.south |- db.north);
+% watchdog
+\node[ghost, text width=3.0cm, text=ink] (wd) at (16.6,4.2) {\textbf{Watchdog}\\[-1pt]{\scriptsize timed check-ins: real progress or drifting?}};
+\draw[darr, draw=muted] (wd.west) -- (w1.north east);
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <h2>Overview</h2> <p> DeepSeek Harness (the <code>dsh</code> command) is DeepSeek’s open-source agent harness, the program around a model that reads your request, calls tools, runs commands, saves the session and repeats until the job is done. It came out in August 2026 under the MIT licence. Every part of it, from the model adapter to the agent loop, is a plugin you can replace. </p> <p> Super-agent is what the Harness team wants to build next. Today you open one chat session per task. In their design, one agent sits in the team’s group chat and GitHub repository, picks up requests, starts workers for them in parallel, and replies in the thread where it was asked. </p> <p> The team shipped two things: a long design essay and a prototype, <code>dsh-superagent-prototype</code>, packaged as a Harness bundle for one GitHub repository with optional Feishu chat. Both are labelled as research, and the prototype covers only part of what the essay describes. </p> <p class="callout"> The essay’s rule is to spend as little human attention as possible for as much value as possible. The agent acts only when asked or when a written team rule allows it, and posts only when someone has to act or can use the result. </p> <h2>Attention is the bottleneck</h2> <p> Today’s coding agents treat one session as one unit of work. Sessions don’t share memory, so when you run several in parallel you are the one carrying context between them and switching back and forth. The team puts the limit at about three to five sessions that one person can actively follow. Past that, more agents don’t get more done, because you can’t keep up with them. </p> </div> <figure> <div class="plate" style="--minw: 700px"> <img src="/assets/img/blog/deepseek-super-agent/fig-02.svg" alt="Left: you coordinate everything yourself. Right: one Router holds the cross-task picture, so the number of parallel tasks is no longer capped by what you can track." loading="lazy"/> </div> <figcaption> Left: you coordinate everything yourself. Right: one Router holds the cross-task picture, so the number of parallel tasks is no longer capped by what you can track. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+% ---- left panel
+\node[title] at (2.6,4.3) {Today: one session per task};
+\fill[ink] (0,1.9) circle (0.22); \draw[ink, line width=1.2pt] (0,1.65) -- (0,1.0) (-0.35,1.4) -- (0.35,1.4) (0,1.0) -- (-0.25,0.55) (0,1.0) -- (0.25,0.55);
+\node[note] at (0,0.2) {you};
+\foreach \i/\y/\t in {1/3.4/auth bug,2/2.55/docs,3/1.7/refactor,4/0.85/flaky test,5/0.0/review}{
+  \node[work, text width=1.9cm, font=\sffamily\scriptsize] (s\i) at (3.6,\y) {session \i\\ \t};
+  \draw[arr, &lt;-&gt;, draw=muted] (0.45,1.4) -- (s\i.west);
+}
+\node[ghost, text width=1.9cm, font=\sffamily\scriptsize] (s6) at (3.6,-0.85) {session 6?};
+\draw[arr, &lt;-&gt;, draw=warn, dashed] (0.45,1.4) -- (s6.west);
+\draw[decorate, decoration={brace, amplitude=5pt, mirror}, muted] (4.75,-0.25) -- (4.75,3.75) node[midway, right=6pt, note, text width=2.0cm]{about 3 to 5 is the most one person can follow};
+\node[note, text width=4.6cm] at (2.4,-1.75) {you carry the context between sessions and switch by hand; your attention caps throughput};
+% ---- right panel
+\begin{scope}[xshift=9.2cm]
+\node[title] at (3.2,4.3) {Super-agent: one conversation, many workers};
+\fill[ink] (0,1.9) circle (0.22); \draw[ink, line width=1.2pt] (0,1.65) -- (0,1.0) (-0.35,1.4) -- (0.35,1.4) (0,1.0) -- (-0.25,0.55) (0,1.0) -- (0.25,0.55);
+\node[note] at (0,0.2) {you \&amp; team};
+\node[rout, text width=1.9cm] (r) at (3.1,1.4) {\textbf{Router}\\{\scriptsize remembers across tasks}};
+\draw[arr, &lt;-&gt;, draw=router, line width=1pt] (0.45,1.4) -- node[lab, above=2pt, text width=1.4cm]{asks only when needed} (r.west);
+\foreach \i/\y in {1/3.6,2/2.8,3/2.0,4/1.2,5/0.4,6/-0.4,7/-1.2}{
+  \node[work, minimum width=1.5cm, font=\sffamily\scriptsize] (w\i) at (6.2,\y) {worker \i};
+  \draw[arr, draw=worker!80] (r.east) -- (w\i.west);
+}
+\node[note, text width=4.6cm] at (2.6,-1.75) {the Router holds the cross-task picture; work in parallel is no longer capped by what you can track};
+\end{scope}
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> The essay asks for an agent with one memory across conversations and channels, that runs many tasks at once, notices work nobody assigned, and stays online. Its example is a group that agrees on plan A in chat and then switches to plan B in a pull-request comment. The agent should see that both are about the same work and change course. </p> <h2>Architecture</h2> <p>The essay compares two simple designs before settling on a third.</p> </div> <figure> <div class="plate" style="--minw: 760px"> <img src="/assets/img/blog/deepseek-super-agent/fig-03.svg" alt="A is continuous but serial. B is parallel but fragmented, and you may get several replies to one question. C keeps memory and the voice in one place and pushes the work out to Workers." loading="lazy"/> </div> <figcaption> A is continuous but serial. B is parallel but fragmented, and you may get several replies to one question. C keeps memory and the voice in one place and pushes the work out to Workers. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+\tikzset{ev/.style={trig, minimum width=0.55cm, minimum height=0.45cm, inner sep=1pt, font=\sffamily\scriptsize}}
+% panel A
+\node[title] at (1.6,3.7) {A. Everything into one session};
+\foreach \i in {1,...,5} \node[ev] (a\i) at (-0.2,2.6-\i*0.55) {e\i};
+\node[work, text width=1.8cm, minimum height=2.4cm] (as) at (2.6,0.95) {one session\\{\scriptsize handles e1, then e2, then e3 \dots}};
+\foreach \i in {1,...,5} \draw[arr] (a\i.east) -- (as.west);
+\node[note, text width=4.0cm] at (1.4,-1.0) {\textcolor{worker}{+} one continuous memory\\\textcolor{warn}{--} one ReAct loop runs serially, so throughput is low};
+% panel B
+\begin{scope}[xshift=5.6cm]
+\node[title] at (1.6,3.7) {B. A new session per event};
+\foreach \i in {1,...,5} {\node[ev] (b\i) at (-0.2,2.6-\i*0.55) {e\i};
+  \node[work, minimum width=1.3cm, minimum height=0.42cm, inner sep=1pt, font=\sffamily\scriptsize] (bs\i) at (1.6,2.6-\i*0.55) {session \i};
+  \draw[arr] (b\i.east) -- (bs\i.west);
+  \draw[arr, draw=warn] (bs\i.east) -- (3.1,0.95);}
+\fill[ink] (3.4,1.25) circle (0.15); \draw[ink, line width=1pt] (3.4,1.1) -- (3.4,0.7) (3.15,0.95) -- (3.65,0.95);
+\node[note, text width=4.0cm] at (1.4,-1.0) {\textcolor{worker}{+} maximum concurrency\\\textcolor{warn}{--} results are fragmented and several sessions may all reply to you};
+\end{scope}
+% panel C
+\begin{scope}[xshift=11.2cm]
+\node[title] at (1.8,3.7) {C. Router + Workers};
+\foreach \i in {1,...,5} \node[ev] (c\i) at (-0.2,2.6-\i*0.55) {e\i};
+\node[rout, text width=1.1cm, minimum height=2.4cm, font=\sffamily\scriptsize] (cr) at (1.3,0.95) {\textbf{Router}};
+\foreach \i in {1,...,5} \draw[arr] (c\i.east) -- (cr.west |- c\i.east);
+\foreach \j/\y in {1/1.95,2/0.95,3/-0.05} {\node[work, minimum width=1.1cm, minimum height=0.5cm, inner sep=1pt, font=\sffamily\scriptsize] (cw\j) at (3.3,\y) {W\j};
+  \draw[arr, &lt;-&gt;] (cr.east |- cw\j.west) -- (cw\j.west);}
+\fill[ink] (1.3,3.05) circle (0.15); \draw[ink, line width=1pt] (1.3,2.9) -- (1.3,2.55) (1.05,2.75) -- (1.55,2.75);
+\draw[arr, draw=router, line width=1pt] (cr.north) -- (1.3,2.5) node[lab, right=4pt, pos=0.5, text=router]{one reply};
+\node[note, text width=4.0cm] at (1.6,-1.0) {\textcolor{worker}{+} continuous memory at the Router, parallel work below it, one voice toward people};
+\end{scope}
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> The Router is one long-lived session. It receives every human message from every channel, keeps track of how tasks relate, decides who does what, and is the only part that talks to people. It doesn’t write code and may not have a shell tool at all. The team found the job easier than they expected, and a smaller, faster model often handles it well. </p> <p> Each Worker gets a fresh context, the full tool set, and usually the strongest model, since Workers write the code. They never message people. They report to the Router, which answers for them. Inside a hard task a Worker can still start its own sub-agents or an agent team, and the Router never sees that detail. </p> <p> In a typical “agent team”, a lead agent breaks one big task into parts and coordinates them closely. The Router never splits a task. It tracks how separate tasks relate to each other. </p> <h2>Choosing what to work on</h2> <p> Every piece of work starts as a trigger, such as a chat message, an email, a calendar reminder, a code-review comment or a CI result. Most of what happens in a group chat isn’t a request, so triggers pass two filters. The fast path is ordinary code that lets events through by source, group and allow-list. Whatever gets past it goes to the slow path, where an LLM reads the team’s written policy and decides whether to take the work on. </p> </div> <figure> <div class="plate" style="--minw: 700px"> <img src="/assets/img/blog/deepseek-super-agent/fig-04.svg" alt="Top: the two-stage filter from the essay. Bottom: how the published prototype separates requests people make from work the agent spots by itself." loading="lazy"/> </div> <figcaption> Top: the two-stage filter from the essay. Bottom: how the published prototype separates requests people make from work the agent spots by itself. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+% top row: funnel
+\node[trig, text width=2.3cm] (in) at (0,0) {\textbf{All events}\\{\scriptsize in the test: $\sim$300 messages, $\sim$20 real requests}};
+\node[plain, text width=2.8cm] (fp) at (3.9,0) {\textbf{Fast path}\\{\scriptsize code checks the source, the group and the allow-list; deterministic}};
+\node[plain, text width=2.8cm] (sp) at (8.0,0) {\textbf{Slow path}\\{\scriptsize an LLM judges the candidate against the team&#x27;s prompt policy}};
+\node[rout, text width=2.0cm] (r) at (11.7,0) {\textbf{Router}\\{\scriptsize takes it on}};
+\draw[arr] (in) -- (fp); \draw[arr] (fp) -- node[lab, above=2pt]{candidate} (sp); \draw[arr] (sp) -- node[lab, above=2pt]{accept} (r);
+\node[ghost, minimum width=1.6cm] (d1) at (3.9,-1.7) {dropped};
+\node[ghost, minimum width=1.6cm] (d2) at (8.0,-1.7) {dropped};
+\draw[darr, draw=muted] (fp) -- (d1); \draw[darr, draw=muted] (sp) -- (d2);
+\node[note] at (6.0,1.35) {cheap filter first, expensive judgement second};
+% bottom: prototype authorization
+\node[title, anchor=west] at (-1.2,-3.1) {How the open-source prototype decides who can start work};
+\node[work, text width=3.0cm] (ex) at (0.4,-4.6) {\textbf{Explicit request}\\{\scriptsize a person on the allow-list addresses the agent}};
+\node[trig, text width=3.0cm] (inf) at (0.4,-6.6) {\textbf{Inferred candidate}\\{\scriptsize the agent noticed it on its own (bots can only produce these)}};
+\node[work, text width=3.2cm] (any) at (8.4,-4.6) {accepted, in any mode};
+\draw[arr] (ex) -- (any);
+\node[plain, text width=2.7cm] (rule) at (4.4,-6.6) {matches a written team rule and passes assessment?};
+\draw[arr] (inf) -- (rule);
+\node[plain, text width=3.2cm] (off) at (8.4,-5.5) {\texttt{off}: {\scriptsize ignored}};
+\node[plain, text width=3.2cm, line width=1.1pt] (obs) at (8.4,-6.6) {\texttt{observe} {\scriptsize(default)}: {\scriptsize logged as ``would accept&#x27;&#x27;, nothing runs}};
+\node[work, text width=3.2cm] (au) at (8.4,-7.85) {\texttt{auto}: {\scriptsize accepted, work starts}};
+\draw[arr] (rule.east) -- ++(0.4,0) |- (off.west);
+\draw[arr] (rule.east) -- (obs.west);
+\draw[arr] (rule.east) -- ++(0.4,0) |- (au.west);
+\node[note] at (6.45,-5.1) {mode};
+\node[note, text width=3.4cm, anchor=west] at (10.4,-6.1) {suggested rollout: start in observe, read the logged decisions, then switch to auto};
+\node[note, text width=3.4cm, anchor=west] at (10.4,-7.5) {each work item records the policy version it was accepted under; weakening a rule can revoke it};
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> The prototype spells out who can start work. An explicit request is a person on the allow-list addressing the agent, and it is handled in every mode. An inferred candidate is something the agent noticed on its own, and it needs a matching written rule. Messages from bots always count as inferred candidates. </p> <p> Inferred work then depends on the accept mode. <code>off</code> ignores it. <code>observe</code>, the default, records “would have accepted” and runs nothing. <code>auto</code> actually starts the work. The README suggests running in observe first, reading what it would have done, and switching to auto after that. Each work item also records which version of the policy it was accepted under, so tightening a rule can revoke work before it resumes. </p> <h2>Threads</h2> <p> Consecutive events in the same pull request, chat topic or email chain form a thread. The first event goes through the Router, which starts a Worker and subscribes it to that thread. Later events in that thread go straight to the Worker without passing through the Router. </p> </div> <figure> <div class="plate" style="--minw: 640px"> <img src="/assets/img/blog/deepseek-super-agent/fig-05.svg" alt="e1 takes the slow path through the Router. e2 goes straight to Worker A. e3 reaches both Workers because both are subscribed, so they can see they’re touching the same code." loading="lazy"/> </div> <figcaption> e1 takes the slow path through the Router. e2 goes straight to Worker A. e3 reaches both Workers because both are subscribed, so they can see they’re touching the same code. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+\draw[trig, line width=1.2pt, -{Stealth[length=6pt]}] (-1.2,3) -- (11.2,3) node[right, font=\sffamily\small, text=trig] {time};
+\node[font=\sffamily\bfseries\small, text=trig, anchor=west] at (-1.2,4.35) {Thread T = everything said in PR \#88};
+\foreach \x/\n/\t in {0.4/e1/``tildes render as strikethrough&#x27;&#x27;,4.6/e2/``also happens in headings&#x27;&#x27;,8.8/e3/review comment on the diff}{
+  \node[trig, font=\sffamily\scriptsize, inner sep=3pt] (\n) at (\x,3) {\n};
+  \node[note, above=1mm of \n, text width=3.2cm] {\t};}
+% lanes
+\node[rout, minimum width=2.0cm] (r) at (0.4,1.0) {\textbf{Router}};
+\node[work, minimum width=2.2cm] (a) at (2.6,-0.6) {\textbf{Worker A}};
+\node[work, minimum width=2.2cm] (b) at (6.8,-2.1) {\textbf{Worker B}};
+\node[note, below=1mm of b, text width=3.6cm] {busy on PR \#90, which edits the same file};
+% e1 via router
+\draw[arr] (e1) -- node[lab, left]{slow path} (r);
+\draw[arr, draw=router] (r.south) |- node[lab, pos=0.3, left, text width=1.9cm]{spawns A and subscribes it to T} (a.west);
+% e2 direct
+\draw[arr, draw=worker, line width=1pt] (e2.south) to[out=-90, in=30] node[lab, pos=0.4, right]{delivered straight to A} (a.north east);
+% B subscribes
+\draw[darr, draw=muted] (b.north) -- ++(0,0.9) node[lab, above, text=muted]{B subscribes to T too};
+% e3 to both
+\draw[arr, draw=worker, line width=1pt] (e3.south) to[out=-110, in=0] (a.east);
+\draw[arr, draw=worker, line width=1pt] (e3.south) to[out=-80, in=0] (b.east);
+\node[note, text width=3.6cm, anchor=west] at (9.4,0.3) {many-to-many: both Workers get e3 and can spot the conflict themselves, with no point-to-point messages};
+\node[note, text width=5.0cm, anchor=west] at (-1.3,-2.6) {Router stays out of the loop for follow-ups, so it makes fewer decisions};
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> Subscriptions are many-to-many. Two Workers subscribed to the same thread both see its events, so they find out they are touching the same code without messaging each other. In the experiments, turning direct delivery off barely changed how fast tasks finished, but the Router had to make about 30% more decisions and read about 37% more tokens. </p> <h2>Memory</h2> <p> A Router that runs for weeks can’t keep everything in its context. The team treats the context window as a cache. Some information is placed in it directly, the rest is left out behind a reference, and every object has an ID the model can use to look it up. </p> </div> <figure> <div class="plate" style="--minw: 680px"> <img src="/assets/img/blog/deepseek-super-agent/fig-06.svg" alt="Inline the likely-useful bits, spill the rest behind pointers, and let the model follow IDs from object to object. The essay calls that last part Chain of Recall." loading="lazy"/> </div> <figcaption> Inline the likely-useful bits, spill the rest behind pointers, and let the model follow IDs from object to object. The essay calls that last part Chain of Recall. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+% context window bar
+\node[title, anchor=west] at (-0.2,2.2) {The context window, treated like a cache};
+\draw[ink, line width=0.8pt, rounded corners=2pt] (0,0.6) rectangle (15,1.6);
+\fill[worker!14] (0.05,0.65) rectangle (9.2,1.55);
+\fill[muted!12] (9.2,0.65) rectangle (14.95,1.55);
+\node[font=\sffamily\small, text=ink, align=center] at (4.6,1.1) {\textbf{Inline}: what is probably needed goes in directly\\{\scriptsize e.g. the first 50 characters of each message, the neighbouring chat lines}};
+\node[font=\sffamily\small, text=ink, align=center] at (12.07,1.1) {\textbf{Spill}: the rest is cut, with a pointer\\{\scriptsize ``\dots\ [more: trigger \#991]&#x27;&#x27;}};
+\draw[decorate, decoration={brace, amplitude=5pt}, muted] (14.95,0.5) -- (9.2,0.5) node[midway, below=5pt, note]{fetched only if the model follows the pointer};
+% chain of recall
+\node[title, anchor=west] at (-0.2,-0.9) {Chain of Recall: every object carries the IDs of related objects};
+\node[trig, text width=2.7cm] (m) at (1.4,-2.6) {\textbf{New IM message}\\{\scriptsize ``is the font thing done?&#x27;&#x27;}\\[2pt]{\scriptsize\texttt{thread:T7}}};
+\node[trig, text width=2.7cm] (t) at (5.4,-2.6) {\textbf{Thread T7}\\{\scriptsize last week&#x27;s chat, first lines inlined}\\[2pt]{\scriptsize\texttt{worker:W3}}};
+\node[work, text width=2.7cm] (w) at (9.4,-2.6) {\textbf{Worker W3}\\{\scriptsize status: in review}\\[2pt]{\scriptsize\texttt{pr:\#88}}};
+\node[plain, text width=2.4cm] (p) at (13.3,-2.6) {\textbf{PR \#88}\\{\scriptsize switched to plan B in review}};
+\draw[arr] (m) -- node[lab, above=2pt]{hop 1} (t); \draw[arr] (t) -- node[lab, above=2pt]{hop 2} (w); \draw[arr] (w) -- node[lab, above=2pt]{hop 3} (p);
+\node[note, text width=11cm] at (7.4,-4.0) {the Router recovers an old task that someone raises on a different channel, one hop at a time, instead of keeping all history in its window};
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> When someone asks in chat whether “the font thing” is done, the Router doesn’t need last week’s conversation in memory. The message carries a thread ID, the thread carries the Worker’s ID, and the Worker’s record points at the pull request, where the answer is. </p> <h2>An asynchronous agent loop</h2> <p> Most agents run a ReAct loop: think, call a tool, wait for the result, think again. While a long build runs, the agent can’t read new messages. Super-agent replaces long commands and subtasks with <code>start()</code> and <code>stop()</code>. <code>start()</code> returns “Started” immediately, the result comes back later as a new event, and the model can cancel something that’s taking too long or is no longer wanted. </p> </div> <figure> <div class="plate" style="--minw: 680px"> <img src="/assets/img/blog/deepseek-super-agent/fig-07.svg" alt="Top: a new instruction waits behind an 8-minute build. Bottom: the agent reads it right away, stops the build and switches plans." loading="lazy"/> </div> <figcaption> Top: a new instruction waits behind an 8-minute build. Bottom: the agent reads it right away, stops the build and switches plans. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\usetikzlibrary{patterns}
+\begin{tikzpicture}
+\tikzset{think/.style={rout, minimum height=0.55cm, inner sep=2pt, font=\sffamily\scriptsize},
+         job/.style={draw=store, fill=store!14, rounded corners=2pt, minimum height=0.5cm, inner sep=2pt, font=\sffamily\scriptsize, text=ink},
+         msg/.style={trig, inner sep=2pt, font=\sffamily\scriptsize}}
+% ---------- sync
+\node[title, anchor=west] at (-1.4,4.7) {Classic ReAct loop: the tool call blocks};
+\node[note, anchor=east] at (-0.2,3.0) {model}; \node[note, anchor=east] at (-0.2,1.8) {tool};
+\draw[muted!60] (0,3.0) -- (13.3,3.0); \draw[muted!60] (0,1.8) -- (13.3,1.8);
+\node[think, minimum width=1.2cm] (s1) at (0.8,3.0) {think};
+\fill[muted!14] (1.6,2.78) rectangle (8.9,3.22);
+\node[font=\sffamily\scriptsize, text=muted] at (6.6,3.0) {blocked, waiting};
+\node[job, minimum width=7.2cm, anchor=west] (sj) at (1.7,1.8) {\texttt{run(build \&amp; test)} \dots\ 8 minutes};
+\draw[arr] (1.3,2.72) -- node[lab, left, pos=0.5]{\texttt{run()}} (1.8,2.05);
+\node[msg] (sm) at (3.6,4.05) {new message: ``stop, use plan B&#x27;&#x27;};
+\draw[arr, draw=warn] (sm.south) -- (3.6,3.25);
+\node[note, text=warn, anchor=west] at (3.7,3.45) {has to wait in line};
+\draw[arr] (8.9,2.05) -- (9.4,2.72);
+\node[think, minimum width=2.4cm] (s2) at (10.6,3.0) {finally reads it};
+% ---------- async
+\begin{scope}[yshift=-4.4cm]
+\node[title, anchor=west] at (-1.4,4.7) {Async loop: \texttt{start()} returns at once; results come back as new events};
+\node[note, anchor=east] at (-0.2,3.0) {model}; \node[note, anchor=east] at (-0.2,1.8) {tool};
+\draw[muted!60] (0,3.0) -- (13.3,3.0); \draw[muted!60] (0,1.8) -- (13.3,1.8);
+\node[think, minimum width=1.2cm] (a1) at (0.8,3.0) {think};
+\node[job, minimum width=3.8cm, anchor=west] (aj) at (1.7,1.8) {\texttt{start(build \&amp; test)}};
+\draw[arr] (1.3,2.72) -- node[lab, left, pos=0.5]{\texttt{start()}} (1.8,2.05);
+\node[note, anchor=north west] at (1.7,1.45) {returns ``Started&#x27;&#x27; immediately};
+\node[msg] (am) at (3.6,4.05) {``stop, use plan B&#x27;&#x27;};
+\node[think, minimum width=2.0cm] (a2) at (3.6,3.0) {handles it now};
+\draw[arr, draw=trig] (am) -- (a2);
+\draw[arr, draw=warn, line width=1pt] (4.5,2.72) -- (5.45,2.05);
+\node[font=\sffamily\scriptsize, text=warn, anchor=west] at (5.15,2.5) {\texttt{stop()}};
+\node[think, minimum width=1.6cm] (a3) at (6.9,3.0) {replans};
+\node[job, minimum width=3.0cm, anchor=west] (aj2) at (7.3,1.8) {\texttt{start(plan B)}};
+\draw[arr] (7.4,2.72) -- (7.7,2.05);
+\draw[arr, draw=store] (10.3,2.05) -- (10.7,2.72);
+\node[think, minimum width=2.8cm] (a4) at (11.9,3.0) {result arrives as an event};
+\end{scope}
+\node[note, text width=13cm] at (6.0,-3.95) {In DeepSeek Harness this asynchronous mode already exists but is off by default. It is what lets a busy session keep listening.};
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> This asynchronous mode already exists in DeepSeek Harness but is off by default. The Router uses the same mechanism to batch work. Triggers that arrive while it is in the middle of a call are added to its next one. </p> <h2>Where it runs</h2> <p> To keep the agent online, the design separates compute from storage, as many databases do. The code that drives the agent loop runs in stateless cloud containers. Every session’s state lives in a database. If a container crashes, another one loads the state and continues. </p> </div> <figure> <div class="plate" style="--minw: 680px"> <img src="/assets/img/blog/deepseek-super-agent/fig-08.svg" alt="Three separate things: the loop (cloud, stateless), the state (database) and the place commands run (wherever a small daemon is installed)." loading="lazy"/> </div> <figcaption> Three separate things: the loop (cloud, stateless), the state (database) and the place commands run (wherever a small daemon is installed). </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+% cloud band
+\begin{scope}[on background layer]
+\fill[store!5, rounded corners=6pt] (-0.4,2.0) rectangle (13.4,4.7);
+\end{scope}
+\node[title, anchor=west] at (-0.2,4.3) {Cloud: compute and state, kept apart};
+\foreach \i/\x in {1/1.0,2/3.0,3/5.0} \node[rout, minimum width=1.7cm, font=\sffamily\scriptsize] (c\i) at (\x,2.9) {container \i\\agent loop};
+\node[note, text width=7cm] at (3.6,3.75) {stateless: scale up, crash or restart any of them without losing anything};
+\node[stor, text width=3.6cm, minimum height=1.4cm] (db) at (10.4,2.9) {\textbf{Session database}\\{\scriptsize every session&#x27;s history and status}};
+\draw[arr, &lt;-&gt;] (c3.east) -- node[lab, above=1pt]{load / save state} (db.west);
+% execution band
+\node[title, anchor=west] at (-0.2,-3.2) {Execution: where the work actually happens};
+\node[work, text width=3.4cm] (lap) at (1.8,-1.4) {\textbf{Developer laptop}\\{\scriptsize uncommitted changes, local credentials}};
+\node[work, text width=3.4cm] (cl) at (6.5,-1.4) {\textbf{Cloud sandbox}\\{\scriptsize disposable environment}};
+\node[ghost, text width=3.4cm, text=ink] (ph) at (11.2,-1.4) {\textbf{Intermittent device}\\{\scriptsize offline now; tasks queue and catch up when it returns}};
+\foreach \n in {lap,cl,ph} \node[plain, font=\sffamily\scriptsize, inner sep=2pt, text width=3.3cm, below=1mm of \n] {small daemon: runs commands, keeps no state};
+\draw[arr] (c1.south) -- node[lab, left, pos=0.55]{commands} ($(lap.north)+(-0.4,0)$);
+\draw[arr] ($(lap.north)+(0.4,0)$) -- node[lab, right, pos=0.45]{results} (c2.south);
+\draw[arr, &lt;-&gt;] (c3.south) -- (cl.north);
+\draw[darr, &lt;-&gt;, draw=muted] (c3.south east) -- (ph.north west);
+\node[note, text width=13cm] at (6.5,-3.95) {``Bring your own machine&#x27;&#x27;: the agent stays online in the cloud but can still work on the computer you already use. The security catch: if the cloud loop is compromised, every connected machine is exposed.};
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> The machines that do the work only run a small daemon that executes commands and returns results. That means your own laptop, with its uncommitted changes and local credentials, can be one of the machines the agent runs commands on. If a device goes offline, its tasks wait and catch up when it reconnects. The essay compares this to Anthropic’s “brain and hands” split, with the difference that the hands here are people’s own computers instead of hosted sandboxes. </p> <h3>The Watchdog</h3> <p> A separate Watchdog session runs on a timer. It handles infrastructure failures like API errors or failed state recovery, and it checks whether each Worker is making real progress or drifting. Maintainers can ask it in plain language why something failed and have it adjust prompts or trigger rules. </p> <h2>An example request</h2> <p>Here is how a bug report moves through the system. A person is involved in only a few of the steps.</p> </div> <figure> <div class="plate" style="--minw: 640px"> <img src="/assets/img/blog/deepseek-super-agent/fig-09.svg" alt="The Router confirms once, then goes quiet. The Worker does the work and writes the pull request. Review comments go straight to the Worker because it subscribed to the PR’s thread." loading="lazy"/> </div> <figcaption> The Router confirms once, then goes quiet. The Worker does the work and writes the pull request. Review comments go straight to the Worker because it subscribed to the PR’s thread. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+\tikzset{msgl/.style={font=\sffamily\scriptsize, text=ink, fill=white, inner sep=1.5pt, align=center}}
+\foreach \x/\n/\s in {0/Team chat/trig,4.2/Router/rout,8.4/Worker/work,12.6/GitHub/plain}{
+  \node[\s, minimum width=2.2cm] at (\x,0) {\textbf{\n}};
+  \draw[muted!70, line width=0.6pt] (\x,-0.4) -- (\x,-11.2);}
+% steps
+\draw[arr, draw=trig] (0,-1.0) -- node[msgl, above]{1. ``@agent tildes render as strikethrough&#x27;&#x27;} (4.2,-1.0);
+\draw[arr, draw=router] (4.2,-1.8) -- node[msgl, above]{2. one short acknowledgement} (0,-1.8);
+\draw[arr, draw=router] (4.2,-2.6) -- node[msgl, above]{3. new work item: own session, own directory} (8.4,-2.6);
+\node[work, text width=3.0cm, font=\sffamily\scriptsize, anchor=north] (quiet) at (8.4,-3.0) {4. reproduce, fix, run tests\\{\itshape silent: nobody is pinged}};
+\draw[arr, draw=worker] (8.4,-5.0) -- node[msgl, above]{5. opens PR \#88} node[msgl, below, text width=3.5cm]{background, changes, how it was verified} (12.6,-5.0);
+\draw[arr, draw=worker] (8.4,-6.2) -- node[msgl, above]{6. reports ``PR ready&#x27;&#x27;} (4.2,-6.2);
+\draw[arr, draw=router, line width=1pt] (4.2,-7.0) -- node[msgl, above]{7. ``Fix is up in \#88.&#x27;&#x27;} node[msgl, below]{IM replies stay under 100 words} (0,-7.0);
+\draw[arr, draw=trig] (12.6,-8.0) -- node[msgl, above]{8. review comment, delivered directly} node[msgl, below]{(Worker is subscribed to this thread)} (8.4,-8.0);
+\draw[arr, draw=worker] (8.4,-9.1) -- node[msgl, above]{9. pushes the change} (12.6,-9.1);
+\draw[darr, draw=router] (4.2,-10.3) -- node[msgl, above]{only if blocked: one clear question} (0,-10.3);
+% annotations
+\node[note, text width=2.8cm, anchor=east] at (-0.75,-4.25) {people spend attention at three moments only: the acknowledgement, the result, and a real decision};
+\draw[decorate, decoration={brace, amplitude=5pt}, muted] (-0.45,-7.2) -- (-0.45,-1.6);
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> The agent writes differently in each channel. Chat replies are informal and stay under 100 words. On GitHub and email it writes longer, structured text, for example a pull-request description with background, changes and how the fix was tested. </p> <p> DeepSeek also uses the agent for speculative work. Their Harness user group has a “silently reproduce and fix” rule: when someone reports a problem, the agent tries to reproduce and fix it in the background and says nothing unless it confirms the bug and finds a simple fix. In one case, people were still discussing a bug where tildes rendered as strikethrough when the agent opened a pull request fixing it. </p> <h2>Results</h2> <p> The team ran a synthetic test. Each run fed in about 300 chat and CI messages, of which about 20 were real work requests and the rest chatter, follow-ups, stop requests and CI noise. The coding itself was replaced by a tool that waits for a set time, so the test measures scheduling and coordination and says nothing about code quality. Each setup ran five times. </p> </div> <figure> <div class="plate narrow" style="--minw: 640px"> <img src="/assets/img/blog/deepseek-super-agent/fig-10.svg" alt="Super-agent finished faster and, more importantly, more predictably. Its slow tail is about half the single-session setups’. It paid for that with two to four times the tokens." loading="lazy"/> </div> <figcaption> Super-agent finished sooner and varied less between runs. Its slowest runs took about half as long as the single-session setups’. It used two to four times as many tokens. </figcaption> <details> <summary>TikZJax source</summary> <div class="src"> <button type="button">Copy</button> <pre><code>&lt;script type=&quot;text/tikz&quot;&gt;
+\usepackage{pgfplots}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric,decorations.pathreplacing}
+\definecolor{ink}{HTML}{1B2433}
+\definecolor{router}{HTML}{B86A00}
+\definecolor{worker}{HTML}{127A74}
+\definecolor{trig}{HTML}{5B4BB7}
+\definecolor{store}{HTML}{2F64AE}
+\definecolor{muted}{HTML}{5F6878}
+\definecolor{warn}{HTML}{B3261E}
+\tikzset{
+  base/.style={draw=ink, line width=0.6pt, rounded corners=2pt, align=center, font=\sffamily\small, inner sep=5pt, text=ink},
+  trig/.style={base, draw=trig, fill=trig!9},
+  rout/.style={base, draw=router, fill=router!12, line width=1.1pt},
+  work/.style={base, draw=worker, fill=worker!9},
+  stor/.style={base, draw=store, fill=store!9},
+  plain/.style={base, fill=white},
+  ghost/.style={base, draw=muted, dashed, fill=white, text=muted},
+  note/.style={font=\sffamily\scriptsize, text=muted, align=center},
+  lab/.style={font=\sffamily\scriptsize, text=ink, align=center, fill=white, inner sep=1.5pt},
+  arr/.style={-{Stealth[length=5pt]}, line width=0.7pt, draw=ink!85},
+  darr/.style={arr, dashed},
+  title/.style={font=\sffamily\bfseries\small, text=ink},
+}
+\begin{tikzpicture}
+\begin{axis}[name=t, xbar, width=8.2cm, height=6.2cm, bar width=6pt,
+  xmin=0, xmax=34, xlabel={minutes to finish a task}, xlabel style={font=\sffamily\scriptsize},
+  symbolic y coords={sub-n,sub-d,nodd,sa}, ytick=data, y dir=reverse,
+  yticklabels={{single session, neutral prompt},{single session, delegate-first},{Super-agent, no subscriptions},{Super-agent}},
+  yticklabel style={font=\sffamily\scriptsize, text width=3.2cm, align=right},
+  ticklabel style={font=\sffamily\scriptsize}, axis line style={muted}, tick style={muted},
+  legend style={font=\sffamily\scriptsize, draw=none, at={(0.5,1.02)}, anchor=south, legend columns=2, reverse legend}, area legend,
+  nodes near coords, nodes near coords style={font=\sffamily\tiny, text=ink}, enlarge y limits=0.18,
+  title={Speed: median and slow tail}, title style={font=\sffamily\bfseries\small, yshift=12pt}]
+\addplot[fill=router!55, draw=router] coordinates {(29.5,sub-n) (29.0,sub-d) (15.5,nodd) (15.7,sa)};
+\addplot[fill=worker!70, draw=worker] coordinates {(20.4,sub-n) (13.8,sub-d) (12.6,nodd) (12.4,sa)};
+\legend{p95 (slow tail), p50 (typical)}
+\end{axis}
+\begin{axis}[at={(t.east)}, anchor=west, xshift=1.4cm, xbar, width=6.2cm, height=6.2cm, bar width=9pt,
+  xmin=0, xmax=38, xlabel={cache-read tokens per run (millions)}, xlabel style={font=\sffamily\scriptsize},
+  symbolic y coords={sub-n,sub-d,nodd,sa}, ytick=data, y dir=reverse, yticklabels={}, 
+  ticklabel style={font=\sffamily\scriptsize}, axis line style={muted}, tick style={muted},
+  nodes near coords, nodes near coords style={font=\sffamily\tiny, text=ink}, enlarge y limits=0.18,
+  title={Cost: tokens read}, title style={font=\sffamily\bfseries\small, yshift=12pt}]
+\addplot[fill=store!60, draw=store] coordinates {(6.05,sub-n) (10.82,sub-d) (31.77,nodd) (23.23,sa)};
+\end{axis}
+\end{tikzpicture}
+&lt;/script&gt;</code></pre> </div> </details> </figure> <div class="prose"> <p> With a neutral prompt, the model never used its sub-agent tool in five runs, so everything happened in one session that kept getting interrupted. With a “delegate first” prompt it delegated in four of five runs. In the fifth it decided a task was small enough to do itself, and that run was the slowest. </p> <p> A separate stress test looked only at the Router. As triggers rose from about 1 to about 40 per minute, it grouped more of them into each model call (from 1.0 to 2.8 on average). Time per request rose from 2.5 to 3.9 seconds, while time per decision fell from 6.4 to 1.6 seconds. The team concluded that one Router session is enough for a team their size. </p> <p>The authors call these results preliminary, given the synthetic load and simplified environment.</p> <h2>Caveats</h2> <ul class="plain"> <li> The README describes the prototype as reference code and says it isn’t an official DeepSeek product. A coding agent wrote much of it, it differs from the version DeepSeek runs internally, and parts of the essay aren’t implemented. </li> <li> Workers run shell commands without approval, as the operator’s OS user. The blocked-command list can be bypassed by calling a program by its full path, so it doesn’t provide security. </li> <li> Auto-merge is off by default for the agent account, and the default instructions allow it only for small pull requests (under 200 changed lines) whose approvals cover the latest commit. </li> <li> The essay lists the cloud loop as an unsolved security problem. If someone compromised it, through a server breach or a prompt injection in a chat message, they could control every connected machine. The team wants the agent to be able to use credentials without seeing them, but doesn’t have a way to do that yet. </li> <li> Other open problems the essay lists are when one Router stops being enough, memory for agents that run for months, showing people what’s going on once sessions are hidden, and how several agents in one organisation should share context. </li> </ul> <p>If you try it, use a throwaway repository, a short allow-list, and a user account that can’t reach your real credentials.</p> <h2>Diagram sources</h2> <p> The figures were drawn in TikZ. They appear here as pre-rendered SVGs, because TikZJax downloads a TeX engine every time the page loads. To reuse one, open “TikZJax source” under the figure and copy the block into your own page, after these two lines in the <code>&lt;head&gt;</code>: </p> <div class="src"> <pre><code>&lt;link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css"&gt;
+&lt;script src="https://tikzjax.com/v1/tikzjax.js"&gt;&lt;/script&gt;</code></pre> </div> <p> Each block defines its own colours and styles, and also compiles as a normal LaTeX <code>tikzpicture</code>. The results chart uses pgfplots, so add <code>\usepackage{pgfplots}</code> at the top of that block. </p> <h2>Sources</h2> <ul class="sources"> <li> <a href="https://agentspulse.github.io/tutorials/deepseek-super-agent-architecture/">AgentsPulse: review of the design essay, with the experiment numbers</a> </li> <li> <a href="https://www.developersdigest.tech/blog/deepseek-dsh-superagent-router-worker-always-on-agent-2026">Developers Digest: what the prototype ships, its accept modes and execution caveats</a> </li> <li><a href="https://github.com/deepseek-ai/dsh-superagent-prototype">deepseek-ai/dsh-superagent-prototype on GitHub</a></li> <li><a href="https://mp.weixin.qq.com/s/zoS7GlReWPhfCjENGxXCdg">The original design essay (Chinese, WeChat)</a></li> <li><a href="https://www.i-scoop.eu/deepseek-super-agent/">i-SCOOP: the attention-budget framing</a></li> <li> <a href="https://www.bloomberg.com/news/articles/2026-11-01/deepseek-drops-enhanced-coding-agent-with-aim-to-rival-anthropic">Bloomberg: news coverage of the release</a> </li> <li><a href="https://www.deepseek.com/en/harness/">DeepSeek Harness</a></li> </ul> </div> <p class="endnote">Written from public sources as of November 1, 2026. All numbers come from the DeepSeek Harness team.</p> </div> <script>
+  document.querySelectorAll(".src button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var code = btn.parentElement.querySelector("code");
+      var text = code.textContent;
+      function done() {
+        btn.textContent = "Copied";
+        setTimeout(function () {
+          btn.textContent = "Copy";
+        }, 1600);
+      }
+      try {
+        navigator.clipboard.writeText(text).then(done, function () {
+          selectIt(code);
+        });
+      } catch (e) {
+        selectIt(code);
+      }
+    });
+  });
+  function selectIt(el) {
+    var r = document.createRange();
+    r.selectNodeContents(el);
+    var s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+</script>]]></content><author><name></name></author><category term="technical-blog"/><category term="llms"/><category term="ai-agents"/><category term="deepseek"/><summary type="html"><![CDATA[DeepSeek’s Harness team has designed a single coding agent that lives in a team’s chat and GitHub repository and handles many requests in parallel.]]></summary></entry><entry><title type="html">Inside Claude Code: An Architecture Deep Dive</title><link href="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/" rel="alternate" type="text/html" title="Inside Claude Code: An Architecture Deep Dive"/><published>2026-04-01T00:00:00+00:00</published><updated>2026-04-01T00:00:00+00:00</updated><id>https://zainhas.github.io/blog/2026/inside-claude-code-architecture</id><content type="html" xml:base="https://zainhas.github.io/blog/2026/inside-claude-code-architecture/"><![CDATA[<p><em>This is a live document as I explore the Claude Code leaked repo — this is mainly LLM generated as I navigate the repo and study how it implements things like memory, compaction, agentic search, etc.</em></p> <h1 id="claude-code-v2188--architecture-deep-dive">Claude Code v2.1.88 — Architecture Deep Dive</h1> <blockquote> <p>A comprehensive visual and narrative guide to how Claude Code works internally. Written for someone new to the codebase.</p> </blockquote> <hr/> <h2 id="table-of-contents">Table of Contents</h2> <ol> <li><a href="#1-high-level-architecture-diagram">High-Level Architecture Diagram</a></li> <li><a href="#2-directory-map">Directory Map</a></li> <li><a href="#3-startup--bootstrap-sequence-diagram">Startup &amp; Bootstrap Sequence Diagram</a></li> <li><a href="#4-the-query-loop--core-interaction-flow">The Query Loop — Core Interaction Flow</a></li> <li><a href="#5-tool-execution-sequence-diagram">Tool Execution Sequence Diagram</a></li> <li><a href="#6-dependency--layer-diagram">Dependency &amp; Layer Diagram</a></li> <li><a href="#7-key-abstractions--data-models">Key Abstractions &amp; Data Models</a></li> <li><a href="#8-communication-patterns">Communication Patterns</a></li> <li><a href="#9-narrative-walkthrough-a-message-end-to-end">Narrative Walkthrough: A Message End-to-End</a></li> <li><a href="#10-deep-dive-the-grep-tool-agentic-search">Deep Dive: The Grep Tool (Agentic Search)</a></li> <li><a href="#11-deep-dive-memory-management--context-compaction">Deep Dive: Memory Management &amp; Context Compaction</a></li> </ol> <hr/> <h2 id="1-high-level-architecture-diagram">1. High-Level Architecture Diagram</h2> <p>This is the 30,000-foot view. Every box is a module group; every arrow is a dependency or data flow direction.</p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────────────────────────┐
 │                          ENTRY POINTS                                       │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │
 │  │ cli.tsx   │  │ mcp.ts   │  │ sdk      │  │ server   │  │ daemon/     │  │
