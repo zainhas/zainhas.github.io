@@ -2,6 +2,12 @@
 # `source` is shown next to the date: Blog (this site), Together AI, or Weaviate.
 
 posts:
+  - title: "DeepSeek’s Super-agent, explained"
+    date: 2026-11-01
+    url: "/blog/2026/deepseek-super-agent/"
+    source: "Blog"
+    description: "DeepSeek’s Harness team has designed a single coding agent that lives in a team’s chat and GitHub repository and handles many requests in parallel."
+
   - title: "Canary rollouts: upgrade models in production without downtime"
     date: 2026-09-22
     url: "https://www.together.ai/blog/canary-rollouts-upgrade-models-in-production-without-downtime"
