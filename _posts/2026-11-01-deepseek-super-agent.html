@@ -160,13 +160,6 @@ categories: technical-blog
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .dsa ul.plain {
-    padding-left: 1.1rem;
-    margin: 0 0 1.1rem;
-  }
-  .dsa ul.plain li {
-    margin-bottom: 0.45rem;
-  }
   .dsa .sources {
     font-size: 0.9rem;
     line-height: 1.55;
@@ -1114,46 +1107,6 @@ categories: technical-blog
       concluded that one Router session is enough for a team their size.
     </p>
     <p>The authors call these results preliminary, given the synthetic load and simplified environment.</p>
-
-    <h2>Caveats</h2>
-    <ul class="plain">
-      <li>
-        The README describes the prototype as reference code and says it isn’t an official DeepSeek product. A coding agent wrote much of it, it
-        differs from the version DeepSeek runs internally, and parts of the essay aren’t implemented.
-      </li>
-      <li>
-        Workers run shell commands without approval, as the operator’s OS user. The blocked-command list can be bypassed by calling a program by its
-        full path, so it doesn’t provide security.
-      </li>
-      <li>
-        Auto-merge is off by default for the agent account, and the default instructions allow it only for small pull requests (under 200 changed
-        lines) whose approvals cover the latest commit.
-      </li>
-      <li>
-        The essay lists the cloud loop as an unsolved security problem. If someone compromised it, through a server breach or a prompt injection in a
-        chat message, they could control every connected machine. The team wants the agent to be able to use credentials without seeing them, but
-        doesn’t have a way to do that yet.
-      </li>
-      <li>
-        Other open problems the essay lists are when one Router stops being enough, memory for agents that run for months, showing people what’s going
-        on once sessions are hidden, and how several agents in one organisation should share context.
-      </li>
-    </ul>
-    <p>If you try it, use a throwaway repository, a short allow-list, and a user account that can’t reach your real credentials.</p>
-
-    <h2>Diagram sources</h2>
-    <p>
-      The figures were drawn in TikZ. They appear here as pre-rendered SVGs, because TikZJax downloads a TeX engine every time the page loads. To
-      reuse one, open “TikZJax source” under the figure and copy the block into your own page, after these two lines in the <code>&lt;head&gt;</code>:
-    </p>
-    <div class="src">
-      <pre><code>&lt;link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css"&gt;
-&lt;script src="https://tikzjax.com/v1/tikzjax.js"&gt;&lt;/script&gt;</code></pre>
-    </div>
-    <p>
-      Each block defines its own colours and styles, and also compiles as a normal LaTeX <code>tikzpicture</code>. The results chart uses pgfplots, so
-      add <code>\usepackage{pgfplots}</code> at the top of that block.
-    </p>
 
     <h2>Sources</h2>
     <ul class="sources">
