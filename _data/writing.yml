@@ -2,6 +2,30 @@
 # `source` is shown next to the date: Blog (this site), Together AI, or Weaviate.
 
 posts:
+  - title: "Inference from First Principles, Part 1: What a Token Costs"
+    date: 2026-11-15
+    url: "/blog/2026/what-a-token-costs/"
+    source: "Blog"
+    description: "A working model of LLM inference built from two hardware numbers and two model numbers, and what it says about batching, speed, and price."
+
+  - title: "Inference from First Principles, Part 2: Fitting a Model onto a Rack"
+    date: 2026-11-15
+    url: "/blog/2026/fitting-a-model-onto-a-rack/"
+    source: "Blog"
+    description: "How mixture-of-experts models are spread across GPUs, why one rack is the natural unit, and what pipelining across racks does and does not buy you."
+
+  - title: "Inference from First Principles, Part 3: Reading the API Price Sheet"
+    date: 2026-11-15
+    url: "/blog/2026/reading-the-api-price-sheet/"
+    source: "Blog"
+    description: "Long-context surcharges, output tokens that cost more than input tokens, and cheap cache hits all fall out of the same cost model. Here is what each one tells us."
+
+  - title: "Inference from First Principles, Part 4: Training a Model You Plan to Serve"
+    date: 2026-11-15
+    url: "/blog/2026/training-a-model-you-plan-to-serve/"
+    source: "Blog"
+    description: "Once a model will serve hundreds of trillions of tokens, the cheapest plan is to train a smaller model for far longer than Chinchilla suggests. A rough estimate of how much longer."
+
   - title: "DeepSeek’s Super-agent, explained"
     date: 2026-11-01
     url: "/blog/2026/deepseek-super-agent/"

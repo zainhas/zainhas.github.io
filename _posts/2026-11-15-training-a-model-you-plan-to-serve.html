@@ -1,0 +1,730 @@
+---
+layout: post
+title: "Training a Model You Plan to Serve"
+date: 2026-11-15 12:00:00
+description: "Part 4 of a four-part series on LLM inference economics: balancing pre-training, RL, and inference compute, and why frontier models are heavily over-trained."
+tags: llms inference
+categories: technical-blog
+tikzjax: true
+---
+
+<style>
+  .ifp {
+    --ifp-text: var(--global-text-color);
+    --ifp-muted: var(--global-text-color-light);
+    --ifp-rule: var(--global-divider-color);
+    --ifp-accent: var(--global-theme-color);
+    --ifp-box: var(--global-code-bg-color);
+    --ifp-card: var(--global-card-bg-color);
+    --ifp-plate: #ffffff;
+    --ifp-plate-edge: #e3e1db;
+  }
+  html[data-theme="dark"] .ifp {
+    --ifp-plate: #f4f6f8;
+    --ifp-plate-edge: #3a4350;
+  }
+  .ifp .series-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 0.86rem;
+    border-top: 1px solid var(--ifp-rule);
+    border-bottom: 1px solid var(--ifp-rule);
+    padding: 10px 0;
+    margin: 0 0 1.4rem;
+  }
+  .ifp .series-nav b {
+    margin-right: auto;
+  }
+  .ifp .series-nav a {
+    color: var(--ifp-muted);
+    text-decoration: none;
+  }
+  .ifp .series-nav a:hover {
+    color: var(--ifp-accent);
+  }
+  .ifp .series-nav a[aria-current="page"] {
+    color: var(--ifp-text);
+    font-weight: 600;
+  }
+  .ifp .kicker {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ifp-accent);
+    margin: 0 0 0.5rem;
+  }
+  .ifp .dek {
+    font-size: 1.25rem;
+    line-height: 1.45;
+    color: var(--ifp-muted);
+    margin: 0 0 0.6rem;
+  }
+  .ifp .meta {
+    font-size: 0.86rem;
+    color: var(--ifp-muted);
+    margin: 0 0 1.5rem;
+  }
+  .ifp h2 {
+    margin: 3rem 0 0.8rem;
+  }
+  .ifp h3 {
+    margin: 2rem 0 0.6rem;
+  }
+  .ifp .katex {
+    font-size: 1.02em;
+  }
+  .ifp .katex-display {
+    margin: 20px 0 24px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 0;
+  }
+  .ifp figure {
+    margin: 32px 0 36px;
+  }
+  .ifp figure.tikz {
+    background: var(--ifp-plate);
+    border: 1px solid var(--ifp-plate-edge);
+    border-radius: 10px;
+    padding: 22px 16px 14px;
+  }
+  .ifp figure.tikz > div {
+    margin: 0 auto;
+    max-width: 100%;
+  }
+  .ifp figure.tikz svg text {
+    text-rendering: geometricPrecision;
+  }
+  .ifp figure.tikz svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+  .ifp figure.tikz:has(> script[type="text/tikz"])::before {
+    content: "Rendering diagram\2026";
+    display: block;
+    text-align: center;
+    padding: 48px 0;
+    font-size: 14px;
+    color: #5f6670;
+  }
+  .ifp figcaption {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #5f6670;
+    margin: 14px auto 0;
+    max-width: 620px;
+  }
+  .ifp figcaption b {
+    color: #24272c;
+    font-weight: 600;
+  }
+  .ifp .box {
+    background: var(--ifp-box);
+    border-radius: 10px;
+    padding: 20px 22px 6px;
+    margin: 28px 0 32px;
+  }
+  .ifp .box h4 {
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ifp-muted);
+    margin: 0 0 12px;
+    font-weight: 600;
+  }
+  .ifp .box p {
+    margin: 0 0 14px;
+  }
+  .ifp .box ol,
+  .ifp .box ul {
+    margin: 0 0 14px;
+  }
+  .ifp .numbers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin: 0 0 16px;
+  }
+  .ifp .numbers div {
+    background: var(--ifp-card);
+    border: 1px solid var(--ifp-rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--ifp-muted);
+  }
+  .ifp .numbers strong {
+    display: block;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: var(--ifp-text);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .ifp table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    margin: 8px 0 24px;
+  }
+  .ifp th,
+  .ifp td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--ifp-rule);
+    vertical-align: top;
+  }
+  .ifp th {
+    font-weight: 600;
+    color: var(--ifp-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .ifp td.num,
+  .ifp th.num {
+    text-align: right;
+    white-space: nowrap;
+  }
+  .ifp .table-wrap {
+    overflow-x: auto;
+  }
+  .ifp .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--ifp-rule);
+    margin-top: 48px;
+    padding-top: 20px;
+  }
+  .ifp .pager a {
+    text-decoration: none;
+    display: block;
+    max-width: 48%;
+  }
+  .ifp .pager span {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ifp-muted);
+  }
+  .ifp .pager .next {
+    text-align: right;
+    margin-left: auto;
+  }
+  .ifp .footnote-diagrams {
+    font-size: 0.82rem;
+    color: var(--ifp-muted);
+    margin-top: 24px;
+  }
+  @media (max-width: 640px) {
+    .ifp .dek {
+      font-size: 1.1rem;
+    }
+    .ifp figure.tikz {
+      padding: 14px 8px 10px;
+      margin-left: -8px;
+      margin-right: -8px;
+    }
+  }
+</style>
+
+<link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+  // Render math with KaTeX. Only \( \) and \[ \] count as math, so dollar prices stay plain text.
+  // The article carries tex2jax_ignore so the site-wide MathJax leaves it alone.
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.querySelector(".ifp"), {
+      delimiters: [
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false },
+      ],
+      throwOnError: false,
+    });
+  });
+  // TikZJax sizes each diagram in points at 1:1. Scale it up to match body text and let it shrink on narrow screens.
+  (function () {
+    var SCALE = 1.32;
+    function fit(svg) {
+      if (svg.dataset.fitted) return;
+      var w = parseFloat(svg.getAttribute("width"));
+      if (!w) return;
+      svg.dataset.fitted = "1";
+      svg.style.position = "static";
+      svg.style.width = w * (96 / 72) * SCALE + "px";
+      svg.removeAttribute("height");
+      for (var el = svg.parentNode; el && el.tagName !== "FIGURE"; el = el.parentNode) {
+        el.style.width = "auto";
+        el.style.height = "auto";
+        el.style.display = "block";
+      }
+    }
+    new MutationObserver(function () {
+      document.querySelectorAll(".ifp figure.tikz svg").forEach(fit);
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  })();
+</script>
+
+<div class="ifp tex2jax_ignore">
+  <nav class="series-nav">
+    <b>Inference from First Principles</b>
+    <a href="/blog/2026/what-a-token-costs/">1. What a token costs</a>
+    <a href="/blog/2026/fitting-a-model-onto-a-rack/">2. Fitting a model onto a rack</a>
+    <a href="/blog/2026/reading-the-api-price-sheet/">3. Reading the price sheet</a>
+    <a href="/blog/2026/training-a-model-you-plan-to-serve/" aria-current="page">4. Training a model you plan to serve</a>
+  </nav>
+  <p class="kicker">Part 4 of 4</p>
+  <p class="dek">
+    Once a model will serve hundreds of trillions of tokens, the cheapest plan is to train a smaller model for far longer than Chinchilla suggests. A
+    rough estimate of how much longer.
+  </p>
+  <p class="meta">Inference from First Principles &middot; 4 diagrams</p>
+
+  {% raw %}
+  <div class="box">
+    <h4>From Parts 1 to 3</h4>
+    <p>
+      Serving cost per token is set by compute when batches are large and by memory traffic when they're small or contexts are long. Prefill runs near
+      the compute floor, decode is memory-bound, and a frontier provider serves on the order of a billion tokens per second across its models. Compute
+      costs scale with the number of active parameters, \(N_{\text{active}}\). Memory costs scale with total parameters and KV cache size.
+    </p>
+  </div>
+
+  <p>
+    Parts 1 to 3 were about serving a model that already exists. This part steps back to the decision before that: how big should the model be, and
+    how much data should it be trained on? The Chinchilla paper answered that for the case where only training compute counts, and the answer works
+    out to about 20 training tokens per parameter. A model that will go on to serve hundreds of trillions of tokens should be smaller than that and
+    trained for much longer.
+  </p>
+
+  <ul>
+    <li>
+      A model's lifetime compute splits into pre-training, reinforcement learning (RL), and serving. A smaller model trained for longer costs more to
+      train and less to serve.
+    </li>
+    <li>
+      When one cost falls and another rises, the total is usually close to its minimum where the two are roughly equal. Here that means spending
+      similar amounts on pre-training, RL, and serving.
+    </li>
+    <li>
+      In tokens, that works out to about as many serving tokens as pre-training tokens, and somewhat fewer RL tokens, because RL runs at lower
+      hardware efficiency.
+    </li>
+    <li>
+      At today's serving volumes, that points to frontier models being pre-trained on hundreds of trillions of tokens, a hundred to a few hundred
+      times Chinchilla-optimal. Open models are already trained 20 to nearly 100 times past it.
+    </li>
+  </ul>
+
+  <h2>Where a model's compute goes</h2>
+
+  <p>Over its life, a model consumes compute in three phases.</p>
+
+  <figure class="tikz" id="fig-life">
+    <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1cm,y=1cm]
+      \node[box, fill=comp!12, draw=comp!80!black, minimum width=3.5cm, minimum height=1.9cm, font=\sffamily\footnotesize] (pre) at (0,0) {\small\bfseries pre-training\\[4pt]$D_{\mathrm{pre}}$ tokens\\[1pt]$6N$ FLOPs per token\\[1pt]compute-bound};
+      \node[box, fill=net!12, draw=net, minimum width=3.5cm, minimum height=1.9cm, font=\sffamily\footnotesize] (rl) at (4.4,0) {\small\bfseries RL\\[4pt]$D_{\mathrm{RL}}$ tokens\\[1pt]$2N$ to $6N$ per token\\[1pt]mostly decode};
+      \node[box, fill=kv!14, draw=kv!80!black, minimum width=3.5cm, minimum height=1.9cm, font=\sffamily\footnotesize] (inf) at (8.8,0) {\small\bfseries serving\\[4pt]$D_{\mathrm{inf}}$ tokens\\[1pt]$2N$ FLOPs per token\\[1pt]prefill and decode};
+      \draw[arr] (pre.east) -- (rl.west);
+      \draw[arr] (rl.east) -- (inf.west);
+      \node[note, anchor=north, align=center] at (4.4,-1.25) {the same $N_{\mathrm{active}}$ in every phase: a smaller model is cheaper in all three,\\but needs more pre-training tokens to reach the same quality};
+      \end{tikzpicture}
+    </script>
+    <figcaption>
+      <b>Figure 1.</b> The three phases of a model's life. Each phase costs FLOPs in proportion to the active parameter count times its tokens.
+      Pre-training runs at high hardware efficiency. RL generation and serving are decode-heavy and run at lower efficiency.
+    </figcaption>
+  </figure>
+
+  <p>
+    Pre-training costs \(6N_{\text{active}}D_{\text{pre}}\) FLOPs: 2 per parameter per token for the forward pass and 4 for the backward pass. RL
+    first generates rollouts, which is decode at 2 FLOPs per parameter per token, and then trains on some of them, which adds 4 more for those tokens,
+    so it costs between \(2N\) and \(6N\) per RL token. Serving costs \(2N_{\text{active}}\) per token.
+  </p>
+
+  <p>
+    FLOPs aren't the whole cost, though. What you pay for is GPU time, which is FLOPs divided by the throughput you actually achieve. Pre-training is
+    compute-bound and can keep a large fraction of the hardware busy. RL generation and serving are dominated by decode, which, as Parts 1 and 3
+    showed, spends most of its time waiting on memory. So write each cost as FLOPs over a utilization factor \(u\):
+  </p>
+
+  \[ C_{\text{pre}} \propto \frac{6\,N D_{\text{pre}}}{u_{\text{pre}}}, \qquad C_{\text{RL}} \propto \frac{m\,N D_{\text{RL}}}{u_{\text{RL}}}, \qquad
+  C_{\text{inf}} \propto \frac{2\,N D_{\text{inf}}}{u_{\text{inf}}} \]
+
+  <p>with \(m\) between 2 and 6.</p>
+
+  <h2>A rule of thumb for balancing costs</h2>
+
+  <p>
+    Making the model smaller lowers the serving cost and the per-token cost of training. But a smaller model needs more training tokens to reach the
+    same quality, and past the Chinchilla point that trade gets worse quickly. So for a fixed quality target, one cost falls with model size and the
+    other rises. Where is the total lowest?
+  </p>
+
+  <figure class="tikz" id="fig-ucurve">
+    <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1.9cm,y=0.85cm]
+      \begin{scope}
+      \clip (0.35,0) rectangle (5.2,6.0);
+      \draw[ink, curve, domain=0.45:4.8, samples=80, smooth, variable=\x] plot (\x,{2.2/\x+0.22*\x+0.9*\x});
+      \draw[comp, curve, domain=0.45:4.8, samples=80, smooth, variable=\x] plot (\x,{2.2/\x+0.22*\x});
+      \draw[kv, curve, domain=0.45:4.8, samples=10, variable=\x] plot (\x,{0.9*\x});
+      \end{scope}
+      \draw[axis] (0.35,0) -- (5.4,0);
+      \draw[axis] (0.35,0) -- (0.35,6.2);
+      \node[lbl, anchor=north] at (2.9,-0.45) {model size, for a fixed quality target};
+      \node[lbl, anchor=south west] at (0.4,6.2) {lifetime cost};
+      \node[note, anchor=north] at (0.75,-0.05) {smaller};
+      \node[note, anchor=north] at (5.0,-0.05) {larger};
+      \draw[guide] (3.162,0) -- (3.162,1.391);
+      \fill[comp] (3.162,1.391) circle (0.07);
+      \node[lbl, anchor=north west, align=left] at (3.25,1.2) {Chinchilla point:\\cheapest to train};
+      \draw[guide] (1.401,0) -- (1.401,3.140);
+      \fill[ink] (1.401,3.140) circle (0.07);
+      \node[lbl, anchor=south, align=center] at (1.401,3.3) {cheapest overall};
+      \draw[->, draw=hot, line width=0.9pt] (3.0,0.45) -- (1.56,0.45);
+      \node[font=\sffamily\scriptsize, text=hot, anchor=south] at (2.28,0.5) {over-train};
+      \node[right, lbl] at (4.8,5.83) {total};
+      \node[right, lbl, text=comp] at (4.8,1.51) {training};
+      \node[right, lbl, text=kv!80!black] at (4.8,4.32) {serving};
+      \end{tikzpicture}
+    </script>
+    <figcaption>
+      <b>Figure 2.</b> Lifetime cost against model size for a fixed quality target. Training cost (blue) is lowest at the Chinchilla point and rises
+      for smaller models, which need many more tokens. Serving cost (green) rises with model size. The total (black) bottoms out at a smaller model
+      trained on more data, near where the two costs are similar.
+    </figcaption>
+  </figure>
+
+  <p>
+    There's a general heuristic here. If you're minimizing \(F(x) + G(x)\) where \(F\) falls and \(G\) rises, the minimum is often near the point
+    where \(F = G\). For power laws it's easy to make exact. With \(F = a\,x^{-p}\) and \(G = b\,x^{q}\), setting the derivative of the sum to zero
+    gives
+  </p>
+
+  \[ p\,F = q\,G \quad\Longrightarrow\quad \frac{F}{G} = \frac{q}{p} \]
+
+  <p>
+    at the minimum. If the exponents are similar, the two costs are equal there. If one exponent is twice the other, the costs differ by a factor of
+    two. And near the minimum the total curve is flat, so landing a bit off costs little. Scaling laws are roughly power laws, so the heuristic should
+    hold to within a small factor near the Chinchilla point. Far from it, the training curve steepens, which makes \(p\) larger and means training
+    should cost somewhat less than serving at the optimum. Checking this properly would mean fitting real scaling-law exponents, which labs don't
+    publish.
+  </p>
+
+  <h2>Setting the three costs equal</h2>
+
+  <p>
+    Apply the heuristic to all three phases and set \(C_{\text{pre}} \approx C_{\text{RL}} \approx C_{\text{inf}}\). Treating RL as a third equal
+    share is a further simplification, since how much RL to do is its own choice. The active parameter count \(N\) appears in every term, so it
+    cancels:
+  </p>
+
+  \[ \frac{6\,D_{\text{pre}}}{u_{\text{pre}}} \approx \frac{m\,D_{\text{RL}}}{u_{\text{RL}}} \approx \frac{2\,D_{\text{inf}}}{u_{\text{inf}}} \]
+
+  <p>
+    Writing the costs this way folds every memory cost into the utilization factors. That hides the fact that KV reads and weight reads don't scale
+    with \(N_{\text{active}}\), so treat what follows as an order of magnitude.
+  </p>
+
+  <p>
+    Now we need the utilizations. Pre-training is the most efficient of the three. Serving mixes efficient prefill with memory-bound decode, and RL
+    generation is mostly decode. As a rough assumption, say both RL and serving get about a third of pre-training's utilization. Then
+  </p>
+
+  \[ D_{\text{inf}} = 3\,\frac{u_{\text{inf}}}{u_{\text{pre}}}\,D_{\text{pre}} \approx D_{\text{pre}}, \qquad D_{\text{RL}} =
+  \frac{6}{m}\,\frac{u_{\text{RL}}}{u_{\text{pre}}}\,D_{\text{pre}} \approx \tfrac{2}{3}\,D_{\text{pre}} \ \ (\text{for } m = 3) \]
+
+  <figure class="tikz" id="fig-budget">
+    <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1cm,y=1cm]
+      \foreach \ox/\title in {0/lifetime cost,6.2/tokens} {
+        \node[lbl, anchor=south] at (\ox+2.25,3.55) {\bfseries \title};
+        \draw[axis] (\ox,0) -- (\ox+4.6,0);
+        \node[lbl, anchor=north] at (\ox+0.85,-0.05) {pre-training};
+        \node[lbl, anchor=north] at (\ox+2.25,-0.05) {RL};
+        \node[lbl, anchor=north] at (\ox+3.65,-0.05) {serving};
+      }
+      \fill[comp!75] (0.4,0) rectangle (1.3,2.7);
+      \fill[net!75] (1.8,0) rectangle (2.7,2.7);
+      \fill[kv!75] (3.2,0) rectangle (4.1,2.7);
+      \node[note] at (2.25,3.15) {equal by construction};
+      \fill[comp!75] (6.6,0) rectangle (7.5,2.7);
+      \fill[net!75] (8.0,0) rectangle (8.9,1.8);
+      \fill[kv!75] (9.4,0) rectangle (10.3,2.7);
+      \node[font=\sffamily\scriptsize, anchor=south] at (7.05,2.72) {$D$};
+      \node[font=\sffamily\scriptsize, anchor=south] at (8.45,1.82) {about $\frac{2}{3}D$};
+      \node[font=\sffamily\scriptsize, anchor=south] at (9.85,2.72) {about $D$};
+      \end{tikzpicture}
+    </script>
+    <figcaption>
+      <b>Figure 3.</b> Equal lifetime cost in each phase (left) turns into token counts (right). Pre-training does three times the FLOPs per token of
+      serving, but at about three times the utilization, so the token counts come out similar. RL does somewhat fewer tokens, because its rollouts are
+      decode-heavy and some of them are also trained on.
+    </figcaption>
+  </figure>
+
+  <p>
+    To within the factors we can't pin down, a model should serve about as many tokens as it was pre-trained on, and do somewhat fewer RL tokens than
+    either. If you split the cost 50/50 between training and serving instead of three ways, the answer moves by less than a factor of two.
+  </p>
+
+  <p>
+    There's one adjustment that pushes the other way. A lab doesn't know in advance how popular a model will be or how long it will last before
+    something better replaces it. Some models get replaced quickly, and some never catch on. So the expected number of serving tokens is less than the
+    hoped-for number, and a cautious lab should plan for somewhat less over-training than this simple balance suggests.
+  </p>
+
+  <h2>Plugging in numbers</h2>
+
+  <p>
+    Serving volume is the one number in this calculation that providers publish, at least in aggregate. Google said in May 2026 that it was processing
+    more than 3.2 quadrillion tokens a month across its products, about 1.2 billion tokens per second. That's spread across many models and surfaces.
+    Say one flagship model handles 100 million tokens per second, and it stays the flagship for three months, about 7.9 million seconds:
+  </p>
+
+  \[ D_{\text{inf}} \approx 10^{8}\ \text{tokens/s} \times 7.9 \times 10^{6}\ \text{s} \approx 8 \times 10^{14}\ \text{tokens} \]
+
+  <p>
+    That's about 800 trillion tokens. Two things push it down. Google's count includes input tokens, many of them cache hits that cost far less than a
+    fresh forward pass, and the popularity discount from the previous section applies. Call it a few hundred trillion tokens of serving, which by the
+    balance argument means a few hundred trillion tokens of pre-training.
+  </p>
+
+  <p>
+    Compare that with Chinchilla. Frontier labs don't publish active parameter counts, but something around 100 billion is plausible. At 20 tokens per
+    parameter, Chinchilla-optimal training would be about 2 trillion tokens. A few hundred trillion is a hundred to a few hundred times that.
+  </p>
+
+  <p>That sounds extreme until you look at open models, where the numbers are published:</p>
+
+  <figure class="tikz" id="fig-overtrain">
+    <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1cm,y=1cm]
+      \foreach \x/\l in {0/0.1T,2.6/1T,5.2/10T,7.8/100T,10.4/1000T} {
+        \draw[faint, line width=0.5pt] (\x,-0.35) -- (\x,4.35);
+        \node[note, anchor=north] at (\x,-0.4) {\l};
+      }
+      \node[lbl, anchor=north] at (5.2,-0.85) {training tokens (log scale)};
+      \foreach \y/\name/\a/\b/\r in {4.0/DeepSeek-V3/2.26/5.64/20$\times$, 3.2/Kimi K2/2.10/5.69/24$\times$, 2.4/Qwen3-235B-A22B/1.67/6.65/82$\times$, 1.6/Llama 3 8B/0.53/5.66/94$\times$} {
+        \draw[ink!70, line width=1.2pt] (\a,\y) -- (\b,\y);
+        \draw[ink, fill=white, line width=0.9pt] (\a,\y) circle (0.11);
+        \fill[ink] (\b,\y) circle (0.11);
+        \node[lbl, anchor=east] at (-0.25,\y) {\name};
+        \node[font=\sffamily\scriptsize, anchor=west] at (10.75,\y) {\r};
+      }
+      \draw[hot, line width=1.2pt] (3.38,0.6) -- (8.58,0.6);
+      \draw[hot, line width=4pt, opacity=0.35] (8.58,0.6) -- (10.15,0.6);
+      \draw[hot, fill=white, line width=0.9pt] (3.38,0.6) circle (0.11);
+      \fill[hot] (9.37,0.6) circle (0.11);
+      \node[lbl, anchor=east, text=hot] at (-0.25,0.6) {frontier estimate};
+      \node[font=\sffamily\scriptsize, anchor=west, text=hot] at (10.75,0.6) {100 to 400$\times$};
+      \draw[ink, fill=white, line width=0.9pt] (0.25,4.9) circle (0.09); \node[font=\sffamily\scriptsize, anchor=west] at (0.42,4.9) {Chinchilla-optimal: 20 tokens per active parameter};
+      \fill[ink] (6.6,4.9) circle (0.09); \node[font=\sffamily\scriptsize, anchor=west] at (6.77,4.9) {actual training tokens};
+      \end{tikzpicture}
+    </script>
+    <figcaption>
+      <b>Figure 4.</b> Chinchilla-optimal token counts (open circles, 20 tokens per active parameter) against actual pre-training tokens (filled
+      dots). DeepSeek-V3: 37B active, 14.8T tokens. Kimi K2: 32B active, 15.5T. Qwen3-235B-A22B: 22B active, about 36T. Llama 3 8B: dense, about 15T.
+      The frontier estimate assumes about 100B active parameters and a few hundred trillion tokens (shaded range: 200T to 800T).
+    </figcaption>
+  </figure>
+
+  <p>
+    DeepSeek-V3 was trained about 20 times past Chinchilla-optimal and Kimi K2 about 24 times. Qwen3-235B-A22B went about 82 times past it, and Llama
+    3 8B about 94 times. The small models' high ratios come partly from labs reusing one dataset across a model family. Llama 3 70B and 405B saw about
+    the same 15 trillion tokens as the 8B, which is about 11 and 2 times Chinchilla-optimal for them. So these numbers show that heavy over-training
+    is normal practice, but they aren't a clean test of the serving argument. The frontier estimate rests on the calculation above.
+  </p>
+
+  <p>
+    There are two caveats. Chinchilla's 20 tokens per parameter was fit on dense models, and active parameters are only a rough stand-in for an MoE
+    model's size. And there may not be a few hundred trillion tokens of good text in the world. Reaching numbers like that means repeating data,
+    generating synthetic data, or training on other modalities. The balance argument tells you where the optimum is, not whether you can get there.
+  </p>
+
+  <p>
+    The argument also says something about the scale of serving. Pre-training data is a large share of all the text people have written down, plus
+    whatever else labs can find or make. For the training to be well spent, the model should write back about as much as it read.
+  </p>
+
+  <h2>The whole model on one page</h2>
+
+  <p>
+    Every result in this series came from a handful of formulas and constants. Here they are in one place, with a note on how solid each number is.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Quantity</th>
+          <th>Formula or value</th>
+          <th>Basis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Compute time per step</td>
+          <td>\(2BN_{\text{active}}/\text{FLOPS}\)</td>
+          <td>Definition</td>
+        </tr>
+        <tr>
+          <td>Memory time per step</td>
+          <td>\((\beta N_{\text{total}} + B\,n_{\text{ctx}}\,s_{\text{kv}})/\text{BW}\)</td>
+          <td>Definition</td>
+        </tr>
+        <tr>
+          <td>Hardware ratio \(R\)</td>
+          <td>\(\dfrac{\text{FLOPS}/2}{\text{BW}/\beta} \approx 300\)</td>
+          <td>Spec sheets: H100 about 295, GB200 about 310</td>
+        </tr>
+        <tr>
+          <td>Balance batch</td>
+          <td>\(B^{*} \approx R \times N_{\text{total}}/N_{\text{active}}\)</td>
+          <td>Derived. DeepSeek-V3 about 5,400</td>
+        </tr>
+        <tr>
+          <td>Step time with full HBM</td>
+          <td>HBM capacity / bandwidth, 20 to 40 ms</td>
+          <td>Spec sheets</td>
+        </tr>
+        <tr>
+          <td>Latency floor</td>
+          <td>\(\beta N_{\text{total}}/(E \times \text{BW}_{\text{per GPU}})\)</td>
+          <td>Derived</td>
+        </tr>
+        <tr>
+          <td>Scale-up vs. scale-out bandwidth</td>
+          <td>About 10&times; (9 to 18&times;)</td>
+          <td>Spec sheets</td>
+        </tr>
+        <tr>
+          <td>Rack boundary is cheap when</td>
+          <td>\(2kL \gtrsim 10\)</td>
+          <td>Derived</td>
+        </tr>
+        <tr>
+          <td>Memory per GPU with pipelining</td>
+          <td>\(\beta N_{\text{total}}/(EP) + b\,n_{\text{ctx}}\,s_{\text{kv}}/E\)</td>
+          <td>Derived</td>
+        </tr>
+        <tr>
+          <td>KV size from a price step</td>
+          <td>\(s_{\text{kv}} \approx \beta N_{\text{active}}/(R\,n_{\text{ctx}})\)</td>
+          <td>Assumes the step sits at the crossover and \(N_{\text{active}}\) is guessed</td>
+        </tr>
+        <tr>
+          <td>Best storage tier for hold time \(T\)</td>
+          <td>\(T \approx\) capacity / bandwidth</td>
+          <td>Heuristic</td>
+        </tr>
+        <tr>
+          <td>Lifetime compute split</td>
+          <td>\(6D_{\text{pre}}/u_{\text{pre}} \approx mD_{\text{RL}}/u_{\text{RL}} \approx 2D_{\text{inf}}/u_{\text{inf}}\)</td>
+          <td>Heuristic. Utilizations assumed</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    None of these numbers is precise, and several are guesses. But they hang together. The same two hardware ratios explain why batches hold thousands
+    of sequences, why a step takes tens of milliseconds, why fast modes cost what they do, why output tokens and long contexts cost more, why cache
+    hits are cheap, and why models are trained on so much more data than Chinchilla recommends. When a new chip, model, or price sheet comes out, you
+    can usually place it with the same few divisions.
+  </p>
+  {% endraw %}
+
+  <p class="footnote-diagrams">Diagrams are drawn in TikZ and rendered in your browser with TikZJax, so they can take a few seconds to appear.</p>
+  <nav class="pager">
+    <a class="prev" href="/blog/2026/reading-the-api-price-sheet/"><span>Previous</span>Part 3: Reading the API Price Sheet</a>
+  </nav>
+</div>
