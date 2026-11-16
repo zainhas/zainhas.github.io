@@ -5,7 +5,6 @@ date: 2026-11-15 09:00:00
 description: "Part 1 of a four-part series on LLM inference economics: the roofline model, batch size, latency floors, and why decode steps take tens of milliseconds."
 tags: llms inference
 categories: technical-blog
-tikzjax: true
 ---
 
 <style>
@@ -94,22 +93,11 @@ tikzjax: true
     margin: 0 auto;
     max-width: 100%;
   }
-  .ifp figure.tikz svg text {
-    text-rendering: geometricPrecision;
-  }
-  .ifp figure.tikz svg {
+  .ifp figure.tikz img {
     display: block;
     margin: 0 auto;
     max-width: 100%;
     height: auto;
-  }
-  .ifp figure.tikz:has(> script[type="text/tikz"])::before {
-    content: "Rendering diagram\2026";
-    display: block;
-    text-align: center;
-    padding: 48px 0;
-    font-size: 14px;
-    color: #5f6670;
   }
   .ifp figcaption {
     font-size: 0.9rem;
@@ -235,8 +223,6 @@ tikzjax: true
     }
   }
 </style>
-
-<link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -252,27 +238,6 @@ tikzjax: true
       throwOnError: false,
     });
   });
-  // TikZJax sizes each diagram in points at 1:1. Scale it up to match body text and let it shrink on narrow screens.
-  (function () {
-    var SCALE = 1.32;
-    function fit(svg) {
-      if (svg.dataset.fitted) return;
-      var w = parseFloat(svg.getAttribute("width"));
-      if (!w) return;
-      svg.dataset.fitted = "1";
-      svg.style.position = "static";
-      svg.style.width = w * (96 / 72) * SCALE + "px";
-      svg.removeAttribute("height");
-      for (var el = svg.parentNode; el && el.tagName !== "FIGURE"; el = el.parentNode) {
-        el.style.width = "auto";
-        el.style.height = "auto";
-        el.style.display = "block";
-      }
-    }
-    new MutationObserver(function () {
-      document.querySelectorAll(".ifp figure.tikz svg").forEach(fit);
-    }).observe(document.documentElement, { childList: true, subtree: true });
-  })();
 </script>
 
 <div class="ifp tex2jax_ignore">
@@ -312,70 +277,12 @@ tikzjax: true
   <p>Before any equations, here is the picture we're building toward.</p>
 
   <figure class="tikz" id="fig-system">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      % requests
-      \foreach \i/\y in {1/3.9,2/3.2,3/2.5,4/1.8,5/1.1} {
-        \node[box, fill=white, minimum width=1.3cm, minimum height=0.46cm, inner sep=1pt, font=\sffamily\scriptsize] (u\i) at (0.65,\y) {request};
-      }
-      \node[lbl] at (0.65,0.45) {users};
-      % batcher
-      \node[box, fill=comp!10, draw=comp!80!black, minimum width=1.85cm, minimum height=1.6cm] (bat) at (3.0,2.5) {\small batcher\\[3pt]\scriptsize groups $B$\\[-1pt]\scriptsize sequences};
-      \foreach \i in {1,...,5} \draw[->, draw=mute, line width=0.5pt] (u\i.east) -- (bat.west);
-      % rack
-      \draw[rounded corners=6pt, line width=0.8pt, fill=faint!40] (4.75,0.5) rectangle (11.05,4.75);
-      \node[anchor=north west, font=\sffamily\small\bfseries] at (4.9,4.68) {scale-up domain (one rack)};
-      \draw[draw=ink, fill=white, rounded corners=2pt, line width=0.6pt] (5.05,2.43) rectangle (10.75,2.87);
-      \node[font=\sffamily\scriptsize] at (7.9,2.65) {NVLink switches: any GPU to any GPU};
-      \foreach \x in {5.48,6.42,7.36,8.30,9.24,10.18} {
-        \foreach \y/\s in {3.55/1,1.75/-1} {
-          \draw[ink!75, line width=1.1pt] (\x,\y-\s*0.35) -- (\x,2.65+\s*0.22);
-          \draw[draw=ink, fill=white, rounded corners=1.5pt, line width=0.6pt] (\x-0.38,\y-0.35) rectangle (\x+0.38,\y+0.35);
-          \node[font=\sffamily\tiny] at (\x,\y+0.14) {GPU};
-          \fill[wt] (\x-0.29,\y-0.24) rectangle (\x-0.17,\y-0.08);
-          \fill[kv] (\x-0.17,\y-0.24) rectangle (\x+0.29,\y-0.08);
-        }
-      }
-      \fill[wt] (5.1,0.72) rectangle (5.3,0.9); \node[anchor=west, font=\sffamily\scriptsize] at (5.32,0.81) {weights};
-      \fill[kv] (6.45,0.72) rectangle (6.65,0.9); \node[anchor=west, font=\sffamily\scriptsize] at (6.67,0.81) {KV cache (in each GPU's HBM)};
-      % batch into rack
-      \draw[arr] (bat.east) -- (4.75,2.5);
-      % tokens back out
-      \draw[arr, draw=comp!80!black, line width=0.9pt] (7.9,4.75) -- (7.9,5.3) -- (0.65,5.3) -- (u1.north);
-      \node[font=\sffamily\scriptsize, text=comp!60!black, fill=white, inner sep=2pt] at (4.3,5.3) {one new token for every sequence, every step (about 25 ms)};
-      % next rack
-      \draw[rounded corners=6pt, line width=0.8pt, fill=faint!40] (12.25,1.45) rectangle (13.85,3.85);
-      \node[lbl] at (13.05,2.65) {next\\rack};
-      \draw[net, dashed, line width=1.1pt] (11.05,2.65) -- (12.25,2.65);
-      \node[font=\sffamily\scriptsize, text=net, align=center] at (11.65,3.15) {network};
-      \node[font=\sffamily\scriptsize, text=net, align=center] at (11.65,2.15) {$\sim$10$\times$\\slower};
-      % storage tiers
-      \node[box, fill=white, minimum width=2.3cm, minimum height=0.6cm, font=\sffamily\scriptsize] (dram) at (6.6,-0.55) {host DRAM};
-      \node[box, fill=white, minimum width=2.3cm, minimum height=0.6cm, font=\sffamily\scriptsize] (ssd) at (9.2,-0.55) {flash (SSD)};
-      \draw[->, draw=mute, line width=0.6pt] (6.6,0.5) -- (dram.north);
-      \draw[->, draw=mute, line width=0.6pt] (9.2,0.5) -- (ssd.north);
-      \node[note, anchor=west] at (10.45,-0.55) {idle KV cache\\is parked here};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/what-a-token-costs/fig-system.svg' | relative_url }}"
+      alt="The system this series models. A batcher groups ready sequences into one forward pass per step. The model&#x27;s weights and every sequence&#x27;s KV cache sit in the HBM of the GPUs in one rack. Traffic that leaves the rack is much slower, and idle KV cache can move to cheaper memory."
+      width="692"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 1.</b> The system this series models. A batcher groups ready sequences into one forward pass per step. The model's weights and every
       sequence's KV cache sit in the HBM of the GPUs in one rack. Traffic that leaves the rack is much slower, and idle KV cache can move to cheaper
@@ -439,48 +346,12 @@ tikzjax: true
   <p>Let's look at what one decode step does.</p>
 
   <figure class="tikz" id="fig-decode">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \w [count=\i from 0] in {The,cat,sat,on,the,mat,and} {
-        \node[box, fill=white, minimum width=0.78cm, minimum height=0.56cm, inner sep=1pt, font=\sffamily\scriptsize] (t\i) at (\i*0.98,0) {\w};
-        \node[box, fill=kv!16, draw=kv!75!black, minimum width=0.78cm, minimum height=0.86cm, inner sep=1pt, font=\sffamily\scriptsize, text=kv!50!black] (k\i) at (\i*0.98,1.3) {K\\V};
-        \draw[kv!75!black, line width=0.5pt] (t\i.north) -- (k\i.south);
-      }
-      \node[box, fill=hot!10, draw=hot, minimum width=0.78cm, minimum height=0.56cm, inner sep=1pt, font=\sffamily\scriptsize] (new) at (8.4,0) {then};
-      \node[box, fill=wt!14, draw=wt!85!black, minimum width=1.7cm, minimum height=2.5cm, font=\sffamily\scriptsize] (W) at (8.4,2.05) {multiply by\\every active\\weight, in\\every layer};
-      \draw[arr] (new.north) -- (W.south);
-      \draw[draw=comp, line width=0.7pt] (W.west |- 0,2.32) -- (0,2.32);
-      \foreach \i in {0,...,6} {
-        \draw[->, draw=comp, line width=0.6pt] (\i*0.98,2.32) -- (k\i.north);
-      }
-      \node[font=\sffamily\scriptsize, text=comp, align=center] at (3.3,2.62) {attention reads the stored keys and values of every earlier token};
-      \node[box, fill=white, minimum width=0.78cm, minimum height=0.56cm, inner sep=1pt, font=\sffamily\scriptsize] (out) at (8.4,4.05) {it};
-      \draw[arr] (W.north) -- (out.south);
-      \node[note, anchor=west] at (8.95,4.05) {next token};
-      \node[note] at (2.94,-0.62) {context: tokens already in the sequence};
-      \node[note] at (8.4,-0.62) {newest token};
-      \node[note, anchor=east, text=kv!60!black] at (-0.5,1.3) {KV cache};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/what-a-token-costs/fig-decode.svg' | relative_url }}"
+      alt="One decode step for one sequence. The newest token is multiplied by the model&#x27;s weights, layer by layer. In each attention layer it reads the keys and values (the KV cache) that were stored for every earlier token. Its own keys and values are then added to the cache for the next step."
+      width="621"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 2.</b> One decode step for one sequence. The newest token is multiplied by the model's weights, layer by layer. In each attention
       layer it reads the keys and values (the KV cache) that were stored for every earlier token. Its own keys and values are then added to the cache
@@ -545,45 +416,12 @@ tikzjax: true
   <p>Here is how each piece scales with batch size.</p>
 
   <figure class="tikz" id="fig-latency">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \fill[faint!45] (0,0) rectangle (5.333,5.9);
-      \draw[ink, line width=4.5pt, opacity=0.16] (0,1.6) -- (5.333,2.933) -- (10,5.5);
-      \draw[axis] (0,0) -- (10.5,0);
-      \draw[axis] (0,0) -- (0,6.2);
-      \node[lbl, anchor=north east] at (10.5,-0.08) {batch size $B$};
-      \node[lbl, anchor=south west] at (0.08,6.2) {time per step};
-      \draw[wt, curve, dashed] (0,1.6) -- (10,1.6) node[right, lbl, text=wt!85!black] {weights};
-      \draw[kv, curve] (0,1.6) -- (10,4.1) node[right, lbl, text=kv!80!black] {weights + KV};
-      \draw[comp, curve] (0,0) -- (10,5.5) node[right, lbl, text=comp] {compute};
-      \draw[guide] (5.333,0) -- (5.333,5.9);
-      \node[lbl, anchor=north] at (5.333,-0.06) {$B^{*}$};
-      \node[note] at (2.67,5.55) {memory-bound};
-      \node[note] at (7.67,5.55) {compute-bound};
-      \node[lbl, anchor=west] at (0.9,3.8) {latency floor: read every weight once};
-      \draw[->, draw=ink, line width=0.5pt] (0.85,3.8) to[out=180, in=90] (0.3,1.78);
-      \node[lbl, anchor=west, fill=white, inner sep=2pt] at (5.55,1.05) {step time = the upper envelope (grey)};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/what-a-token-costs/fig-latency.svg' | relative_url }}"
+      alt="Time per decode step as the batch grows. Compute (blue) grows from zero. Memory time has a fixed part for the weights (orange) plus a KV part that grows with the batch (green). The step takes as long as the larger of the two. Below B* the step is memory-bound, and no batch size gets it under the time to read the weights."
+      width="604"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 3.</b> Time per decode step as the batch grows. Compute (blue) grows from zero. Memory time has a fixed part for the weights (orange)
       plus a KV part that grows with the batch (green). The step takes as long as the larger of the two. Below \(B^{*}\) the step is memory-bound, and
@@ -620,50 +458,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-cost">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \begin{scope}
-      \clip (0,0) rectangle (10,6.4);
-      \draw[ink, line width=4.5pt, opacity=0.16, domain=0.66:3.636, samples=60, smooth, variable=\x] plot (\x,{4/\x+0.9});
-      \draw[ink, line width=4.5pt, opacity=0.16] (3.636,2.0) -- (10,2.0);
-      \draw[wt, curve, dashed, domain=0.62:10, samples=80, smooth, variable=\x] plot (\x,{4/\x});
-      \draw[kv, curve, domain=0.66:10, samples=80, smooth, variable=\x] plot (\x,{4/\x+0.9});
-      \draw[comp, curve] (0,2.0) -- (10,2.0);
-      \end{scope}
-      \draw[axis] (0,0) -- (10.5,0);
-      \draw[axis] (0,0) -- (0,6.7);
-      \node[lbl, anchor=north east] at (10.5,-0.08) {batch size $B$};
-      \node[lbl, anchor=south west] at (0.08,6.7) {cost per token};
-      \node[right, lbl, text=comp] at (10,2.0) {compute};
-      \node[right, lbl, text=kv!80!black] at (10,1.3) {weights + KV};
-      \node[right, lbl, text=wt!85!black] at (10,0.4) {weights};
-      \draw[guide] (3.636,0) -- (3.636,2.0);
-      \node[lbl, anchor=north] at (3.636,-0.06) {$B^{*}$};
-      \node[lbl, anchor=west] at (2.9,5.2) {fast mode: smaller batches,\\shorter steps, pricier tokens};
-      \draw[->, draw=ink, line width=0.5pt] (2.85,5.2) to[out=180, in=30] (1.42,3.95);
-      \node[lbl, anchor=west] at (6.0,3.75) {slow mode: bigger batches,\\but the floor doesn't move};
-      \draw[->, draw=ink, line width=0.5pt] (7.6,3.25) -- (7.6,2.15);
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/what-a-token-costs/fig-cost.svg' | relative_url }}"
+      alt="Cost per token, which is each curve from Figure 3 divided by B. Only the weight reads are shared across the batch, so only their cost per token falls (as 1/B). Compute and KV reads per token stay flat. The cost settles onto a floor set by whatever each token can&#x27;t share. This plot shows short contexts, where that&#x27;s compute. With long contexts, the KV reads can be the higher floor."
+      width="603"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 4.</b> Cost per token, which is each curve from Figure 3 divided by \(B\). Only the weight reads are shared across the batch, so only
       their cost per token falls (as \(1/B\)). Compute and KV reads per token stay flat. The cost settles onto a floor set by whatever each token
@@ -834,43 +634,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-breakdown">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=0.46cm,y=1cm]
-      \foreach \t in {0,5,10,15,20,25} {
-        \draw[faint, line width=0.5pt] (\t,-0.45) -- (\t,1.95);
-        \node[note, anchor=north] at (\t,-0.5) {\t};
-      }
-      \node[lbl, anchor=north] at (12.5,-0.95) {milliseconds per step};
-      \fill[wt] (0,1.05) rectangle (1.31,1.75);
-      \fill[kv] (1.31,1.05) rectangle (23.2,1.75);
-      \node[font=\sffamily\scriptsize, text=white, anchor=west] at (2.0,1.4) {KV cache reads: 21.9 ms};
-      \fill[comp] (0,0.05) rectangle (1.25,0.75);
-      \node[lbl, anchor=east] at (-0.4,1.4) {HBM reads};
-      \node[lbl, anchor=east] at (-0.4,0.4) {multiply-adds};
-      \draw[wt!85!black, line width=0.5pt] (0.65,1.75) -- (0.65,2.3);
-      \node[font=\sffamily\scriptsize, text=wt!85!black, anchor=west] at (0.85,2.3) {weight reads: 1.3 ms};
-      \node[font=\sffamily\scriptsize, text=comp, anchor=west] at (1.6,0.4) {compute: 1.25 ms};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/what-a-token-costs/fig-breakdown.svg' | relative_url }}"
+      alt="Where the time goes in one decode step for DeepSeek-V3 on 64 GB200 GPUs, with 8-bit weights, a batch of 5,400, and HBM filled with KV cache. Reading weights and doing the multiply-adds take about the same time, as they should at B*. Reading the KV cache takes about 17 times longer than either."
+      width="692"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 5.</b> Where the time goes in one decode step for DeepSeek-V3 on 64 GB200 GPUs, with 8-bit weights, a batch of 5,400, and HBM filled
       with KV cache. Reading weights and doing the multiply-adds take about the same time, as they should at \(B^{*}\). Reading the KV cache takes
@@ -891,48 +660,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-train">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \k in {0,...,4} {
-        \draw[draw=ink, fill=faint!40, rounded corners=2pt, line width=0.6pt] (\k*2.5+0.06,0) rectangle (\k*2.5+2.44,0.85);
-        \pgfmathtruncatemacro{\n}{\k+1}
-        \node[note, anchor=north] at (\k*2.5+1.25,-0.05) {step \n};
-        \foreach \j in {0,...,6} { \fill[comp!70] (\k*2.5+0.42+\j*0.27,0.43) circle (0.085); }
-      }
-      \fill[hot] (5.42+6*0.27,0.43) circle (0.105);
-      \foreach \k in {0,...,5} { \draw[ink, line width=0.8pt] (\k*2.5,-0.05) -- (\k*2.5,1.0); }
-      \draw[axis] (-0.3,-0.55) -- (12.9,-0.55);
-      \node[lbl, anchor=west] at (12.95,-0.55) {time};
-      \draw[->, draw=hot, line width=0.9pt] (2.75,2.45) -- (2.75,1.08);
-      \node[font=\sffamily\scriptsize, text=hot, anchor=south] at (2.75,2.45) {request arrives just after step 2 leaves};
-      \draw[hot, line width=0.6pt] (2.75,1.3) -- (2.75,1.45) -- (4.95,1.45) -- (4.95,1.3);
-      \node[font=\sffamily\scriptsize, text=hot] at (3.85,1.75) {waits up to one step};
-      \draw[hot, line width=0.6pt] (5.05,1.3) -- (5.05,1.45) -- (7.45,1.45) -- (7.45,1.3);
-      \node[font=\sffamily\scriptsize, text=hot] at (6.25,1.75) {rides step 3};
-      \draw[->, draw=kv!80!black, line width=0.9pt] (7.5,1.0) -- (7.5,2.2);
-      \node[font=\sffamily\scriptsize, text=kv!60!black, anchor=south] at (7.5,2.2) {token comes out};
-      \node[note, anchor=north] at (1.25,-0.6) {about 25 ms};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/what-a-token-costs/fig-train.svg' | relative_url }}"
+      alt="Steps leave on a fixed timetable. Each dot is a sequence riding that step. A request that just misses a departure waits at most one step, then rides the next one, so the worst-case wait for its first token is about two steps."
+      width="701"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 6.</b> Steps leave on a fixed timetable. Each dot is a sequence riding that step. A request that just misses a departure waits at most
       one step, then rides the next one, so the worst-case wait for its first token is about two steps.
@@ -973,7 +706,7 @@ tikzjax: true
   </ul>
   {% endraw %}
 
-  <p class="footnote-diagrams">Diagrams are drawn in TikZ and rendered in your browser with TikZJax, so they can take a few seconds to appear.</p>
+  <p class="footnote-diagrams">Diagrams are drawn in TikZ.</p>
   <nav class="pager">
     <a class="next" href="/blog/2026/fitting-a-model-onto-a-rack/"><span>Next</span>Part 2: Fitting a Model onto a Rack</a>
   </nav>

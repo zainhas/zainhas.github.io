@@ -5,7 +5,6 @@ date: 2026-11-15 12:00:00
 description: "Part 4 of a four-part series on LLM inference economics: balancing pre-training, RL, and inference compute, and why frontier models are heavily over-trained."
 tags: llms inference
 categories: technical-blog
-tikzjax: true
 ---
 
 <style>
@@ -94,22 +93,11 @@ tikzjax: true
     margin: 0 auto;
     max-width: 100%;
   }
-  .ifp figure.tikz svg text {
-    text-rendering: geometricPrecision;
-  }
-  .ifp figure.tikz svg {
+  .ifp figure.tikz img {
     display: block;
     margin: 0 auto;
     max-width: 100%;
     height: auto;
-  }
-  .ifp figure.tikz:has(> script[type="text/tikz"])::before {
-    content: "Rendering diagram\2026";
-    display: block;
-    text-align: center;
-    padding: 48px 0;
-    font-size: 14px;
-    color: #5f6670;
   }
   .ifp figcaption {
     font-size: 0.9rem;
@@ -235,8 +223,6 @@ tikzjax: true
     }
   }
 </style>
-
-<link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -252,27 +238,6 @@ tikzjax: true
       throwOnError: false,
     });
   });
-  // TikZJax sizes each diagram in points at 1:1. Scale it up to match body text and let it shrink on narrow screens.
-  (function () {
-    var SCALE = 1.32;
-    function fit(svg) {
-      if (svg.dataset.fitted) return;
-      var w = parseFloat(svg.getAttribute("width"));
-      if (!w) return;
-      svg.dataset.fitted = "1";
-      svg.style.position = "static";
-      svg.style.width = w * (96 / 72) * SCALE + "px";
-      svg.removeAttribute("height");
-      for (var el = svg.parentNode; el && el.tagName !== "FIGURE"; el = el.parentNode) {
-        el.style.width = "auto";
-        el.style.height = "auto";
-        el.style.display = "block";
-      }
-    }
-    new MutationObserver(function () {
-      document.querySelectorAll(".ifp figure.tikz svg").forEach(fit);
-    }).observe(document.documentElement, { childList: true, subtree: true });
-  })();
 </script>
 
 <div class="ifp tex2jax_ignore">
@@ -331,35 +296,12 @@ tikzjax: true
   <p>Over its life, a model consumes compute in three phases.</p>
 
   <figure class="tikz" id="fig-life">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \node[box, fill=comp!12, draw=comp!80!black, minimum width=3.5cm, minimum height=1.9cm, font=\sffamily\footnotesize] (pre) at (0,0) {\small\bfseries pre-training\\[4pt]$D_{\mathrm{pre}}$ tokens\\[1pt]$6N$ FLOPs per token\\[1pt]compute-bound};
-      \node[box, fill=net!12, draw=net, minimum width=3.5cm, minimum height=1.9cm, font=\sffamily\footnotesize] (rl) at (4.4,0) {\small\bfseries RL\\[4pt]$D_{\mathrm{RL}}$ tokens\\[1pt]$2N$ to $6N$ per token\\[1pt]mostly decode};
-      \node[box, fill=kv!14, draw=kv!80!black, minimum width=3.5cm, minimum height=1.9cm, font=\sffamily\footnotesize] (inf) at (8.8,0) {\small\bfseries serving\\[4pt]$D_{\mathrm{inf}}$ tokens\\[1pt]$2N$ FLOPs per token\\[1pt]prefill and decode};
-      \draw[arr] (pre.east) -- (rl.west);
-      \draw[arr] (rl.east) -- (inf.west);
-      \node[note, anchor=north, align=center] at (4.4,-1.25) {the same $N_{\mathrm{active}}$ in every phase: a smaller model is cheaper in all three,\\but needs more pre-training tokens to reach the same quality};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-life.svg' | relative_url }}"
+      alt="The three phases of a model&#x27;s life. Each phase costs FLOPs in proportion to the active parameter count times its tokens. Pre-training runs at high hardware efficiency. RL generation and serving are decode-heavy and run at lower efficiency."
+      width="615"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 1.</b> The three phases of a model's life. Each phase costs FLOPs in proportion to the active parameter count times its tokens.
       Pre-training runs at high hardware efficiency. RL generation and serving are decode-heavy and run at lower efficiency.
@@ -392,52 +334,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-ucurve">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1.9cm,y=0.85cm]
-      \begin{scope}
-      \clip (0.35,0) rectangle (5.2,6.0);
-      \draw[ink, curve, domain=0.45:4.8, samples=80, smooth, variable=\x] plot (\x,{2.2/\x+0.22*\x+0.9*\x});
-      \draw[comp, curve, domain=0.45:4.8, samples=80, smooth, variable=\x] plot (\x,{2.2/\x+0.22*\x});
-      \draw[kv, curve, domain=0.45:4.8, samples=10, variable=\x] plot (\x,{0.9*\x});
-      \end{scope}
-      \draw[axis] (0.35,0) -- (5.4,0);
-      \draw[axis] (0.35,0) -- (0.35,6.2);
-      \node[lbl, anchor=north] at (2.9,-0.45) {model size, for a fixed quality target};
-      \node[lbl, anchor=south west] at (0.4,6.2) {lifetime cost};
-      \node[note, anchor=north] at (0.75,-0.05) {smaller};
-      \node[note, anchor=north] at (5.0,-0.05) {larger};
-      \draw[guide] (3.162,0) -- (3.162,1.391);
-      \fill[comp] (3.162,1.391) circle (0.07);
-      \node[lbl, anchor=north west, align=left] at (3.25,1.2) {Chinchilla point:\\cheapest to train};
-      \draw[guide] (1.401,0) -- (1.401,3.140);
-      \fill[ink] (1.401,3.140) circle (0.07);
-      \node[lbl, anchor=south, align=center] at (1.401,3.3) {cheapest overall};
-      \draw[->, draw=hot, line width=0.9pt] (3.0,0.45) -- (1.56,0.45);
-      \node[font=\sffamily\scriptsize, text=hot, anchor=south] at (2.28,0.5) {over-train};
-      \node[right, lbl] at (4.8,5.83) {total};
-      \node[right, lbl, text=comp] at (4.8,1.51) {training};
-      \node[right, lbl, text=kv!80!black] at (4.8,4.32) {serving};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-ucurve.svg' | relative_url }}"
+      alt="Lifetime cost against model size for a fixed quality target. Training cost (blue) is lowest at the Chinchilla point and rises for smaller models, which need many more tokens. Serving cost (green) rises with model size. The total (black) bottoms out at a smaller model trained on more data, near where the two costs are similar."
+      width="515"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 2.</b> Lifetime cost against model size for a fixed quality target. Training cost (blue) is lowest at the Chinchilla point and rises
       for smaller models, which need many more tokens. Serving cost (green) rises with model size. The total (black) bottoms out at a smaller model
@@ -485,46 +387,12 @@ tikzjax: true
   \frac{6}{m}\,\frac{u_{\text{RL}}}{u_{\text{pre}}}\,D_{\text{pre}} \approx \tfrac{2}{3}\,D_{\text{pre}} \ \ (\text{for } m = 3) \]
 
   <figure class="tikz" id="fig-budget">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \ox/\title in {0/lifetime cost,6.2/tokens} {
-        \node[lbl, anchor=south] at (\ox+2.25,3.55) {\bfseries \title};
-        \draw[axis] (\ox,0) -- (\ox+4.6,0);
-        \node[lbl, anchor=north] at (\ox+0.85,-0.05) {pre-training};
-        \node[lbl, anchor=north] at (\ox+2.25,-0.05) {RL};
-        \node[lbl, anchor=north] at (\ox+3.65,-0.05) {serving};
-      }
-      \fill[comp!75] (0.4,0) rectangle (1.3,2.7);
-      \fill[net!75] (1.8,0) rectangle (2.7,2.7);
-      \fill[kv!75] (3.2,0) rectangle (4.1,2.7);
-      \node[note] at (2.25,3.15) {equal by construction};
-      \fill[comp!75] (6.6,0) rectangle (7.5,2.7);
-      \fill[net!75] (8.0,0) rectangle (8.9,1.8);
-      \fill[kv!75] (9.4,0) rectangle (10.3,2.7);
-      \node[font=\sffamily\scriptsize, anchor=south] at (7.05,2.72) {$D$};
-      \node[font=\sffamily\scriptsize, anchor=south] at (8.45,1.82) {about $\frac{2}{3}D$};
-      \node[font=\sffamily\scriptsize, anchor=south] at (9.85,2.72) {about $D$};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-budget.svg' | relative_url }}"
+      alt="Equal lifetime cost in each phase (left) turns into token counts (right). Pre-training does three times the FLOPs per token of serving, but at about three times the utilization, so the token counts come out similar. RL does somewhat fewer tokens, because its rollouts are decode-heavy and some of them are also trained on."
+      width="540"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 3.</b> Equal lifetime cost in each phase (left) turns into token counts (right). Pre-training does three times the FLOPs per token of
       serving, but at about three times the utilization, so the token counts come out similar. RL does somewhat fewer tokens, because its rollouts are
@@ -567,49 +435,12 @@ tikzjax: true
   <p>That sounds extreme until you look at open models, where the numbers are published:</p>
 
   <figure class="tikz" id="fig-overtrain">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \x/\l in {0/0.1T,2.6/1T,5.2/10T,7.8/100T,10.4/1000T} {
-        \draw[faint, line width=0.5pt] (\x,-0.35) -- (\x,4.35);
-        \node[note, anchor=north] at (\x,-0.4) {\l};
-      }
-      \node[lbl, anchor=north] at (5.2,-0.85) {training tokens (log scale)};
-      \foreach \y/\name/\a/\b/\r in {4.0/DeepSeek-V3/2.26/5.64/20$\times$, 3.2/Kimi K2/2.10/5.69/24$\times$, 2.4/Qwen3-235B-A22B/1.67/6.65/82$\times$, 1.6/Llama 3 8B/0.53/5.66/94$\times$} {
-        \draw[ink!70, line width=1.2pt] (\a,\y) -- (\b,\y);
-        \draw[ink, fill=white, line width=0.9pt] (\a,\y) circle (0.11);
-        \fill[ink] (\b,\y) circle (0.11);
-        \node[lbl, anchor=east] at (-0.25,\y) {\name};
-        \node[font=\sffamily\scriptsize, anchor=west] at (10.75,\y) {\r};
-      }
-      \draw[hot, line width=1.2pt] (3.38,0.6) -- (8.58,0.6);
-      \draw[hot, line width=4pt, opacity=0.35] (8.58,0.6) -- (10.15,0.6);
-      \draw[hot, fill=white, line width=0.9pt] (3.38,0.6) circle (0.11);
-      \fill[hot] (9.37,0.6) circle (0.11);
-      \node[lbl, anchor=east, text=hot] at (-0.25,0.6) {frontier estimate};
-      \node[font=\sffamily\scriptsize, anchor=west, text=hot] at (10.75,0.6) {100 to 400$\times$};
-      \draw[ink, fill=white, line width=0.9pt] (0.25,4.9) circle (0.09); \node[font=\sffamily\scriptsize, anchor=west] at (0.42,4.9) {Chinchilla-optimal: 20 tokens per active parameter};
-      \fill[ink] (6.6,4.9) circle (0.09); \node[font=\sffamily\scriptsize, anchor=west] at (6.77,4.9) {actual training tokens};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-overtrain.svg' | relative_url }}"
+      alt="Chinchilla-optimal token counts (open circles, 20 tokens per active parameter) against actual pre-training tokens (filled dots). DeepSeek-V3: 37B active, 14.8T tokens. Kimi K2: 32B active, 15.5T. Qwen3-235B-A22B: 22B active, about 36T. Llama 3 8B: dense, about 15T. The frontier estimate assumes about 100B active parameters and a few hundred trillion tokens (shaded range: 200T to 800T)."
+      width="762"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 4.</b> Chinchilla-optimal token counts (open circles, 20 tokens per active parameter) against actual pre-training tokens (filled
       dots). DeepSeek-V3: 37B active, 14.8T tokens. Kimi K2: 32B active, 15.5T. Qwen3-235B-A22B: 22B active, about 36T. Llama 3 8B: dense, about 15T.
@@ -723,7 +554,7 @@ tikzjax: true
   </p>
   {% endraw %}
 
-  <p class="footnote-diagrams">Diagrams are drawn in TikZ and rendered in your browser with TikZJax, so they can take a few seconds to appear.</p>
+  <p class="footnote-diagrams">Diagrams are drawn in TikZ.</p>
   <nav class="pager">
     <a class="prev" href="/blog/2026/reading-the-api-price-sheet/"><span>Previous</span>Part 3: Reading the API Price Sheet</a>
   </nav>

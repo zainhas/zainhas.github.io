@@ -5,7 +5,6 @@ date: 2026-11-15 10:00:00
 description: "Part 2 of a four-part series on LLM inference economics: expert parallelism, scale-up versus scale-out networks, pipeline parallelism, and memory per GPU."
 tags: llms inference
 categories: technical-blog
-tikzjax: true
 ---
 
 <style>
@@ -94,22 +93,11 @@ tikzjax: true
     margin: 0 auto;
     max-width: 100%;
   }
-  .ifp figure.tikz svg text {
-    text-rendering: geometricPrecision;
-  }
-  .ifp figure.tikz svg {
+  .ifp figure.tikz img {
     display: block;
     margin: 0 auto;
     max-width: 100%;
     height: auto;
-  }
-  .ifp figure.tikz:has(> script[type="text/tikz"])::before {
-    content: "Rendering diagram\2026";
-    display: block;
-    text-align: center;
-    padding: 48px 0;
-    font-size: 14px;
-    color: #5f6670;
   }
   .ifp figcaption {
     font-size: 0.9rem;
@@ -235,8 +223,6 @@ tikzjax: true
     }
   }
 </style>
-
-<link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -252,27 +238,6 @@ tikzjax: true
       throwOnError: false,
     });
   });
-  // TikZJax sizes each diagram in points at 1:1. Scale it up to match body text and let it shrink on narrow screens.
-  (function () {
-    var SCALE = 1.32;
-    function fit(svg) {
-      if (svg.dataset.fitted) return;
-      var w = parseFloat(svg.getAttribute("width"));
-      if (!w) return;
-      svg.dataset.fitted = "1";
-      svg.style.position = "static";
-      svg.style.width = w * (96 / 72) * SCALE + "px";
-      svg.removeAttribute("height");
-      for (var el = svg.parentNode; el && el.tagName !== "FIGURE"; el = el.parentNode) {
-        el.style.width = "auto";
-        el.style.height = "auto";
-        el.style.display = "block";
-      }
-    }
-    new MutationObserver(function () {
-      document.querySelectorAll(".ifp figure.tikz svg").forEach(fit);
-    }).observe(document.documentElement, { childList: true, subtree: true });
-  })();
 </script>
 
 <div class="ifp tex2jax_ignore">
@@ -333,55 +298,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-moe">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \node[box, fill=white, minimum width=2.4cm, minimum height=0.55cm, font=\sffamily\footnotesize] (x) at (0,0) {token};
-      \node[box, fill=comp!10, draw=comp!80!black, minimum width=2.4cm, minimum height=0.55cm, font=\sffamily\footnotesize] (r) at (0,1.15) {router};
-      \draw[arr] (x.north) -- (r.south);
-      \foreach \i/\on in {1/0,2/1,3/0,4/0,5/1,6/0,7/0,8/1} {
-        \pgfmathsetmacro{\xx}{(\i-4.5)*1.15}
-        \ifnum\on=1
-          \node[box, fill=wt!18, draw=wt!85!black, minimum width=0.9cm, minimum height=0.75cm, font=\sffamily\scriptsize] (e\i) at (\xx,2.85) {E\i};
-          \draw[->, draw=ink, line width=0.7pt] (r.north) -- (e\i.south);
-          \draw[draw=ink, line width=0.7pt] (e\i.north) -- (0,4.25);
-        \else
-          \node[box, fill=white, draw=mute, text=mute, minimum width=0.9cm, minimum height=0.75cm, font=\sffamily\scriptsize] (e\i) at (\xx,2.85) {E\i};
-        \fi
-      }
-      \node[circle, draw=ink, fill=white, line width=0.7pt, inner sep=1.2pt, font=\sffamily\footnotesize] (sum) at (0,4.4) {$+$};
-      \node[note, anchor=west] at (0.35,4.4) {weighted sum of the chosen experts};
-      \node[circle, draw=ink, fill=white, line width=0.7pt, inner sep=1.2pt, font=\sffamily\footnotesize] (res) at (0,5.4) {$+$};
-      \draw[arr] (sum.north) -- (res.south);
-      \draw[arr, draw=mute] (x.west) -- (-5.4,0) -- (-5.4,5.4) -- (res.west);
-      \node[note, anchor=south, rotate=90] at (-5.45,2.7) {residual connection};
-      \draw[arr] (res.north) -- (0,6.1);
-      \node[lbl, anchor=south] at (0,6.1) {to the next layer};
-      \node[note, anchor=west] at (1.35,1.15) {picks a few experts per token};
-      % expert internals
-      \draw[guide] (e8.east) -- (5.15,2.85);
-      \node[box, fill=wt!8, draw=wt!85!black, minimum width=2.5cm, font=\sffamily\scriptsize, anchor=west] (in) at (5.15,2.85) {up projection\\[1pt]nonlinearity\\[1pt]down projection};
-      \node[note, anchor=north] at (in.south) {each expert is a small MLP};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-moe.svg' | relative_url }}"
+      alt="One MoE layer. The router sends each token to a few experts (here 3 of 8, shaded). Each expert is a small two-layer MLP. Their outputs are combined with the router&#x27;s weights and added back to the token through the residual connection. DeepSeek-V3 picks 8 of 256 experts per token, plus one shared expert that every token uses."
+      width="705"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 1.</b> One MoE layer. The router sends each token to a few experts (here 3 of 8, shaded). Each expert is a small two-layer MLP. Their
       outputs are combined with the router's weights and added back to the token through the residual connection. DeepSeek-V3 picks 8 of 256 experts
@@ -404,47 +326,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-ep">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \g in {1,...,4} {
-        \pgfmathsetmacro{\yy}{4-\g}
-        \node[box, fill=comp!10, draw=comp!80!black, minimum width=1.9cm, minimum height=0.62cm, font=\sffamily\scriptsize] (a\g) at (0,\yy*1.05) {GPU \g: tokens};
-        \pgfmathtruncatemacro{\ea}{2*\g-1}
-        \pgfmathtruncatemacro{\eb}{2*\g}
-        \node[box, fill=wt!16, draw=wt!85!black, minimum width=2.1cm, minimum height=0.62cm, font=\sffamily\scriptsize] (b\g) at (4.6,\yy*1.05) {GPU \g: E\ea, E\eb};
-        \node[box, fill=comp!10, draw=comp!80!black, minimum width=1.9cm, minimum height=0.62cm, font=\sffamily\scriptsize] (c\g) at (9.2,\yy*1.05) {GPU \g: tokens};
-      }
-      \foreach \s/\t in {1/2,1/4,2/1,2/3,3/2,3/4,4/1,4/3,1/1,3/3} {
-        \draw[->, draw=ink!80, line width=0.55pt] (a\s.east) -- (b\t.west);
-        \draw[->, draw=ink!80, line width=0.55pt] (b\t.east) -- (c\s.west);
-      }
-      \node[lbl, anchor=base] at (0,3.72) {route};
-      \node[lbl, anchor=base] at (4.6,3.72) {run experts};
-      \node[lbl, anchor=base] at (9.2,3.72) {combine};
-      \node[note, anchor=north] at (2.3,-0.45) {dispatch: all-to-all};
-      \node[note, anchor=north] at (6.9,-0.45) {return: all-to-all};
-      \node[note, anchor=north] at (4.6,-0.95) {the same four GPUs, drawn three times};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-ep.svg' | relative_url }}"
+      alt="Expert parallelism on four GPUs with two experts each. Every GPU holds a slice of the batch and runs the router on it. Each token is sent to the GPUs that hold its chosen experts, and the results come back to where the token started. Which GPU talks to which depends on the router, so any GPU can end up sending to any other."
+      width="555"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 2.</b> Expert parallelism on four GPUs with two experts each. Every GPU holds a slice of the batch and runs the router on it. Each
       token is sent to the GPUs that hold its chosen experts, and the results come back to where the token started. Which GPU talks to which depends
@@ -475,52 +362,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-racks">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \r/\ox in {A/0,B/6.9} {
-        \draw[rounded corners=5pt, line width=0.8pt, fill=faint!40] (\ox,-0.15) rectangle (\ox+5.4,3.35);
-        \node[font=\sffamily\scriptsize\bfseries, anchor=north west] at (\ox+0.12,3.3) {rack \r};
-        \draw[draw=ink, fill=white, rounded corners=2pt, line width=0.6pt] (\ox+0.3,1.4) rectangle (\ox+5.1,1.8);
-        \node[font=\sffamily\tiny] at (\ox+4.3,1.6) {NVLink switches};
-        \foreach \k in {1,...,4} {
-          \pgfmathsetmacro{\gx}{\ox+0.35+\k*1.0}
-          \draw[ink!75, line width=1pt] (\gx,2.15) -- (\gx,1.8);
-          \draw[ink!75, line width=1pt] (\gx,1.05) -- (\gx,1.4);
-          \node[box, fill=white, minimum width=0.72cm, minimum height=0.55cm, inner sep=1pt, font=\sffamily\tiny] (\r t\k) at (\gx,2.45) {GPU};
-          \node[box, fill=white, minimum width=0.72cm, minimum height=0.55cm, inner sep=1pt, font=\sffamily\tiny] (\r b\k) at (\gx,0.75) {GPU};
-        }
-      }
-      \node[box, fill=net!10, draw=net, minimum width=4.2cm, minimum height=0.55cm, font=\sffamily\scriptsize] (dc) at (6.15,4.55) {data center network switch};
-      \draw[net, dashed, line width=0.9pt] (2.7,3.35) -- (2.7,4.55) -- (dc.west);
-      \draw[net, dashed, line width=0.9pt] (9.6,3.35) -- (9.6,4.55) -- (dc.east);
-      % fast path inside rack A
-      \draw[->, draw=kv!75!black, line width=1.6pt, rounded corners=3pt] (At1.south) -- (1.35,1.72) -- (3.35,1.72) -- (Ab3.north);
-      % slow path from rack A to rack B
-      \draw[->, draw=hot, line width=1.6pt, rounded corners=4pt] (At4.north) -- (4.35,3.9) -- (6.15,3.9) -- (6.15,4.27);
-      \draw[->, draw=hot, line width=1.6pt, rounded corners=4pt] (6.4,4.27) -- (6.4,3.9) -- (9.25,3.9) -- (9.25,2.72);
-      \node[font=\sffamily\scriptsize, text=kv!50!black, align=left, anchor=north west] at (0.0,-0.3) {inside a rack: 900 GB/s per GPU\\each way, any GPU to any GPU};
-      \node[font=\sffamily\scriptsize, text=hot, align=left, anchor=north west] at (6.9,-0.3) {between racks: 50 to 100 GB/s\\per GPU, through shared switches};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-racks.svg' | relative_url }}"
+      alt="Two racks. Inside a rack, any GPU reaches any other through the NVLink switches (green path). To reach a GPU in another rack, traffic goes out through a network card and the data center network (red path), with roughly a tenth of the bandwidth."
+      width="615"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 3.</b> Two racks. Inside a rack, any GPU reaches any other through the NVLink switches (green path). To reach a GPU in another rack,
       traffic goes out through a network card and the data center network (red path), with roughly a tenth of the bandwidth.
@@ -554,42 +401,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-pipe">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \r/\ox/\lab in {1/0/{layers 1 to 20},2/4.55/{layers 21 to 40},3/9.1/{layers 41 to 60}} {
-        \draw[rounded corners=6pt, line width=0.8pt, fill=faint!40] (\ox,0) rectangle (\ox+3.3,3.0);
-        \node[font=\sffamily\scriptsize\bfseries, anchor=north] at (\ox+1.65,2.95) {rack \r};
-        \foreach \a in {0,1,...,7} { \coordinate (p\a) at ($(\ox+1.65,1.35)+(\a*45:0.95)$); }
-        \foreach \a in {0,1,...,7} { \foreach \b in {0,1,...,7} { \ifnum\a<\b \draw[ink!45, line width=0.4pt] (p\a) -- (p\b); \fi } }
-        \foreach \a in {0,1,...,7} { \fill[white] (p\a) circle (0.13); \draw[ink, line width=0.5pt] (p\a) circle (0.13); }
-        \node[note, anchor=north] at (\ox+1.65,-0.08) {\lab};
-      }
-      \draw[->, draw=net, line width=1.4pt] (3.3,1.35) -- (4.55,1.35);
-      \draw[->, draw=net, line width=1.4pt] (7.85,1.35) -- (9.1,1.35);
-      \node[font=\sffamily\scriptsize, text=net, align=center, anchor=south] at (3.925,1.45) {one vector\\per token};
-      \node[font=\sffamily\scriptsize, text=net, align=center, anchor=south] at (8.475,1.45) {one vector\\per token};
-      \node[font=\sffamily\scriptsize, text=ink!80, align=center] at (6.2,-0.85) {inside each rack: every layer sends each token to $k$ experts and back, $2k$ vectors per token per layer};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe.svg' | relative_url }}"
+      alt="Pipeline parallelism. Each rack holds a contiguous group of layers. Inside a rack, every MoE layer does an all-to-all exchange (grey mesh). Between racks, each token crosses the slow network once per stage, carrying just its residual-stream vector."
+      width="620"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 4.</b> Pipeline parallelism. Each rack holds a contiguous group of layers. Inside a rack, every MoE layer does an all-to-all exchange
       (grey mesh). Between racks, each token crosses the slow network once per stage, carrying just its residual-stream vector.
@@ -625,50 +442,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-pipe-inf">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \colorlet{m0}{comp!22}\colorlet{m1}{wt!26}\colorlet{m2}{kv!24}\colorlet{m3}{net!20}
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \s in {0,...,3} {
-        \pgfmathtruncatemacro{\sl}{\s+1}
-        \node[lbl, anchor=east] at (-0.15,-\s*0.72) {rack \sl};
-        \foreach \t in {0,...,9} {
-          \ifnum\t<\s
-            \draw[draw=faint, fill=faint!30, line width=0.5pt] (\t*1.12,-\s*0.72-0.3) rectangle (\t*1.12+1.04,-\s*0.72+0.3);
-          \else
-            \pgfmathtruncatemacro{\m}{mod(\t-\s,4)}
-            \pgfmathtruncatemacro{\tok}{div(\t-\s,4)+1}
-            \draw[draw=ink, fill=m\m, line width=0.5pt, rounded corners=1.5pt] (\t*1.12,-\s*0.72-0.3) rectangle (\t*1.12+1.04,-\s*0.72+0.3);
-            \node[font=\sffamily\scriptsize] at (\t*1.12+0.52,-\s*0.72) {mb \m};
-          \fi
-        }
-      }
-      \draw[axis] (0,-2.75) -- (11.5,-2.75);
-      \node[lbl, anchor=west] at (11.55,-2.75) {time};
-      \foreach \t in {0,...,3} { \draw[draw=hot, line width=1.3pt, rounded corners=1.5pt] (\t*1.12,-\t*0.72-0.3) rectangle (\t*1.12+1.04,-\t*0.72+0.3); }
-      \draw[draw=hot, line width=1.3pt, rounded corners=1.5pt] (4*1.12,-0.3) rectangle (4*1.12+1.04,0.3);
-      \draw[->, draw=hot, line width=0.8pt] (5.6,0.95) -- (5.06,0.36);
-      \node[font=\sffamily\scriptsize, text=hot, anchor=west, align=left] at (5.65,0.95) {mb 0 gets its token after rack 4,\\then starts the next one at rack 1};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe-inf.svg' | relative_url }}"
+      alt="Inference with four pipeline stages. Each box is one micro-batch (mb) running through one rack&#x27;s layers. After the first few steps every rack is busy, and each micro-batch loops back to the first rack as soon as it gets a token. Four micro-batches keep four racks full."
+      width="674"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 5.</b> Inference with four pipeline stages. Each box is one micro-batch (mb) running through one rack's layers. After the first few
       steps every rack is busy, and each micro-batch loops back to the first rack as soon as it gets a token. Four micro-batches keep four racks full.
@@ -696,49 +475,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-pipe-train">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \s in {0,...,3} {
-        \pgfmathtruncatemacro{\sl}{\s+1}
-        \node[lbl, anchor=east] at (-0.15,-\s*0.72) {rack \sl};
-        \foreach \t in {0,...,13} {
-          \draw[draw=faint, line width=0.4pt, pattern=north east lines, pattern color=mute!60] (\t*0.8,-\s*0.72-0.3) rectangle (\t*0.8+0.74,-\s*0.72+0.3);
-        }
-        \foreach \m in {0,...,3} {
-          \pgfmathtruncatemacro{\tf}{\s+\m}
-          \draw[draw=ink, fill=comp!25, line width=0.5pt, rounded corners=1.5pt] (\tf*0.8,-\s*0.72-0.3) rectangle (\tf*0.8+0.74,-\s*0.72+0.3);
-          \node[font=\sffamily\scriptsize] at (\tf*0.8+0.37,-\s*0.72) {F\m};
-          \pgfmathtruncatemacro{\tb}{7+(3-\s)+\m}
-          \draw[draw=ink, fill=wt!30, line width=0.5pt, rounded corners=1.5pt] (\tb*0.8,-\s*0.72-0.3) rectangle (\tb*0.8+0.74,-\s*0.72+0.3);
-          \node[font=\sffamily\scriptsize] at (\tb*0.8+0.37,-\s*0.72) {B\m};
-        }
-      }
-      \draw[axis] (0,-2.75) -- (11.6,-2.75);
-      \node[lbl, anchor=west] at (11.65,-2.75) {time};
-      \node[font=\sffamily\scriptsize, fill=white, inner sep=2pt] at (5.17,0.0) {bubble (idle)};
-      \node[note, anchor=south] at (2.8,0.38) {forward passes};
-      \node[note, anchor=south] at (9.2,0.38) {backward passes};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe-train.svg' | relative_url }}"
+      alt="Training with four stages and four micro-batches. Forward passes (F) flow down the racks and backward passes (B) flow back up. The hatched cells are the pipeline bubble, where a rack has nothing to do. Here 24 of the 56 rack-slots are idle, which is 43%."
+      width="679"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 6.</b> Training with four stages and four micro-batches. Forward passes (F) flow down the racks and backward passes (B) flow back up.
       The hatched cells are the pipeline bubble, where a rack has nothing to do. Here 24 of the 56 rack-slots are idle, which is 43%.
@@ -778,42 +520,12 @@ tikzjax: true
   <p>The \(P\) cancels in the KV term.</p>
 
   <figure class="tikz" id="fig-mem-p">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=1cm,y=1cm]
-      \foreach \p/\i in {1/0,2/1,3/2,4/3,6/4,8/5} {
-        \pgfmathsetmacro{\w}{8/\p*0.42}
-        \pgfmathsetmacro{\k}{3*0.42}
-        \fill[wt!80] (\i*1.5,0) rectangle (\i*1.5+0.9,\w);
-        \fill[kv!80] (\i*1.5,\w) rectangle (\i*1.5+0.9,\w+\k);
-        \node[lbl, anchor=north] at (\i*1.5+0.45,-0.05) {\p};
-      }
-      \draw[axis] (-0.3,0) -- (9.3,0);
-      \draw[axis] (-0.3,0) -- (-0.3,5.1);
-      \node[lbl, anchor=north] at (4.2,-0.5) {pipeline stages $P$};
-      \node[lbl, anchor=south west] at (-0.22,5.1) {memory per GPU};
-      \fill[wt!80] (6.0,4.55) rectangle (6.25,4.8); \node[lbl, anchor=west] at (6.3,4.675) {weights: divided by $E$ and $P$};
-      \fill[kv!80] (6.0,4.05) rectangle (6.25,4.3); \node[lbl, anchor=west] at (6.3,4.175) {KV cache: divided by $E$ only};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-mem-p.svg' | relative_url }}"
+      alt="Memory per GPU as the number of pipeline stages grows. The weights are divided across more racks and shrink as 1/P. The KV cache per GPU stays flat, because every extra stage needs its own micro-batch of sequences in flight."
+      width="526"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 7.</b> Memory per GPU as the number of pipeline stages grows. The weights are divided across more racks and shrink as \(1/P\). The KV
       cache per GPU stays flat, because every extra stage needs its own micro-batch of sequences in flight.
@@ -857,40 +569,12 @@ tikzjax: true
   </p>
 
   <figure class="tikz" id="fig-floor">
-    <script type="text/tikz">
-      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
-      \definecolor{ink}{HTML}{24272C}
-      \definecolor{mute}{HTML}{868C96}
-      \definecolor{faint}{HTML}{D9DCE1}
-      \definecolor{comp}{HTML}{2F6DB5}
-      \definecolor{wt}{HTML}{D07A1F}
-      \definecolor{kv}{HTML}{1E8F6E}
-      \definecolor{net}{HTML}{7B4FAE}
-      \definecolor{hot}{HTML}{C0392B}
-      \tikzset{
-        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
-        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
-        axis/.style={->, draw=ink, line width=0.7pt},
-        arr/.style={->, draw=ink, line width=0.7pt},
-        curve/.style={line width=1.5pt},
-        guide/.style={dashed, draw=mute, line width=0.5pt},
-        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
-        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
-      }
-      \begin{tikzpicture}[x=0.4cm,y=1cm]
-      \foreach \t in {0,5,10,15,20,25,30} {
-        \draw[faint, line width=0.5pt] (\t,-0.4) -- (\t,1.95);
-        \node[note, anchor=north] at (\t,-0.45) {\t};
-      }
-      \node[lbl, anchor=north] at (15,-0.9) {milliseconds to read 1 TB of weights once};
-      \fill[wt] (0,1.05) rectangle (26.0,1.7);
-      \fill[wt] (0,0.05) rectangle (1.95,0.7);
-      \node[lbl, anchor=east] at (-0.6,1.375) {8 H200s (one server)};
-      \node[lbl, anchor=east] at (-0.6,0.375) {64 GB200s (one rack)};
-      \node[font=\sffamily\scriptsize, text=white, anchor=east] at (25.6,1.375) {26 ms: at most 38 tokens/s per sequence};
-      \node[font=\sffamily\scriptsize, anchor=west] at (2.5,0.375) {2 ms: up to 500 tokens/s per sequence};
-      \end{tikzpicture}
-    </script>
+    <img
+      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-floor.svg' | relative_url }}"
+      alt="The latency floor for a one-trillion-parameter model with 8-bit weights. Eight H200s (4.8 TB/s each) take 26 ms to read the weights once. Sixty-four GB200s (8 TB/s each) take 2 ms. Splitting the model across more 8-GPU servers with pipelining fits more memory but doesn&#x27;t lower this floor."
+      width="773"
+      loading="lazy"
+    />
     <figcaption>
       <b>Figure 8.</b> The latency floor for a one-trillion-parameter model with 8-bit weights. Eight H200s (4.8 TB/s each) take 26 ms to read the
       weights once. Sixty-four GB200s (8 TB/s each) take 2 ms. Splitting the model across more 8-GPU servers with pipelining fits more memory but
@@ -917,7 +601,7 @@ tikzjax: true
   </p>
   {% endraw %}
 
-  <p class="footnote-diagrams">Diagrams are drawn in TikZ and rendered in your browser with TikZJax, so they can take a few seconds to appear.</p>
+  <p class="footnote-diagrams">Diagrams are drawn in TikZ.</p>
   <nav class="pager">
     <a class="prev" href="/blog/2026/what-a-token-costs/"><span>Previous</span>Part 1: What a Token Costs</a
     ><a class="next" href="/blog/2026/reading-the-api-price-sheet/"><span>Next</span>Part 3: Reading the API Price Sheet</a>
