@@ -1,0 +1,305 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> Reading the API Price Sheet | Zain Hasan </title> <meta name="author" content="Zain Hasan"> <meta name="description" content="Part 3 of a four-part series on LLM inference economics: context length costs, prefill versus decode, KV cache bytes per token, and prompt caching tiers."> <meta name="keywords" content="ai, machine learning, vector databases, rag, retrieval augmented generation, together ai, developer relations"> <meta property="og:site_name" content="Zain Hasan"> <meta property="og:type" content="article"> <meta property="og:title" content="Zain Hasan | Reading the API Price Sheet"> <meta property="og:url" content="https://zainhas.github.io/blog/2026/reading-the-api-price-sheet/"> <meta property="og:description" content="Part 3 of a four-part series on LLM inference economics: context length costs, prefill versus decode, KV cache bytes per token, and prompt caching tiers."> <meta property="og:image" content="prof_pic.jpg"> <meta property="og:locale" content="en"> <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="Reading the API Price Sheet"> <meta name="twitter:description" content="Part 3 of a four-part series on LLM inference economics: context length costs, prefill versus decode, KV cache bytes per token, and prompt caching tiers."> <meta name="twitter:image" content="prof_pic.jpg"> <script type="application/ld+json">
+    {
+        "author":
+        {
+            "@type": "Person",
+            "name": "Zain Hasan"
+        },
+        "url": "https://zainhas.github.io/blog/2026/reading-the-api-price-sheet/",
+        "@type": "BlogPosting",
+        "description": "Part 3 of a four-part series on LLM inference economics: context length costs, prefill versus decode, KV cache bytes per token, and prompt caching tiers.",
+        "headline": "Reading the API Price Sheet",
+        
+        "sameAs": ["https://github.com/zainhas","https://www.linkedin.com/in/zainhas","https://twitter.com/zainhas"],
+        
+        "name": "Zain Hasan",
+        "@context": "https://schema.org"
+    }
+  </script> <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04"> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5"> <link defer rel="stylesheet" href="/assets/css/scholar-icons.css?62b2ac103a88034e6882a5be5f3e2772"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="/assets/img/prof_pic_ascii.png?62ef0b728b1ae20f506dbe44f0246277"> <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e"> <link rel="canonical" href="https://zainhas.github.io/blog/2026/reading-the-api-price-sheet/"> <script src="/assets/js/theme.js?279190624f5bd585feec529dd5391ed1"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> <link defer rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css"> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand" href="/">Zain Hasan</a> <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse text-right" id="navbarNav"> <ul class="navbar-nav ml-auto flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">About </a> </li> <li class="nav-item "> <a class="nav-link" href="/writing/">Writing </a> </li> <li class="nav-item "> <a class="nav-link" href="/talks/">Talks </a> </li> <li class="nav-item "> <a class="nav-link" href="/teaching/">Teaching </a> </li> <li class="toggle-container"> <button id="light-toggle" title="Change theme"> <i class="ti ti-sun-moon" id="light-toggle-system"></i> <i class="ti ti-moon-filled" id="light-toggle-dark"></i> <i class="ti ti-sun-filled" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title">Reading the API Price Sheet</h1> <p class="post-meta"> November 15, 2026 · llms · inference </p> </header> <article class="post-content"> <div id="markdown-content"> <style>.ifp{--ifp-text:var(--global-text-color);--ifp-muted:var(--global-text-color-light);--ifp-rule:var(--global-divider-color);--ifp-accent:var(--global-theme-color);--ifp-box:var(--global-code-bg-color);--ifp-card:var(--global-card-bg-color);--ifp-plate:#fff;--ifp-plate-edge:#e3e1db}html[data-theme="dark"] .ifp{--ifp-plate:#f4f6f8;--ifp-plate-edge:#3a4350}.ifp .series-nav{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.86rem;border-top:1px solid var(--ifp-rule);border-bottom:1px solid var(--ifp-rule);padding:10px 0;margin:0 0 1.4rem}.ifp .series-nav b{margin-right:auto}.ifp .series-nav a{color:var(--ifp-muted);text-decoration:none}.ifp .series-nav a:hover{color:var(--ifp-accent)}.ifp .series-nav a[aria-current="page"]{color:var(--ifp-text);font-weight:600}.ifp .kicker{font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ifp-accent);margin:0 0 .5rem}.ifp .dek{font-size:1.25rem;line-height:1.45;color:var(--ifp-muted);margin:0 0 .6rem}.ifp .meta{font-size:.86rem;color:var(--ifp-muted);margin:0 0 1.5rem}.ifp h2{margin:3rem 0 .8rem}.ifp h3{margin:2rem 0 .6rem}.ifp .katex{font-size:1.02em}.ifp .katex-display{margin:20px 0 24px;overflow-x:auto;overflow-y:hidden;padding:4px 0}.ifp figure{margin:32px 0 36px}.ifp figure.tikz{background:var(--ifp-plate);border:1px solid var(--ifp-plate-edge);border-radius:10px;padding:22px 16px 14px}.ifp figure.tikz>div{margin:0 auto;max-width:100%}.ifp figure.tikz svg text{text-rendering:geometricPrecision}.ifp figure.tikz svg{display:block;margin:0 auto;max-width:100%;height:auto}.ifp figure.tikz:has(>script[type="text/tikz"])::before{content:"Rendering diagram\2026";display:block;text-align:center;padding:48px 0;font-size:14px;color:#5f6670}.ifp figcaption{font-size:.9rem;line-height:1.55;color:#5f6670;margin:14px auto 0;max-width:620px}.ifp figcaption b{color:#24272c;font-weight:600}.ifp .box{background:var(--ifp-box);border-radius:10px;padding:20px 22px 6px;margin:28px 0 32px}.ifp .box h4{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ifp-muted);margin:0 0 12px;font-weight:600}.ifp .box p{margin:0 0 14px}.ifp .box ol,.ifp .box ul{margin:0 0 14px}.ifp .numbers{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:0 0 16px}.ifp .numbers div{background:var(--ifp-card);border:1px solid var(--ifp-rule);border-radius:8px;padding:12px 14px;font-size:.86rem;line-height:1.45;color:var(--ifp-muted)}.ifp .numbers strong{display:block;font-size:1.5rem;line-height:1.2;color:var(--ifp-text);font-weight:600;margin-bottom:4px}.ifp table{border-collapse:collapse;width:100%;font-size:.92rem;line-height:1.45;margin:8px 0 24px}.ifp th,.ifp td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--ifp-rule);vertical-align:top}.ifp th{font-weight:600;color:var(--ifp-muted);font-size:.8rem;letter-spacing:.03em;text-transform:uppercase}.ifp td.num,.ifp th.num{text-align:right;white-space:nowrap}.ifp .table-wrap{overflow-x:auto}.ifp .pager{display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--ifp-rule);margin-top:48px;padding-top:20px}.ifp .pager a{text-decoration:none;display:block;max-width:48%}.ifp .pager span{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ifp-muted)}.ifp .pager .next{text-align:right;margin-left:auto}.ifp .footnote-diagrams{font-size:.82rem;color:var(--ifp-muted);margin-top:24px}@media(max-width:640px){.ifp .dek{font-size:1.1rem}.ifp figure.tikz{padding:14px 8px 10px;margin-left:-8px;margin-right:-8px}}</style> <link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css"> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"> <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script> <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script> <script>
+  // Render math with KaTeX. Only \( \) and \[ \] count as math, so dollar prices stay plain text.
+  // The article carries tex2jax_ignore so the site-wide MathJax leaves it alone.
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.querySelector(".ifp"), {
+      delimiters: [
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false },
+      ],
+      throwOnError: false,
+    });
+  });
+  // TikZJax sizes each diagram in points at 1:1. Scale it up to match body text and let it shrink on narrow screens.
+  (function () {
+    var SCALE = 1.32;
+    function fit(svg) {
+      if (svg.dataset.fitted) return;
+      var w = parseFloat(svg.getAttribute("width"));
+      if (!w) return;
+      svg.dataset.fitted = "1";
+      svg.style.position = "static";
+      svg.style.width = w * (96 / 72) * SCALE + "px";
+      svg.removeAttribute("height");
+      for (var el = svg.parentNode; el && el.tagName !== "FIGURE"; el = el.parentNode) {
+        el.style.width = "auto";
+        el.style.height = "auto";
+        el.style.display = "block";
+      }
+    }
+    new MutationObserver(function () {
+      document.querySelectorAll(".ifp figure.tikz svg").forEach(fit);
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  })();
+</script> <div class="ifp tex2jax_ignore"> <nav class="series-nav"> <b>Inference from First Principles</b> <a href="/blog/2026/what-a-token-costs/">1. What a token costs</a> <a href="/blog/2026/fitting-a-model-onto-a-rack/">2. Fitting a model onto a rack</a> <a href="/blog/2026/reading-the-api-price-sheet/" aria-current="page">3. Reading the price sheet</a> <a href="/blog/2026/training-a-model-you-plan-to-serve/">4. Training a model you plan to serve</a> </nav> <p class="kicker">Part 3 of 4</p> <p class="dek"> Long-context surcharges, output tokens that cost more than input tokens, and cheap cache hits all fall out of the same cost model. Here is what each one tells us. </p> <p class="meta">Inference from First Principles · 6 diagrams</p> <div class="box"> <h4>From Parts 1 and 2</h4> <p> A decode step takes at least \(\max(t_{\text{compute}}, t_{\text{memory}})\), with \(t_{\text{compute}} \approx 2BN_{\text{active}}/\text{FLOPS}\) and \(t_{\text{memory}} \approx (\beta N_{\text{total}} + B\,n_{\text{ctx}}\,s_{\text{kv}})/\text{BW}\). A GPU does about \(R \approx 300\) multiply-adds in the time it takes to read one weight. At scale, decode spends most of its time reading KV cache. A model is served from one scale-up domain, usually a rack. </p> </div> <p> AI labs don't publish their architectures, but they do publish prices. Prices can't stay far above cost for long, because a competitor would undercut them, and they can't stay below cost for long either. So the shape of a price sheet carries information about the hardware and the model behind it. This part reads the common features of LLM price sheets with the cost model from Parts 1 and 2. </p> <ul> <li> A long-context surcharge may mark the point where reading the KV cache starts to cost more than the compute. Treating one price step as that crossover suggests a KV cache of only a few kilobytes per token, which takes aggressive compression. </li> <li> Output tokens cost 4 to 8 times as much as input tokens because prefill shares its memory traffic across many tokens per pass, while decode reads everything for a single token per sequence. A 5x price ratio suggests decode spends about five times as long on memory as on compute. </li> <li> Cache hits cost a tenth of a normal input token or less because storing the KV cache and copying it back is much cheaper than recomputing it. The relative prices of short and long cache durations point at flash storage, not HBM. </li> <li> Very long contexts stay expensive because the memory traffic of decode grows linearly with context, and memory bandwidth improves only a little each hardware generation. </li> </ul> <h2>The cost of a longer context</h2> <p> Take one sequence in a big batch and ask what each new output token costs as its context grows. The compute per token barely changes: the model multiplies by the same active weights whether the context is short or long. The memory traffic per token grows, because each step reads the KV cache for every earlier token. With the batch large enough to amortize the weights, the memory time per token is about \(n_{\text{ctx}}\,s_{\text{kv}}/\text{BW}\), a straight line in the context length. </p> <figure class="tikz" id="fig-ctx"> <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1cm,y=1cm]
+      \draw[ink, line width=4.5pt, opacity=0.16] (0,2.0) -- (4,2.0) -- (8,4.0);
+      \draw[hot, line width=1.1pt, dashed] (0,2.6) -- (4,2.6) -- (4,4.45) -- (8,4.45);
+      \draw[comp, curve] (0,2.0) -- (8,2.0);
+      \draw[kv, curve] (0,0) -- (8,4.0);
+      \draw[axis] (0,0) -- (8.6,0);
+      \draw[axis] (0,0) -- (0,5.2);
+      \foreach \x/\l in {2/100K,4/200K,6/300K,8/400K} { \draw[ink, line width=0.6pt] (\x,0) -- (\x,-0.08); \node[note, anchor=north] at (\x,-0.1) {\l}; }
+      \node[lbl, anchor=north] at (4.3,-0.55) {context length (tokens)};
+      \node[lbl, anchor=south west] at (0.08,5.2) {cost per output token};
+      \draw[guide] (4,0) -- (4,2.0);
+      \node[right, lbl, text=comp] at (8,2.0) {compute};
+      \node[right, lbl, text=kv!80!black] at (8,3.9) {KV reads};
+      \node[right, lbl, text=hot] at (8,4.5) {price};
+      \node[font=\sffamily\scriptsize, text=hot, anchor=south] at (2,2.65) {lower price tier};
+      \node[font=\sffamily\scriptsize, text=hot, anchor=south] at (6,4.5) {higher price tier};
+      \node[lbl, anchor=west, align=left] at (4.15,0.85) {crossover: KV reads\\start to dominate};
+      \end{tikzpicture}
+    </script> <figcaption> <b>Figure 1.</b> Cost per output token for one sequence as its context grows, with the weights amortized by a large batch. Compute stays flat. KV reads grow linearly and overtake compute at some context length. A two-tier price (dashed red) is a coarse way to stay above a cost line that bends upward. </figcaption> </figure> <p> Below the crossover, a longer context is almost free, because the chip is waiting on compute anyway. Above it, every extra token of context adds cost. A provider that charges one flat rate either overcharges short prompts or loses money on long ones, so some use two tiers. When Google launched Gemini 3 Pro, it charged $2 per million input tokens and $12 per million output tokens for prompts up to 200K tokens, and $4 and $18 for longer prompts, with the whole request billed at the higher rate. </p> <p> Not every provider does this. Anthropic prices the full million-token window of its recent large models at one flat rate, while its small Haiku 5.5 model charges five times as much once a prompt passes 100,000 tokens. Both fit the cost model. A small model does little compute per token, so KV reads overtake compute at a shorter context. A flat price on a large model suggests a very small KV cache per token, or long requests being averaged in with short ones. </p> <h2>Reading the KV cache size off a price step</h2> <p> Suppose the 200K-token step sits near the crossover. That's an assumption, but it's the natural place to put a price step. At the crossover, the KV read time per token equals the compute time per token: </p> \[ \frac{n_{\text{ctx}}\,s_{\text{kv}}}{\text{BW}} = \frac{2\,N_{\text{active}}}{\text{FLOPS}} \] <p>Solve for the KV cache size per token, and use the hardware ratio \(R = (\text{FLOPS}/2)/(\text{BW}/\beta) \approx 300\) from Part 1:</p> \[ s_{\text{kv}} = \frac{\beta\,N_{\text{active}}}{R\;n_{\text{ctx}}} \] <p> We don't know the active parameter count of a frontier model. A hundred billion is a reasonable guess. With 8-bit weights (\(\beta = 1\)) and \(n_{\text{ctx}} = 200{,}000\), </p> \[ s_{\text{kv}} \approx \frac{10^{11}}{300 \times 2 \times 10^{5}} \approx 1{,}700\ \text{bytes per token} \] <p> If the model had 50 billion active parameters, it would be about 830 bytes. At 200 billion, about 3.3 KB. Either way it comes out at a few kilobytes at most. Is that plausible? The KV cache per token is </p> \[ s_{\text{kv}} = (\text{layers with their own KV}) \times 2 \times (\text{KV heads}) \times d_{\text{head}} \times (\text{bytes per value}) \] <p>where the 2 counts keys and values. Plug in a few real and hypothetical designs:</p> <figure class="tikz" id="fig-kvsize"> <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1cm,y=1cm]
+      \foreach \d/\l in {0/1 KB,1/10 KB,2/100 KB,3/1 MB} {
+        \draw[faint, line width=0.5pt] (\d*3,-0.35) -- (\d*3,3.75);
+        \node[note, anchor=north] at (\d*3,-0.4) {\l};
+      }
+      \node[lbl, anchor=north] at (4.5,-0.85) {KV cache per token (log scale)};
+      \fill[kv!80] (0,3.0) rectangle (7.55,3.55);
+      \fill[kv!80] (0,2.1) rectangle (5.54,2.65);
+      \fill[kv!80] (0,1.2) rectangle (0.93,1.75);
+      \fill[hot!75] (0,0.3) rectangle (0.67,0.85);
+      \node[lbl, anchor=east] at (-0.25,3.275) {Llama 3 70B};
+      \node[lbl, anchor=east] at (-0.25,2.375) {DeepSeek-V3};
+      \node[lbl, anchor=east] at (-0.25,1.475) {one shared KV layer};
+      \node[lbl, anchor=east] at (-0.25,0.575) {implied by the price step};
+      \node[font=\sffamily\scriptsize, anchor=west, fill=white, inner sep=1.5pt] at (7.7,3.275) {328 KB};
+      \node[font=\sffamily\scriptsize, anchor=west, fill=white, inner sep=1.5pt] at (5.69,2.375) {70 KB};
+      \node[font=\sffamily\scriptsize, anchor=west, fill=white, inner sep=1.5pt] at (1.08,1.475) {2 KB};
+      \node[font=\sffamily\scriptsize, anchor=west, fill=white, inner sep=1.5pt] at (0.82,0.575) {about 1.7 KB};
+      \end{tikzpicture}
+    </script> <figcaption> <b>Figure 2.</b> KV cache bytes per token of context, on a log scale. Llama 3 70B: 80 layers, 8 KV heads of width 128, 16-bit. DeepSeek-V3: 61 layers, one compressed 576-wide vector per layer (multi-head latent attention), 16-bit. A design with one KV cache shared by all layers, 8 KV heads of width 128, 8-bit: 2 KB. The price step implies something in that last range. </figcaption> </figure> <p> A plain grouped-query attention model like Llama 3 70B stores about 328 KB per token. DeepSeek-V3 compresses keys and values into one small latent vector per layer and gets down to about 70 KB. Reaching a couple of kilobytes takes tricks that stack: </p> <ul> <li> Share one KV cache across many layers. Character.AI described sharing KV caches between neighboring layers, combined with a single KV head and mostly local attention, and reported that together these cut KV cache size by more than 20 times. </li> <li> Make most layers local. Gemma 3 uses five sliding-window layers, which only look back 1,024 tokens, for every global layer. Only the global layers' caches grow with context. </li> <li>Compress keys and values, as DeepSeek's latent attention does.</li> <li> Read only part of the cache. Sparse attention schemes such as DeepSeek's DSA pick a subset of past tokens for each new token. The full cache is still stored, but each step reads less of it, which lowers the bandwidth cost per token even though the capacity cost stays. </li> </ul> <p> A combination of these can plausibly reach a few kilobytes per token of long-range context. The estimate has big error bars. The price step may not sit exactly at the crossover, prices include margins, and the active parameter count is a guess. But it points at kilobytes, not hundreds of kilobytes, and the gap matters. At 70 KB per token, a million-token context is 70 GB per sequence, more than a third of a GB200 GPU's HBM. At 2 KB it's 2 GB. </p> <h2>Why output tokens cost more than input tokens</h2> <p> Most price sheets charge 4 to 8 times as much for output tokens as for input tokens. Anthropic charges 5 times as much, Gemini 3 Pro 6 times, and GPT-5 8 times. The reason is the difference between prefill and decode. </p> <figure class="tikz" id="fig-chat"> <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1.15cm,y=1.15cm]
+      \newcommand{\prefill}[3]{
+        \draw[draw=comp!80!black, fill=comp!14, rounded corners=2pt, line width=0.6pt] (#1,0) rectangle (#2,0.7);
+        \foreach \t in {1,...,10} { \pgfmathsetmacro{\xx}{#1+\t*0.32} \ifdim\xx pt<#2 pt \draw[comp!45, line width=0.3pt] (\xx,0.12) -- (\xx,0.58); \fi }
+        \node[font=\sffamily\footnotesize, anchor=south, align=center] at ({(#1+#2)/2},0.78) {#3};
+        \node[font=\sffamily\footnotesize, text=comp!80!black, anchor=north] at ({(#1+#2)/2},-0.08) {prefill};
+      }
+      \newcommand{\decode}[3]{
+        \foreach \k in {0,...,#2} { \draw[draw=kv!80!black, fill=kv!16, rounded corners=1pt, line width=0.5pt] (#1+\k*0.36,0.12) rectangle (#1+\k*0.36+0.28,0.58); }
+        \node[font=\sffamily\footnotesize, anchor=south, align=center] at ({#1+(#2+1)*0.18},0.78) {#3};
+        \node[font=\sffamily\footnotesize, text=kv!70!black, anchor=north] at ({#1+(#2+1)*0.18},-0.08) {decode};
+      }
+      \prefill{0}{3.4}{system prompt\\and user message}
+      \decode{3.6}{5}{model's reply}
+      \prefill{5.85}{8.1}{tool output}
+      \decode{8.3}{5}{model's reply}
+      \draw[axis] (0,-0.62) -- (10.6,-0.62);
+      \node[note, anchor=north] at (5.3,-0.68) {position in the conversation};
+      \node[font=\sffamily\scriptsize, text=mute, anchor=north] at (5.3,-1.08) {prefill: every new token in one pass \quad decode: one token per pass};
+      \end{tikzpicture}
+    </script> <figcaption> <b>Figure 3.</b> A conversation alternates between prefill and decode. Text the model didn't write (prompts, files, tool results) is known in advance, so all of it goes through the model in one pass. Text the model writes comes out one token per pass, because each token depends on the one before. </figcaption> </figure> <p> Text the model didn't write, such as the system prompt, the user's message, a file, or a tool result, is known all at once. So the model can push all of those tokens through in a single pass. That's prefill. Text the model writes has to come out one token per pass. That's decode. </p> <p> Now look at the cost of one pass that handles \(n\) new tokens per sequence. The memory traffic is the same as for a decode step: read the weights once, and read each sequence's existing KV cache once. The new tokens' keys and values are computed on the chip as part of the pass. The compute is \(n\) times larger, so the cost per token is </p> \[ \frac{t}{n} \approx \max\!\left(\frac{2\,N_{\text{active}}}{\text{FLOPS}},\ \ \frac{\beta N_{\text{total}}/B + n_{\text{ctx}}\,s_{\text{kv}}}{n \cdot \text{BW}}\right) \] <p>per sequence in the batch. The memory term is divided by \(n\).</p> <figure class="tikz" id="fig-pass"> <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1cm,y=1cm]
+      \begin{scope}
+      \clip (0,0) rectangle (10,5);
+      \draw[ink, line width=4.5pt, opacity=0.16, domain=0:2.3219, samples=40, smooth, variable=\x] plot (\x,{4.5/2^\x});
+      \draw[ink, line width=4.5pt, opacity=0.16] (2.3219,0.9) -- (10,0.9);
+      \draw[kv, curve, domain=0:10, samples=80, smooth, variable=\x] plot (\x,{4.5/2^\x});
+      \draw[comp, curve] (0,0.9) -- (10,0.9);
+      \end{scope}
+      \draw[axis] (0,0) -- (10.5,0);
+      \draw[axis] (0,0) -- (0,5.2);
+      \foreach \x/\l in {0/1,2/4,4/16,6/64,8/256,10/1024} { \draw[ink, line width=0.6pt] (\x,0) -- (\x,-0.08); \node[note, anchor=north] at (\x,-0.1) {\l}; }
+      \node[lbl, anchor=north] at (5,-0.55) {new tokens per sequence in one pass (log scale)};
+      \node[lbl, anchor=south west] at (0.08,5.2) {cost per token};
+      \node[right, lbl, text=comp] at (10,0.9) {compute};
+      \node[lbl, text=kv!80!black, anchor=west] at (1.2,3.6) {memory traffic, shared by the pass};
+      \draw[->, draw=kv!80!black, line width=0.5pt] (1.15,3.6) to[out=180, in=60] (0.62,3.05);
+      \node[lbl, anchor=west, align=left] at (0.25,4.6) {decode: memory-bound};
+      \node[lbl, anchor=south, align=center] at (8,1.05) {prefill: compute-bound};
+      \end{tikzpicture}
+    </script> <figcaption> <b>Figure 4.</b> Cost per token against the number of new tokens processed per sequence in one pass. Decode is the left edge (one token per pass), where memory traffic dominates. Prefill handles hundreds or thousands of tokens per pass, so the memory traffic is split many ways and compute sets the cost. Here decode memory is drawn at five times compute. </figcaption> </figure> <p> Prefill passes cover hundreds or thousands of tokens, so the memory term disappears and prefill runs at the compute floor. Decode is the \(n = 1\) case, where the memory term is as large as it gets. If prices track costs, an output price five times the input price says that in decode, the memory time per token is roughly five times the compute time. Part 1's DeepSeek-V3 example, with HBM full of 30,000-token contexts at 70 KB per token, had KV reads at about 17 times compute. The gap means that either typical serving is less KV-heavy than that example, through shorter contexts or smaller KV caches per token, or output prices don't track decode cost closely. A KV cache of a few kilobytes per token, as the previous section suggested, would close most of it, because many more sequences would fit in HBM and the compute per step would rise to match. </p> <p> Prefill isn't free of its own long-context cost, though. Each prompt token attends to every token before it, and in prefill that attention costs real compute as well as memory traffic. In Llama 3 70B, attention's multiply-adds per token equal the weight multiply-adds at about 53,000 tokens of context (80 layers times 64 query heads of width 128, for both the key and value products, against 70 billion weights). Long prompts get expensive to prefill too, which is another reason input prices step up for very long prompts. </p> <h2>Why cache hits are cheap</h2> <p> Prompt caching lets you reuse the KV cache for a prefix you've sent before, such as a long system prompt or a codebase. Anthropic's prices for its Claude 4.x models, as multiples of the normal input price, are: </p> <div class="table-wrap"> <table> <thead> <tr> <th>Operation</th> <th class="num">Price vs. normal input</th> </tr> </thead> <tbody> <tr> <td>Normal input (no caching)</td> <td class="num">1×</td> </tr> <tr> <td>Write to cache, kept 5 minutes</td> <td class="num">1.25×</td> </tr> <tr> <td>Write to cache, kept 1 hour</td> <td class="num">2×</td> </tr> <tr> <td>Read from cache (a hit)</td> <td class="num">0.1×</td> </tr> </tbody> </table> </div> <p> Its newest models charge even less for a hit: 0.05× for Opus 5.5 and Sonnet 5.5, and 0.025× for the Fable models. The write prices are the same. </p> <p> There are two ways to get a prefix's KV cache onto the GPUs. You can compute it from the token IDs, which means running prefill again. Or you can have kept it somewhere and copy it back. A cache miss means you threw it away and have to recompute it. The gap of 10 times or more between a normal input token and a cache hit is the gap between those two options. </p> <p> Where do you keep it? Each storage tier has two costs for holding data. Holding it takes capacity, for as long as you hold it. Getting it back takes bandwidth, once. Recomputing has no holding cost but a large retrieval cost. HBM has a large holding cost, since HBM is the most expensive memory in the system, but costs nothing to retrieve from, because the data is already where it's needed. Host DRAM and flash are much cheaper to hold data in, but the data has to be copied back into HBM before use. </p> <p> A storage device is used efficiently when its capacity and its bandwidth run out at about the same time. If you're holding data for time \(T\) and then reading it once, that happens when </p> \[ T \approx \frac{\text{capacity}}{\text{bandwidth}} \] <p> which is the device's drain time, the time to read the whole thing once. It's the same balance argument as compute against memory in Part 1, applied to capacity against bandwidth. Database designers know a version of it as the five-minute rule, from Jim Gray and Franco Putzolu's 1987 paper on when to keep data in memory versus on disk. </p> <figure class="tikz" id="fig-tiers"> <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=1cm,y=1cm]
+      \foreach \x/\l in {0/10 ms,1.5/100 ms,3/1 s,4.5/10 s,5.67/1 min,7.17/10 min,8.33/1 hour,10.41/1 day} {
+        \draw[faint, line width=0.5pt] (\x,-0.3) -- (\x,3.3);
+        \node[note, anchor=north] at (\x,-0.35) {\l};
+      }
+      \node[lbl, anchor=north] at (5.2,-0.85) {drain time: capacity divided by bandwidth (log scale)};
+      \draw[draw=hot, dashed, line width=0.9pt] (6.72,-0.3) -- (6.72,3.7);
+      \draw[draw=hot, dashed, line width=0.9pt] (8.33,-0.3) -- (8.33,3.7);
+      \node[font=\sffamily\scriptsize, text=hot, anchor=south east] at (6.72,3.7) {5-minute cache};
+      \node[font=\sffamily\scriptsize, text=hot, anchor=south west] at (8.33,3.7) {1-hour cache};
+      \fill[wt!85, rounded corners=2pt] (0.45,2.75) rectangle (0.90,3.15);
+      \fill[comp!70, rounded corners=2pt] (3.0,1.95) rectangle (4.05,2.35);
+      \fill[kv!80, rounded corners=2pt] (6.57,1.15) rectangle (8.92,1.55);
+      \fill[mute!80, rounded corners=2pt] (9.95,0.35) rectangle (10.55,0.75);
+      \node[lbl, anchor=west, fill=white, inner sep=1.5pt] at (1.05,2.95) {HBM: 20 to 40 ms};
+      \node[lbl, anchor=east, fill=white, inner sep=1.5pt] at (2.85,2.15) {host DRAM: about 1 to 5 s};
+      \node[lbl, anchor=east, fill=white, inner sep=1.5pt] at (6.42,1.35) {NVMe flash: minutes to a couple of hours};
+      \node[lbl, anchor=east, fill=white, inner sep=1.5pt] at (9.8,0.55) {hard disk: about a day};
+      \end{tikzpicture}
+    </script> <figcaption> <b>Figure 5.</b> Drain times of the storage tiers in a GPU server, on a log scale. HBM: 80 to 288 GB at 3 to 8 TB/s. Host DRAM: hundreds of GB to a few TB at hundreds of GB/s. One NVMe drive: 4 to 60 TB at 7 to 14 GB/s. One hard disk: about 24 TB at under 300 MB/s. Both prompt-cache durations fall in the flash range. </figcaption> </figure> <p> Both cache durations land in flash territory. HBM is far too expensive for this. Its drain time is about 25 ms, so holding a prompt there for five minutes costs about 12,000 times as much as reading it once. Host DRAM fits hold times of seconds. Flash fits minutes to a couple of hours, which covers both. Hard disks would suit data held for a day. </p> <p> The prices fit this picture in one more way. A cache write has to run prefill anyway, which costs the normal 1×. So the extra 0.25× for a five-minute write is the price of holding the data for five minutes, and the extra 1× for a one-hour write is the price of holding it for an hour. </p> <figure class="tikz" id="fig-cacheprice"> <script type="text/tikz">
+      \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,patterns}
+      \definecolor{ink}{HTML}{24272C}
+      \definecolor{mute}{HTML}{868C96}
+      \definecolor{faint}{HTML}{D9DCE1}
+      \definecolor{comp}{HTML}{2F6DB5}
+      \definecolor{wt}{HTML}{D07A1F}
+      \definecolor{kv}{HTML}{1E8F6E}
+      \definecolor{net}{HTML}{7B4FAE}
+      \definecolor{hot}{HTML}{C0392B}
+      \tikzset{
+        every picture/.style={line cap=round, line join=round, font=\sffamily, >={Stealth[length=2.2mm,width=1.6mm]}, draw=ink, text=ink},
+        box/.style={draw=ink, rounded corners=2.5pt, line width=0.6pt, align=center, inner sep=4pt},
+        axis/.style={->, draw=ink, line width=0.7pt},
+        arr/.style={->, draw=ink, line width=0.7pt},
+        curve/.style={line width=1.5pt},
+        guide/.style={dashed, draw=mute, line width=0.5pt},
+        lbl/.style={font=\sffamily\footnotesize, text=ink, align=center},
+        note/.style={font=\sffamily\footnotesize, text=mute, align=center},
+      }
+      \begin{tikzpicture}[x=2.4cm,y=1cm]
+      \foreach \v in {0,1,2,3,4} {
+        \draw[faint, line width=0.5pt] (\v,-0.3) -- (\v,4.35);
+        \node[note, anchor=north] at (\v,-0.35) {\v$\times$};
+      }
+      \node[lbl, anchor=north] at (2,-0.85) {price, as a multiple of normal input};
+      \fill[comp!70] (0,3.7) rectangle (1,4.2);
+      \fill[comp!70] (0,2.8) rectangle (1,3.3); \fill[net!60] (1,2.8) rectangle (1.25,3.3);
+      \fill[comp!70] (0,1.9) rectangle (1,2.4); \fill[net!60] (1,1.9) rectangle (2,2.4);
+      \fill[comp!30] (0,1.0) rectangle (1,1.5); \draw[net, dashed, line width=0.8pt, fill=net!12] (1,1.0) rectangle (4,1.5);
+      \fill[kv!80] (0,0.1) rectangle (0.1,0.6);
+      \node[lbl, anchor=east] at (-0.06,3.95) {normal input (prefill)};
+      \node[lbl, anchor=east] at (-0.06,3.05) {5-minute write};
+      \node[lbl, anchor=east] at (-0.06,2.15) {1-hour write};
+      \node[lbl, anchor=east, text=mute] at (-0.06,1.25) {1 hour at the 5-minute rate};
+      \node[lbl, anchor=east] at (-0.06,0.35) {cache read};
+      \node[font=\sffamily\scriptsize, anchor=west] at (1.3,3.05) {+0.25 to hold 5 min};
+      \node[font=\sffamily\scriptsize, anchor=west] at (2.05,2.15) {+1 to hold 1 hour};
+      \node[font=\sffamily\scriptsize, text=net, anchor=center] at (2.5,1.25) {+3 if the hour cost the same per minute};
+      \node[font=\sffamily\scriptsize, anchor=west] at (0.15,0.35) {0.1: copy it back};
+      \fill[comp!70] (2.55,3.95) rectangle (2.65,4.15); \node[font=\sffamily\scriptsize, anchor=west] at (2.67,4.05) {compute the KV cache};
+      \fill[net!60] (2.55,3.55) rectangle (2.65,3.75); \node[font=\sffamily\scriptsize, anchor=west] at (2.67,3.65) {hold it};
+      \end{tikzpicture}
+    </script> <figcaption> <b>Figure 6.</b> Anthropic's cache prices for Claude 4.x models, split into computing the KV cache (the 1× any prefill costs) and holding it. Holding for an hour costs four times as much as holding for five minutes, not twelve. That's consistent with the longer duration living on a cheaper, slower tier. </figcaption> </figure> <p> Holding for 12 times as long costs only 4 times as much. If both durations used the same storage at the same rate, the hour would cost 3× extra, not 1×. That's consistent with the hour living on cheaper storage, such as larger, slower flash drives, whose drain times run to hours. Prices aren't costs, and a provider may simply round to friendly numbers, so treat this as a hint. </p> <h2>Why long contexts stay expensive</h2> <p> Context windows went from 2,048 tokens in GPT-3 (2020) to 8K and 32K in GPT-4 (early 2023), then to 128K and 200K by the end of 2023, and to a million with Gemini 1.5 in early 2024, later two million. Llama 4 Scout claims ten million. Several flagship models offer a million tokens today. Advertised windows keep growing, but serving very long contexts at scale stays expensive, and the cost model says why. </p> <p> The compute per token barely depends on context length. The memory traffic per decoded token grows in proportion to it, and so does the memory each sequence occupies. Fewer long sequences fit in HBM at once, so batches shrink and the weights are amortized over fewer tokens. HBM bandwidth improves by a factor of two or so per hardware generation, which doesn't come close to keeping up with 10x or 100x jumps in context. </p> <p> One argument against needing continual learning is that a model could learn on the job in context, if it could hold, say, a month of work. That might be a hundred million tokens. At 70 KB per token that's 7 TB per sequence, more than half of an NVL72's entire HBM. Even at 2 KB per token, it's 200 GB per sequence. Sparse attention reduces how much each step reads, but it still has to store everything, and attending to too few past tokens hurts quality. Contexts that long will need architectural changes as well as faster memory. </p> <p> In <a href="part-4-training-a-model-you-plan-to-serve.html">Part 4</a>, the last part, we turn from serving to training and ask how much data a model should be trained on, given how many tokens it will serve. </p> <p class="footnote-diagrams">Diagrams are drawn in TikZ and rendered in your browser with TikZJax, so they can take a few seconds to appear.</p> <nav class="pager"> <a class="prev" href="/blog/2026/fitting-a-model-onto-a-rack/"><span>Previous</span>Part 2: Fitting a Model onto a Rack</a><a class="next" href="/blog/2026/training-a-model-you-plan-to-serve/"><span>Next</span>Part 4: Training a Model You Plan to Serve</a> </nav> </div> </div> </article> </div> </div> <footer class="container"> <div class="site-footer"> <span>© 2026 Zain Hasan</span> <span> <a href="https://github.com/zainhas" rel="external nofollow noopener" target="_blank">GitHub</a> <a href="https://www.linkedin.com/in/zainhas" rel="external nofollow noopener" target="_blank">LinkedIn</a> <a href="https://x.com/zainhas" rel="external nofollow noopener" target="_blank">X</a> </span> </div> </footer> <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> <script src="/assets/js/bootstrap.bundle.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script> <script defer src="https://tikzjax.com/v1/tikzjax.js" integrity="sha256-+1qyucCXRZJrCg3lm3KxRt/7WXaYhBid4/1XJRHGB1E=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/js/zoom.js?85ddb88934d28b74e78031fd54cf8308"></script> <script src="/assets/js/no_defer.js?2781658a0a2b13ed609542042a859126"></script> <script defer src="/assets/js/common.js?e0514a05c5c95ac1a93a8dfd5249b92e"></script> <script defer src="/assets/js/copy_code.js?c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?d9f17b6adc2311cbabd747f4538bb15f"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/js/mathjax-setup.js?a5bb4e6a542c546dd929b24b8b236dfd"></script> <script defer src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6" crossorigin="anonymous"></script> <script defer src="/assets/js/progress-bar.js?2f30e0e6801ea8f5036fa66e1ab0a71a" type="text/javascript"></script> <script src="/assets/js/vanilla-back-to-top.min.js?f40d453793ff4f64e238e420181a1d17"></script> <script>
+    addBackToTop();
+  </script> <script defer src="/assets/js/tilt.js?25082cf50c7307ac9d4b913a4d305ddc"></script> <script>
+      (function () {
+        var k = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65],
+          p = 0;
+        document.addEventListener('keydown', function (e) {
+          p = e.keyCode === k[p] ? p + 1 : 0;
+          if (p === k.length) {
+            p = 0;
+            window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+          }
+        });
+      })();
+    </script> </body> </html>
