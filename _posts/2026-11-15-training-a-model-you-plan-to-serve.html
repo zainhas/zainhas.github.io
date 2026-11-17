@@ -297,7 +297,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-life">
     <img
-      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-life.svg' | relative_url }}"
+      src="/assets/img/blog/training-a-model-you-plan-to-serve/fig-life.svg"
       alt="The three phases of a model&#x27;s life. Each phase costs FLOPs in proportion to the active parameter count times its tokens. Pre-training runs at high hardware efficiency. RL generation and serving are decode-heavy and run at lower efficiency."
       width="615"
       loading="lazy"
@@ -335,7 +335,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-ucurve">
     <img
-      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-ucurve.svg' | relative_url }}"
+      src="/assets/img/blog/training-a-model-you-plan-to-serve/fig-ucurve.svg"
       alt="Lifetime cost against model size for a fixed quality target. Training cost (blue) is lowest at the Chinchilla point and rises for smaller models, which need many more tokens. Serving cost (green) rises with model size. The total (black) bottoms out at a smaller model trained on more data, near where the two costs are similar."
       width="515"
       loading="lazy"
@@ -388,7 +388,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-budget">
     <img
-      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-budget.svg' | relative_url }}"
+      src="/assets/img/blog/training-a-model-you-plan-to-serve/fig-budget.svg"
       alt="Equal lifetime cost in each phase (left) turns into token counts (right). Pre-training does three times the FLOPs per token of serving, but at about three times the utilization, so the token counts come out similar. RL does somewhat fewer tokens, because its rollouts are decode-heavy and some of them are also trained on."
       width="540"
       loading="lazy"
@@ -436,7 +436,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-overtrain">
     <img
-      src="{{ '/assets/img/blog/training-a-model-you-plan-to-serve/fig-overtrain.svg' | relative_url }}"
+      src="/assets/img/blog/training-a-model-you-plan-to-serve/fig-overtrain.svg"
       alt="Chinchilla-optimal token counts (open circles, 20 tokens per active parameter) against actual pre-training tokens (filled dots). DeepSeek-V3: 37B active, 14.8T tokens. Kimi K2: 32B active, 15.5T. Qwen3-235B-A22B: 22B active, about 36T. Llama 3 8B: dense, about 15T. The frontier estimate assumes about 100B active parameters and a few hundred trillion tokens (shaded range: 200T to 800T)."
       width="762"
       loading="lazy"

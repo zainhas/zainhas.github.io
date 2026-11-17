@@ -299,7 +299,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-moe">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-moe.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-moe.svg"
       alt="One MoE layer. The router sends each token to a few experts (here 3 of 8, shaded). Each expert is a small two-layer MLP. Their outputs are combined with the router&#x27;s weights and added back to the token through the residual connection. DeepSeek-V3 picks 8 of 256 experts per token, plus one shared expert that every token uses."
       width="705"
       loading="lazy"
@@ -327,7 +327,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-ep">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-ep.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-ep.svg"
       alt="Expert parallelism on four GPUs with two experts each. Every GPU holds a slice of the batch and runs the router on it. Each token is sent to the GPUs that hold its chosen experts, and the results come back to where the token started. Which GPU talks to which depends on the router, so any GPU can end up sending to any other."
       width="555"
       loading="lazy"
@@ -363,7 +363,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-racks">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-racks.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-racks.svg"
       alt="Two racks. Inside a rack, any GPU reaches any other through the NVLink switches (green path). To reach a GPU in another rack, traffic goes out through a network card and the data center network (red path), with roughly a tenth of the bandwidth."
       width="615"
       loading="lazy"
@@ -402,7 +402,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-pipe">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe.svg"
       alt="Pipeline parallelism. Each rack holds a contiguous group of layers. Inside a rack, every MoE layer does an all-to-all exchange (grey mesh). Between racks, each token crosses the slow network once per stage, carrying just its residual-stream vector."
       width="620"
       loading="lazy"
@@ -443,7 +443,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-pipe-inf">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe-inf.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe-inf.svg"
       alt="Inference with four pipeline stages. Each box is one micro-batch (mb) running through one rack&#x27;s layers. After the first few steps every rack is busy, and each micro-batch loops back to the first rack as soon as it gets a token. Four micro-batches keep four racks full."
       width="674"
       loading="lazy"
@@ -476,7 +476,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-pipe-train">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe-train.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-pipe-train.svg"
       alt="Training with four stages and four micro-batches. Forward passes (F) flow down the racks and backward passes (B) flow back up. The hatched cells are the pipeline bubble, where a rack has nothing to do. Here 24 of the 56 rack-slots are idle, which is 43%."
       width="679"
       loading="lazy"
@@ -521,7 +521,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-mem-p">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-mem-p.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-mem-p.svg"
       alt="Memory per GPU as the number of pipeline stages grows. The weights are divided across more racks and shrink as 1/P. The KV cache per GPU stays flat, because every extra stage needs its own micro-batch of sequences in flight."
       width="526"
       loading="lazy"
@@ -570,7 +570,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-floor">
     <img
-      src="{{ '/assets/img/blog/fitting-a-model-onto-a-rack/fig-floor.svg' | relative_url }}"
+      src="/assets/img/blog/fitting-a-model-onto-a-rack/fig-floor.svg"
       alt="The latency floor for a one-trillion-parameter model with 8-bit weights. Eight H200s (4.8 TB/s each) take 26 ms to read the weights once. Sixty-four GB200s (8 TB/s each) take 2 ms. Splitting the model across more 8-GPU servers with pipelining fits more memory but doesn&#x27;t lower this floor."
       width="773"
       loading="lazy"

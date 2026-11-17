@@ -302,7 +302,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-ctx">
     <img
-      src="{{ '/assets/img/blog/reading-the-api-price-sheet/fig-ctx.svg' | relative_url }}"
+      src="/assets/img/blog/reading-the-api-price-sheet/fig-ctx.svg"
       alt="Cost per output token for one sequence as its context grows, with the weights amortized by a large batch. Compute stays flat. KV reads grow linearly and overtake compute at some context length. A two-tier price (dashed red) is a coarse way to stay above a cost line that bends upward."
       width="473"
       loading="lazy"
@@ -359,7 +359,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-kvsize">
     <img
-      src="{{ '/assets/img/blog/reading-the-api-price-sheet/fig-kvsize.svg' | relative_url }}"
+      src="/assets/img/blog/reading-the-api-price-sheet/fig-kvsize.svg"
       alt="KV cache bytes per token of context, on a log scale. Llama 3 70B: 80 layers, 8 KV heads of width 128, 16-bit. DeepSeek-V3: 61 layers, one compressed 576-wide vector per layer (multi-head latent attention), 16-bit. A design with one KV cache shared by all layers, 8 KV heads of width 128, 8-bit: 2 KB. The price step implies something in that last range."
       width="650"
       loading="lazy"
@@ -408,7 +408,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-chat">
     <img
-      src="{{ '/assets/img/blog/reading-the-api-price-sheet/fig-chat.svg' | relative_url }}"
+      src="/assets/img/blog/reading-the-api-price-sheet/fig-chat.svg"
       alt="A conversation alternates between prefill and decode. Text the model didn&#x27;t write (prompts, files, tool results) is known in advance, so all of it goes through the model in one pass. Text the model writes comes out one token per pass, because each token depends on the one before."
       width="609"
       loading="lazy"
@@ -438,7 +438,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-pass">
     <img
-      src="{{ '/assets/img/blog/reading-the-api-price-sheet/fig-pass.svg' | relative_url }}"
+      src="/assets/img/blog/reading-the-api-price-sheet/fig-pass.svg"
       alt="Cost per token against the number of new tokens processed per sequence in one pass. Decode is the left edge (one token per pass), where memory traffic dominates. Prefill handles hundreds or thousands of tokens per pass, so the memory traffic is split many ways and compute sets the cost. Here decode memory is drawn at five times compute."
       width="574"
       loading="lazy"
@@ -535,7 +535,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-tiers">
     <img
-      src="{{ '/assets/img/blog/reading-the-api-price-sheet/fig-tiers.svg' | relative_url }}"
+      src="/assets/img/blog/reading-the-api-price-sheet/fig-tiers.svg"
       alt="Drain times of the storage tiers in a GPU server, on a log scale. HBM: 80 to 288 GB at 3 to 8 TB/s. Host DRAM: hundreds of GB to a few TB at hundreds of GB/s. One NVMe drive: 4 to 60 TB at 7 to 14 GB/s. One hard disk: about 24 TB at under 300 MB/s. Both prompt-cache durations fall in the flash range."
       width="578"
       loading="lazy"
@@ -561,7 +561,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-cacheprice">
     <img
-      src="{{ '/assets/img/blog/reading-the-api-price-sheet/fig-cacheprice.svg' | relative_url }}"
+      src="/assets/img/blog/reading-the-api-price-sheet/fig-cacheprice.svg"
       alt="Anthropic&#x27;s cache prices for Claude 4.x models, split into computing the KV cache (the 1× any prefill costs) and holding it. Holding for an hour costs four times as much as holding for five minutes, not twelve. That&#x27;s consistent with the longer duration living on a cheaper, slower tier."
       width="685"
       loading="lazy"

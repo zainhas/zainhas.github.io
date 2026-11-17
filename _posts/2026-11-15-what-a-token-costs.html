@@ -278,7 +278,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-system">
     <img
-      src="{{ '/assets/img/blog/what-a-token-costs/fig-system.svg' | relative_url }}"
+      src="/assets/img/blog/what-a-token-costs/fig-system.svg"
       alt="The system this series models. A batcher groups ready sequences into one forward pass per step. The model&#x27;s weights and every sequence&#x27;s KV cache sit in the HBM of the GPUs in one rack. Traffic that leaves the rack is much slower, and idle KV cache can move to cheaper memory."
       width="692"
       loading="lazy"
@@ -347,7 +347,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-decode">
     <img
-      src="{{ '/assets/img/blog/what-a-token-costs/fig-decode.svg' | relative_url }}"
+      src="/assets/img/blog/what-a-token-costs/fig-decode.svg"
       alt="One decode step for one sequence. The newest token is multiplied by the model&#x27;s weights, layer by layer. In each attention layer it reads the keys and values (the KV cache) that were stored for every earlier token. Its own keys and values are then added to the cache for the next step."
       width="621"
       loading="lazy"
@@ -417,7 +417,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-latency">
     <img
-      src="{{ '/assets/img/blog/what-a-token-costs/fig-latency.svg' | relative_url }}"
+      src="/assets/img/blog/what-a-token-costs/fig-latency.svg"
       alt="Time per decode step as the batch grows. Compute (blue) grows from zero. Memory time has a fixed part for the weights (orange) plus a KV part that grows with the batch (green). The step takes as long as the larger of the two. Below B* the step is memory-bound, and no batch size gets it under the time to read the weights."
       width="604"
       loading="lazy"
@@ -459,7 +459,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-cost">
     <img
-      src="{{ '/assets/img/blog/what-a-token-costs/fig-cost.svg' | relative_url }}"
+      src="/assets/img/blog/what-a-token-costs/fig-cost.svg"
       alt="Cost per token, which is each curve from Figure 3 divided by B. Only the weight reads are shared across the batch, so only their cost per token falls (as 1/B). Compute and KV reads per token stay flat. The cost settles onto a floor set by whatever each token can&#x27;t share. This plot shows short contexts, where that&#x27;s compute. With long contexts, the KV reads can be the higher floor."
       width="603"
       loading="lazy"
@@ -635,7 +635,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-breakdown">
     <img
-      src="{{ '/assets/img/blog/what-a-token-costs/fig-breakdown.svg' | relative_url }}"
+      src="/assets/img/blog/what-a-token-costs/fig-breakdown.svg"
       alt="Where the time goes in one decode step for DeepSeek-V3 on 64 GB200 GPUs, with 8-bit weights, a batch of 5,400, and HBM filled with KV cache. Reading weights and doing the multiply-adds take about the same time, as they should at B*. Reading the KV cache takes about 17 times longer than either."
       width="692"
       loading="lazy"
@@ -661,7 +661,7 @@ categories: technical-blog
 
   <figure class="tikz" id="fig-train">
     <img
-      src="{{ '/assets/img/blog/what-a-token-costs/fig-train.svg' | relative_url }}"
+      src="/assets/img/blog/what-a-token-costs/fig-train.svg"
       alt="Steps leave on a fixed timetable. Each dot is a sequence riding that step. A request that just misses a departure waits at most one step, then rides the next one, so the worst-case wait for its first token is about two steps."
       width="701"
       loading="lazy"
